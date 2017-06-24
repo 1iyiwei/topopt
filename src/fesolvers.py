@@ -20,15 +20,11 @@ class FESolver(object):
 
         nely, nelx = x.shape
 
-        if self.verbose >= 3: print('gk before', flush = True)
         k_freedofs = self.gk_freedofs(load, x, ke, penal)
-        if self.verbose >= 3: print('gk after', flush = True)
 
         u = np.zeros(load.dim*(nely+1)*(nelx+1));
 
-        if self.verbose >= 3: print('spsolve before', flush = True)
         u[freedofs] = spsolve(k_freedofs, f[freedofs])  
-        if self.verbose >= 3: print('spsolve after', flush = True)
 
         u[fixdofs] = 0.0
 
@@ -91,7 +87,7 @@ class CooFESolver(FESolver):
         dof = load.dim*(nelx+1)*(nely+1)
         k = coo_matrix((value_list, (y_list, x_list)), shape=(dof, dof)).tocsc()
 
-        free = load.freedofs()
-        k_freedofs = k[free,:][:,free]
+        freedofs = load.freedofs()
+        k_freedofs = k[freedofs,:][:,freedofs]
 
         return k_freedofs

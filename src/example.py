@@ -2,6 +2,7 @@
 tester for topology optimization code
 '''
 
+import numpy as np
 import math
 import matplotlib.pyplot as plt
 
@@ -20,7 +21,7 @@ if __name__ == "__main__":
     volfrac = 0.4
     penal = 3.0
     rmin = 5.4
-    delta = 0.01
+    delta = 0.02
     loopy = math.inf
 
     # loading/problem
@@ -32,8 +33,21 @@ if __name__ == "__main__":
     optimizer = Topopt(fesolver, young, poisson, verbose = verbose)
 
     # compute
+    history = False
     x = optimizer.init(load, volfrac)
-    x, loop = optimizer.layout(load, x, volfrac, penal, rmin, delta, loopy)
+    if history:
+        x, x_history = optimizer.layout(load, x, volfrac, penal, rmin, delta, loopy, history)
+        loop = len(x_history)
+    else:    
+        x, loop = optimizer.layout(load, x, volfrac, penal, rmin, delta, loopy, history)
+        x_history = None
+
+    # save
+    if x_history:
+        # import scipy.misc
+        # sequence = [scipy.misc.toimage(x, cmin=0, cmax=1) for x in x_history]
+        import imageio
+        imageio.mimsave('topopt.gif', x_history)
 
     # plot
     plt.figure()

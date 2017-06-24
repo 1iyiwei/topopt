@@ -21,18 +21,25 @@ class Topopt(object):
         self.verbose = verbose
 
     # topology optimization
-    def layout(self, load, x, volfrac, penal, rmin, delta, loopy):
+    def layout(self, load, x, volfrac, penal, rmin, delta, loopy, history = False):
 
         loop = 0 # number of loop iterations
         change = 1.0 # maximum density change from prior iteration
+        
+        if history:
+            x_history = [x]
 
         while (change > delta) and (loop < loopy):
             loop = loop + 1
             x, change = self.iter(load, x, volfrac, penal, rmin)
             if self.verbose: print('iteration ', loop, ', change ', change, flush = True)
-            
+            if history: x_history.append(x)
+
         # done
-        return x, loop
+        if history:
+            return x, x_history
+        else:
+            return x, loop
 
     # initialization
     def init(self, load, volfrac):
@@ -42,34 +49,26 @@ class Topopt(object):
 
     # iteration
     def iter(self, load, x, volfrac, penal, rmin):
-        if self.verbose >= 2: print('iter start', flush = True)
 
         xold = x.copy()
-        if self.verbose >= 2: print('copy', flush = True)
 
         # element stiffness matrix
         ke = self.lk(self.young, self.poisson)
-        if self.verbose >= 2: print('stiffness matrix', flush = True)
 
         # displacement via finite element analysis
         u = self.fesolver.displace(load, x, ke, penal)
-        if self.verbose >= 2: print('finite element', flush = True)
 
         # compliance and derivative
         c, dc = self.comp(load, x, u, ke, penal)
-        if self.verbose >= 2: print('compliance', flush = True)
 
         # filter
         dc = self.filt(x, rmin, dc)
-        if self.verbose >= 2: print('filter', flush = True)
 
         # update
         x = self.update(x, volfrac, dc)
-        if self.verbose >= 2: print('update', flush = True)
 
         # how much has changed?
         change = np.amax(abs(x-xold))
-        if self.verbose >= 2: print('change', flush = True)
 
         return x, change
     
