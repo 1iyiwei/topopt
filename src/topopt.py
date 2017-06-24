@@ -21,7 +21,7 @@ class Topopt(object):
         self.verbose = verbose
 
     # topology optimization
-    def layout(self, load, x, volfrac, penal, rmin, delta, loopy, history = False):
+    def layout(self, load, constraint, x, penal, rmin, delta, loopy, history = False):
 
         loop = 0 # number of loop iterations
         change = 1.0 # maximum density change from prior iteration
@@ -31,7 +31,7 @@ class Topopt(object):
 
         while (change > delta) and (loop < loopy):
             loop = loop + 1
-            x, change = self.iter(load, x, volfrac, penal, rmin)
+            x, change = self.iter(load, constraint, x, penal, rmin)
             if self.verbose: print('iteration ', loop, ', change ', change, flush = True)
             if history: x_history.append(x)
 
@@ -42,13 +42,13 @@ class Topopt(object):
             return x, loop
 
     # initialization
-    def init(self, load, volfrac):
+    def init(self, load, constraint):
         (nelx, nely) = load.shape()
         # mean density
-        return np.ones((nely, nelx))*volfrac
+        return np.ones((nely, nelx))*constraint.volume_frac()
 
     # iteration
-    def iter(self, load, x, volfrac, penal, rmin):
+    def iter(self, load, constraint, x, penal, rmin):
 
         xold = x.copy()
 
@@ -65,7 +65,7 @@ class Topopt(object):
         dc = self.filt(x, rmin, dc)
 
         # update
-        x = self.update(x, volfrac, dc)
+        x = self.update(constraint, x, dc)
 
         # how much has changed?
         change = np.amax(abs(x-xold))
@@ -108,14 +108,16 @@ class Topopt(object):
         return dcn
 
     # optimality criteria update
-    def update(self, x, volfrac, dc):
+    def update(self, constraint, x, dc):
+        volfrac = constraint.volume_frac()
+        xmin = constraint.density_min()
+        xmax = constraint.density_max()
+
         # ugly hardwired constants to fix later
+        move = 0.2 * xmax
         l1 = 0
         l2 = 100000
         lt = 1e-4
-        move = 0.2
-        xmin = 0.001
-        xmax = 1.0
 
         nely, nelx = x.shape
         while (l2-l1 > lt):

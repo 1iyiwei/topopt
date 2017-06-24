@@ -7,6 +7,7 @@ import math
 import matplotlib.pyplot as plt
 
 from loads import HalfBeam
+from constraints import DensityConstraint
 from fesolvers import LilFESolver, CooFESolver
 from topopt import Topopt
 
@@ -15,17 +16,26 @@ if __name__ == "__main__":
     young = 1
     poisson = 0.3
 
-    # default input parameters
+    # constraints
+    volfrac = 0.4
+    xmin = 0.001
+    xmax = 1.0
+
+    # input parameters
     nelx = 180
     nely = 60
-    volfrac = 0.4
+
     penal = 3.0
     rmin = 5.4
+
     delta = 0.02
     loopy = math.inf
 
     # loading/problem
     load = HalfBeam(nelx, nely)
+
+    # constraints
+    density_constraint = DensityConstraint(volume_frac = volfrac, density_min = xmin, density_max = xmax)
 
     # optimizer
     verbose = True
@@ -34,12 +44,14 @@ if __name__ == "__main__":
 
     # compute
     history = False
-    x = optimizer.init(load, volfrac)
+    x = optimizer.init(load, density_constraint)
+    x, x_more = optimizer.layout(load, density_constraint, x, penal, rmin, delta, loopy, history)
+
     if history:
-        x, x_history = optimizer.layout(load, x, volfrac, penal, rmin, delta, loopy, history)
+        x_history = x_more
         loop = len(x_history)
     else:    
-        x, loop = optimizer.layout(load, x, volfrac, penal, rmin, delta, loopy, history)
+        loop = x_more
         x_history = None
 
     # save
