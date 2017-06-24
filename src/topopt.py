@@ -99,9 +99,9 @@ class Topopt(object):
                 sum = 0.0
                 for k in range(max(i-rminf, 0), min(i+rminf+1, nelx)):
                     for l in range(max(j-rminf, 0), min(j+rminf+1, nely)):
-                        fac = max(0, rmin - math.sqrt((i-k)**2+(j-l)**2));
-                        sum = sum + fac;
-                        dcn[j,i] = dcn[j,i] + fac*x[l,k]*dc[l,k];
+                        weight = max(0, rmin - math.sqrt((i-k)**2+(j-l)**2));
+                        sum = sum + weight;
+                        dcn[j,i] = dcn[j,i] + weight*x[l,k]*dc[l,k];
             
                 dcn[j,i] = dcn[j,i]/(x[j,i]*sum);
 
@@ -123,7 +123,11 @@ class Topopt(object):
         while (l2-l1 > lt):
             lmid = 0.5*(l2+l1)
             xnew = np.multiply(x, np.sqrt(-dc/lmid))
-            xnew = np.maximum(xmin, np.maximum(x-move, np.minimum(xmax, np.minimum(x+move, xnew))));
+
+            x_below = np.maximum(xmin, x - move)
+            x_above = np.minimum(xmax, x + move)
+            xnew = np.maximum(x_below, np.minimum(x_above, xnew));
+
             if (np.sum(xnew) - volfrac*nelx*nely) > 0:
                 l1 = lmid
             else:
