@@ -72,7 +72,7 @@ class CooFESolver(FESolver):
 
         # coo_matrix automatically sums duplicated entries, so it is handy
         dof = load.dim*(nelx+1)*(nely+1)
-        k = coo_matrix((value_list, (x_list, y_list)), shape=(dof, dof)).tocsc()
+        k = coo_matrix((value_list, (y_list, x_list)), shape=(dof, dof)).tocsc()
 
         freedofs = load.freedofs()
         k_freedofs = k[freedofs,:][:,freedofs]
