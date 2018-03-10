@@ -59,35 +59,21 @@ class LilFESolver(FESolver):
 
 # coo_matrix should be faster
 class CooFESolver(FESolver):
-    
+
     def __init__(self, verbose = False):
         super().__init__(verbose)
 
-    def gk_freedofs(self, load, density, ke, penal):
+    def gk_freedofs(self, load, x, ke, penal):
         nelx, nely = load.shape()
 
-        x_list = []
-        y_list = []
-        value_list = []
-        for elx in range(nelx):
-            for ely in range(nely):
-                sel = load.edof(elx, ely, nelx, nely)
-                value = ke*(density[ely, elx]**penal)
-                for i, x in enumerate(sel):
-                    for j, y in enumerate(sel):
-                        x_list.append(x)
-                        y_list.append(y)
-                        value_list.append(value[j, i])
-
-        x_list = np.array(x_list)
-        y_list = np.array(y_list)
-        value_list = np.array(value_list)
+        edof, x_list, y_list = load.edof(nelx, nely)
+        kd = x.T.reshape(nelx*nely, 1, 1) ** penal
+        value_list = (np.tile(ke, (nelx*nely, 1, 1))*kd).flatten()
 
         # coo_matrix automatically sums duplicated entries, so it is handy
         dof = load.dim*(nelx+1)*(nely+1)
-        k = coo_matrix((value_list, (y_list, x_list)), shape=(dof, dof)).tocsc()
+        k = coo_matrix((value_list, (x_list, y_list)), shape=(dof, dof)).tocsc()
 
         freedofs = load.freedofs()
         k_freedofs = k[freedofs,:][:,freedofs]
-
         return k_freedofs

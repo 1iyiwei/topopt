@@ -31,9 +31,43 @@ class Load(object):
         return n1, n2, n3, n4
 
     # edof
-    def edof(self, elx, ely, nelx, nely):
+    def edofOld(self, elx, ely, nelx, nely):
         n1, n2, n3, n4 = self.nodes(elx, ely, nelx, nely)
         return np.array([self.dim*n1,self.dim*n1+1, self.dim*n2,self.dim*n2+1, self.dim*n3,self.dim*n3+1, self.dim*n4,self.dim*n4+1])
+
+    # edof that returns an array
+    def edof(self, nelx, nely):
+        """
+        Generates an array with the position of the nodes of each element in
+        the global stiffness matrix
+
+        The following nodal defenitions are used:
+        _________________
+        >>>
+                       |                                       |
+        --   2*el+2*elx , 2*el+2*elx+1 ---- 2*el+2*elx+2*nely+2 , 2*el+2*elx+2*nely+3 --
+                       |                                       |
+                       |                                       |
+                       |                                       |
+                       |                                       |
+                       |                                       |
+                       |                                       |
+                       |                                       |
+        -- 2*el+2*elx+1 , 2*el+2*elx+2 ---- 2*el+2*elx+2*nely+4 , 2*el+2*elx+2*nely+5 --
+                       |                                       |
+        """
+        # Creating list with element numbers
+        elx = np.repeat(range(nelx), nely).reshape((nelx*nely, 1))  # x position of element
+        ely = np.tile(range(nely), nelx).reshape((nelx*nely, 1))  # y position of element
+
+        n1, n2, n3, n4 = self.nodes(elx, ely, nelx, nely)
+        edof = np.array([self.dim*n1,self.dim*n1+1, self.dim*n2,self.dim*n2+1,
+                         self.dim*n3,self.dim*n3+1, self.dim*n4,self.dim*n4+1])
+        edof = edof.T[0]
+
+        x_list = np.repeat(edof, 8)  # flat list pointer of each node in an element
+        y_list = np.tile(edof, 8).flatten()  # flat list pointer of each node in element
+        return edof, x_list, y_list
 
     def force(self):
         return np.zeros(self.dim*(self.nely+1)*(self.nelx+1))
