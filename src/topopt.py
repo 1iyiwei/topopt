@@ -80,7 +80,7 @@ class Topopt(object):
         nely, nelx = x.shape
         for ely in range(nely):
             for elx in range(nelx):
-                ue = u[load.edof(elx, ely, nelx, nely)]
+                ue = u[load.edofOld(elx, ely, nelx, nely)]
                 ce = np.dot(ue.transpose(), np.dot(ke, ue))
                 c = c + (x[ely,elx]**penal)*ce
                 dc[ely,elx] = -penal*(x[ely,elx]**(penal-1))*ce
