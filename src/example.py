@@ -44,8 +44,9 @@ if __name__ == "__main__":
 
     # compute
     history = False
+    newfilt = True
     x = optimizer.init(load, density_constraint)
-    x, x_more = optimizer.layout(load, density_constraint, x, penal, rmin, delta, loopy, history)
+    x, x_more = optimizer.layout(load, density_constraint, x, penal, rmin, delta, loopy, history, newfilt)
 
     if history:
         x_history = x_more

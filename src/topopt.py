@@ -5,6 +5,7 @@ topology optimization
 '''
 
 import numpy as np
+import cv2 as cv
 import math
 
 class Topopt(object):
@@ -21,7 +22,7 @@ class Topopt(object):
         self.verbose = verbose
 
     # topology optimization
-    def layout(self, load, constraint, x, penal, rmin, delta, loopy, history = False):
+    def layout(self, load, constraint, x, penal, rmin, delta, loopy, history = False, newfilt = False):
 
         loop = 0 # number of loop iterations
         change = 1.0 # maximum density change from prior iteration
@@ -31,7 +32,7 @@ class Topopt(object):
 
         while (change > delta) and (loop < loopy):
             loop = loop + 1
-            x, change = self.iter(load, constraint, x, penal, rmin)
+            x, change = self.iter(load, constraint, x, penal, rmin, newfilt = newfilt)
             if self.verbose: print('iteration ', loop, ', change ', change, flush = True)
             if history: x_history.append(x)
 
@@ -48,7 +49,7 @@ class Topopt(object):
         return np.ones((nely, nelx))*constraint.volume_frac()
 
     # iteration
-    def iter(self, load, constraint, x, penal, rmin):
+    def iter(self, load, constraint, x, penal, rmin, newfilt):
 
         xold = x.copy()
 
@@ -62,7 +63,10 @@ class Topopt(object):
         c, dc = self.comp(load, x, u, ke, penal)
 
         # filter
-        dc = self.filt(x, rmin, dc)
+        if newfilt:
+            dc = self.filtNew(x, rmin, dc)
+        else:
+            dc = self.filt(x, rmin, dc)
 
         # update
         x = self.update(constraint, x, dc)
@@ -71,7 +75,7 @@ class Topopt(object):
         change = np.amax(abs(x-xold))
 
         return x, change
-    
+
     # updated compliance algorithm
     def comp(self, load, x, u, ke, penal):
         nely, nelx = x.shape
@@ -101,11 +105,39 @@ class Topopt(object):
                 sum = 0.0
                 for k in range(max(i-rminf, 0), min(i+rminf+1, nelx)):
                     for l in range(max(j-rminf, 0), min(j+rminf+1, nely)):
-                        weight = max(0, rmin - math.sqrt((i-k)**2+(j-l)**2));
+                        weight = max(0, rmin - np.sqrt((i-k)**2+(j-l)**2));
                         sum = sum + weight;
                         dcn[j,i] = dcn[j,i] + weight*x[l,k]*dc[l,k];
             
                 dcn[j,i] = dcn[j,i]/(x[j,i]*sum);
+
+        return dcn
+
+    # new filter based upon C++ accelerated code
+    def filtNew(self, x, rmin, dc):
+        rminf = math.floor(rmin)
+        nely, nelx = x.shape
+
+        # define normalized convolution kernel based upon rmin
+        size = rminf*2+1
+        kernel = np.zeros((size, size))
+        for i in range(size):
+            for j in range(size):
+                dis = np.sqrt((rminf-i)**2 + (rminf-j)**2)
+                kernel[i, j] = np.max((0, rmin - dis))
+        kernel = kernel/np.sum(kernel)  # normalisation
+
+        # elementwise multiplication of x and dc
+        xdc = x*dc
+
+        # opencv border padding to get propper results in the outer edge
+        #xdc = cv.copyMakeBorder(xdc, rminf, rminf, rminf, rminf, cv.BORDER_REFLECT_101)
+
+        # execute convolution on xdc using opencv, with reflected 101 border
+        xdcn = cv.filter2D(xdc, -1, kernel, borderType=cv.BORDER_REFLECT)
+
+        # then dcn = xdcn/x (elementwise)
+        dcn = xdcn/x
 
         return dcn
 
