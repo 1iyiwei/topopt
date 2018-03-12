@@ -72,19 +72,21 @@ class Topopt(object):
 
         return x, change
     
-    # compliance and its derivative
+    # updated compliance algorithm
     def comp(self, load, x, u, ke, penal):
-        c = 0
-        dc = np.zeros(x.shape)
-
         nely, nelx = x.shape
-        for ely in range(nely):
-            for elx in range(nelx):
-                ue = u[load.edofOld(elx, ely, nelx, nely)]
-                ce = np.dot(ue.transpose(), np.dot(ke, ue))
-                c = c + (x[ely,elx]**penal)*ce
-                dc[ely,elx] = -penal*(x[ely,elx]**(penal-1))*ce
+        xe = x.T.flatten()  # flat list wich desities
 
+        edof = load.edof(nelx, nely)[0]
+        ue = u[edof]  # list with the displacements of the nodes of that element
+
+        # calculating the compliance in 3 steps
+        dot = np.dot(ke, ue.reshape((nelx*nely, 8, 1)))
+        ce = np.sum(ue.T*dot[:, :, 0], axis=0)  # element compliance
+        c = np.sum(ce * xe.T**penal)  # total compliance
+
+        dc = -penal * (xe ** (penal-1)) * ce  # compliance derivative
+        dc = dc.reshape((nelx, nely)).T
         return c, dc
 
     # filter

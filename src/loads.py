@@ -30,11 +30,6 @@ class Load(object):
         n4 = self.node(elx,     ely + 1, nelx, nely)
         return n1, n2, n3, n4
 
-    # edof
-    def edofOld(self, elx, ely, nelx, nely):
-        n1, n2, n3, n4 = self.nodes(elx, ely, nelx, nely)
-        return np.array([self.dim*n1,self.dim*n1+1, self.dim*n2,self.dim*n2+1, self.dim*n3,self.dim*n3+1, self.dim*n4,self.dim*n4+1])
-
     # edof that returns an array
     def edof(self, nelx, nely):
         """
