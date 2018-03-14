@@ -71,7 +71,7 @@ class Topopt(object):
         # how much has changed?
         change = np.amax(abs(x-xold))
 
-        return x, change
+        return x, change, c
 
     # updated compliance algorithm
     def comp(self, load, x, u, ke, penal):
