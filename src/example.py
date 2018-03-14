@@ -22,11 +22,11 @@ if __name__ == "__main__":
     xmax = 1.0
 
     # input parameters
-    nelx = 180*2
-    nely = 60*2
+    nelx = 300
+    nely = 100
 
     penal = 3.0
-    rmin = 2.0
+    rmin = 3.0
 
     delta = 0.02
     loopy = math.inf
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     x = optimizer.init(load, density_constraint)
     x, x_more = optimizer.layout(load, density_constraint, x, penal, rmin, delta, loopy, history)
 
-    print(time.time() - t)
+    print('Elapsed time is: ', time.time() - t, 'seconds.')
 
     if history:
         x_history = x_more

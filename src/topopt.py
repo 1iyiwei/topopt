@@ -33,7 +33,7 @@ class Topopt(object):
         while (change > delta) and (loop < loopy):
             loop = loop + 1
             x, change, c = self.iter(load, constraint, x, penal, rmin)
-            if self.verbose: print('I.: ', loop, 'Obj.:', c ,', ch.: ', change, flush=True)
+            if self.verbose: print('It.: {0:4d},  Obj.: {1:8.2f},  ch.: {2:0.3f}'.format(loop, c, change), flush=True)
             if history: x_history.append(x)
 
         # done
