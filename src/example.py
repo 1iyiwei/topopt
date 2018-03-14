@@ -1,18 +1,18 @@
 '''
 tester for topology optimization code
 '''
-
-import numpy as np
+import time
 import math
 import matplotlib.pyplot as plt
 
 from loads import HalfBeam
 from constraints import DensityConstraint
-from fesolvers import LilFESolver, CooFESolver
+from fesolvers import CooFESolver
 from topopt import Topopt
 
 if __name__ == "__main__":
     # material properties
+    t = time.time()
     young = 1
     poisson = 0.3
 
@@ -22,11 +22,11 @@ if __name__ == "__main__":
     xmax = 1.0
 
     # input parameters
-    nelx = 180
-    nely = 60
+    nelx = 180*2
+    nely = 60*2
 
     penal = 3.0
-    rmin = 5.4
+    rmin = 2.0
 
     delta = 0.02
     loopy = math.inf
@@ -35,23 +35,24 @@ if __name__ == "__main__":
     load = HalfBeam(nelx, nely)
 
     # constraints
-    density_constraint = DensityConstraint(volume_frac = volfrac, density_min = xmin, density_max = xmax)
+    density_constraint = DensityConstraint(volume_frac=volfrac, density_min=xmin, density_max=xmax)
 
     # optimizer
     verbose = True
-    fesolver = CooFESolver(verbose = verbose)
-    optimizer = Topopt(fesolver, young, poisson, verbose = verbose)
+    fesolver = CooFESolver(verbose=verbose)
+    optimizer = Topopt(fesolver, young, poisson, verbose=verbose)
 
     # compute
     history = False
-    newfilt = True
     x = optimizer.init(load, density_constraint)
-    x, x_more = optimizer.layout(load, density_constraint, x, penal, rmin, delta, loopy, history, newfilt)
+    x, x_more = optimizer.layout(load, density_constraint, x, penal, rmin, delta, loopy, history)
+
+    print(time.time() - t)
 
     if history:
         x_history = x_more
         loop = len(x_history)
-    else:    
+    else:
         loop = x_more
         x_history = None
 

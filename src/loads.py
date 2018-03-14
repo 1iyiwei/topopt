@@ -6,6 +6,7 @@ dofs are for displacements
 
 import numpy as np
 
+
 class Load(object):
     def __init__(self, nelx, nely):
         self.nelx = nelx
@@ -20,7 +21,7 @@ class Load(object):
 
     # compute 1D index from 2D position for node (boundary of element)
     def node(self, elx, ely, nelx, nely):
-        return (nely+1)*elx + ely; 
+        return (nely+1)*elx + ely
 
     # compute the 4 boundary nodes of an element
     def nodes(self, elx, ely, nelx, nely):
@@ -76,11 +77,12 @@ class Load(object):
     def freedofs(self):
         return self.alldofs()
 
+
 # example loading scenario, half mbb-beam
 class HalfBeam(Load):
     def __init__(self, nelx, nely):
         super().__init__(nelx, nely)
-        
+
     def force(self):
         f = super().force()
         # downward force at the upper left corner

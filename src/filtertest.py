@@ -1,71 +1,77 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Mar 12 17:07:13 2018
-
-@author: bram
-"""
+'''
+tester for topology optimization code
+'''
 
 import numpy as np
-import cv2 as cv
 import math
+import matplotlib.pyplot as plt
 
-# filter
-def filt(x, rmin, dc):
-    rminf = math.floor(rmin)
+from loads import HalfBeam
+from constraints import DensityConstraint
+from fesolvers import LilFESolver, CooFESolver
+from topopt import Topopt
 
-    dcn = np.zeros(x.shape)
-    nely, nelx = 11, 11
+from matplotlib import rc
+rc('font', **{'family': 'sans-serif', 'sans-serif': ['Helvetica']})
+rc('text', usetex=True)
 
-    for i in range(nelx):
-        for j in range(nely):
-            sum = 0.0
-            for k in range(max(i-rminf, 0), min(i+rminf+1, nelx)):
-                for l in range(max(j-rminf, 0), min(j+rminf+1, nely)):
-                    weight = max(0, rmin - np.sqrt((i-k)**2+(j-l)**2));
-                    sum = sum + weight;
-                    dcn[j,i] = dcn[j,i] + weight*x[l,k]*dc[l,k];
-        
-            dcn[j,i] = dcn[j,i]/(x[j,i]*sum);
+if __name__ == "__main__":
+    # material properties
+    young = 1
+    poisson = 0.3
 
-    return dcn
+    # constraints
+    volfrac = 0.4
+    xmin = 0.001
+    xmax = 1.0
 
-# new filter based upon C++ accelerated code
-def filtNew(x, rmin, dc):
-    rminf = math.floor(rmin)
-    nely, nelx = x.shape
+    # input parameters
+    nelx = 180
+    nely = 60
 
-    # define normalized convolution kernel based upon rmin
-    size = rminf*2+1
-    kernel = np.zeros((size, size))
-    for i in range(size):
-        for j in range(size):
-            dis = np.sqrt((rminf-i)**2 + (rminf-j)**2)
-            kernel[i, j] = np.max((0, rmin - dis))
-    kernel = kernel/np.sum(kernel)  # normalisation
+    penal = 3.0
+    rmin = 5.4
 
-    # elementwise multiplication of x and dc
-    xdc = x*dc
+    delta = 0.02
+    loopy = 2  # math.inf
 
-    # execute convolution on xdc using opencv, with reflected 101 border
-    xdcn = cv.filter2D(xdc, -1, kernel, borderType=cv.BORDER_REFLECT_101)
+    # loading/problem
+    load = HalfBeam(nelx, nely)
 
-    # then dcn = xdcn/x (elementwise)
-    dcn = xdcn/x
+    # constraints
+    density_constraint = DensityConstraint(volume_frac = volfrac, density_min = xmin, density_max = xmax)
 
-    return dcn
+    # optimizer
+    verbose = True
+    fesolver = CooFESolver(verbose = verbose)
+    optimizer = Topopt(fesolver, young, poisson, verbose = verbose)
 
+    # compute new filter result
+    history = False
+    newfilt = True
+    xn = optimizer.init(load, density_constraint)
+    xn, loop, cnew = optimizer.layout(load, density_constraint, xn, penal, rmin, delta, loopy, history, newfilt)
 
-rmin = 1.5
-x = np.ones((11, 11))
-dc = np.ones((11, 11))
-dc[4, 0] = 10
-dc[5, 1] = 10
-dc[3, 1] = 10
+    # compute old filter result
+    history = False
+    newfilt = False
+    xo = optimizer.init(load, density_constraint)
+    xo, loop, cold = optimizer.layout(load, density_constraint, xo, penal, rmin, delta, loopy, history, newfilt)    
 
-dcn = filt(x, rmin, dc)
-dcn2 = filtNew(x, rmin, dc)
+    # print copmlicance difference
+    print('Compliance old ', cold)
+    print('Compliance new ', cnew)
+    print('  Relative differnce ', 100*(cnew-cold)/(cold))
 
-if np.allclose(dcn, dcn2, rtol=1e-10):
-    print('succes')
-    
+    x = xo - xn
+    xabs = max(np.absolute(x).min(), x.max())
+
+    # plot
+    plt.figure()
+    plt.imshow(x, cmap=plt.cm.bwr)
+    plt.title(r'$x_{old}-x_{new}$, $r_{min}=%0.1f$, $nely,nelx=%d,%d$' % (rmin, nely, nelx))
+    plt.colorbar()
+    plt.clim(-xabs, xabs)
+    plt.xticks([])
+    plt.yticks([])
+    plt.show()

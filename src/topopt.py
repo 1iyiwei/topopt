@@ -8,13 +8,13 @@ import numpy as np
 import cv2 as cv
 import math
 
+
 class Topopt(object):
-    
     '''
     young: young's modulus
     poisson: poisson ratio
     '''
-    def __init__(self, fesolver, young = 1, poisson = 0.3, verbose = False):
+    def __init__(self, fesolver, young=1, poisson=0.3, verbose=False):
         self.fesolver = fesolver
         self.young = young
         self.poisson = poisson
@@ -22,18 +22,18 @@ class Topopt(object):
         self.verbose = verbose
 
     # topology optimization
-    def layout(self, load, constraint, x, penal, rmin, delta, loopy, history = False, newfilt = False):
+    def layout(self, load, constraint, x, penal, rmin, delta, loopy, history=False):
 
-        loop = 0 # number of loop iterations
-        change = 1.0 # maximum density change from prior iteration
-        
+        loop = 0  # number of loop iterations
+        change = 1.0  # maximum density change from prior iteration
+
         if history:
             x_history = [x]
 
         while (change > delta) and (loop < loopy):
             loop = loop + 1
-            x, change = self.iter(load, constraint, x, penal, rmin, newfilt = newfilt)
-            if self.verbose: print('iteration ', loop, ', change ', change, flush = True)
+            x, change, c = self.iter(load, constraint, x, penal, rmin)
+            if self.verbose: print('I.: ', loop, 'Obj.:', c ,', ch.: ', change, flush=True)
             if history: x_history.append(x)
 
         # done
@@ -49,7 +49,7 @@ class Topopt(object):
         return np.ones((nely, nelx))*constraint.volume_frac()
 
     # iteration
-    def iter(self, load, constraint, x, penal, rmin, newfilt):
+    def iter(self, load, constraint, x, penal, rmin):
 
         xold = x.copy()
 
@@ -63,10 +63,7 @@ class Topopt(object):
         c, dc = self.comp(load, x, u, ke, penal)
 
         # filter
-        if newfilt:
-            dc = self.filtNew(x, rmin, dc)
-        else:
-            dc = self.filt(x, rmin, dc)
+        dc = self.filt(x, rmin, dc)
 
         # update
         x = self.update(constraint, x, dc)
@@ -93,28 +90,8 @@ class Topopt(object):
         dc = dc.reshape((nelx, nely)).T
         return c, dc
 
-    # filter
-    def filt(self, x, rmin, dc):
-        rminf = math.floor(rmin)
-
-        dcn = np.zeros(x.shape)
-        nely, nelx = x.shape
-
-        for i in range(nelx):
-            for j in range(nely):
-                sum = 0.0
-                for k in range(max(i-rminf, 0), min(i+rminf+1, nelx)):
-                    for l in range(max(j-rminf, 0), min(j+rminf+1, nely)):
-                        weight = max(0, rmin - np.sqrt((i-k)**2+(j-l)**2));
-                        sum = sum + weight;
-                        dcn[j,i] = dcn[j,i] + weight*x[l,k]*dc[l,k];
-            
-                dcn[j,i] = dcn[j,i]/(x[j,i]*sum);
-
-        return dcn
-
     # new filter based upon C++ accelerated code
-    def filtNew(self, x, rmin, dc):
+    def filt(self, x, rmin, dc):
         rminf = math.floor(rmin)
         nely, nelx = x.shape
 
@@ -128,15 +105,8 @@ class Topopt(object):
         kernel = kernel/np.sum(kernel)  # normalisation
 
         # elementwise multiplication of x and dc
-        xdc = x*dc
-
-        # opencv border padding to get propper results in the outer edge
-        #xdc = cv.copyMakeBorder(xdc, rminf, rminf, rminf, rminf, cv.BORDER_REFLECT_101)
-
-        # execute convolution on xdc using opencv, with reflected 101 border
+        xdc = dc*x
         xdcn = cv.filter2D(xdc, -1, kernel, borderType=cv.BORDER_REFLECT)
-
-        # then dcn = xdcn/x (elementwise)
         dcn = xdcn/x
 
         return dcn
@@ -160,7 +130,7 @@ class Topopt(object):
 
             x_below = np.maximum(xmin, x - move)
             x_above = np.minimum(xmax, x + move)
-            xnew = np.maximum(x_below, np.minimum(x_above, xnew));
+            xnew = np.maximum(x_below, np.minimum(x_above, xnew))
 
             if (np.sum(xnew) - volfrac*nelx*nely) > 0:
                 l1 = lmid
@@ -174,14 +144,13 @@ class Topopt(object):
         e = young
         nu = poisson
         k = np.array([1/2-nu/6,1/8+nu/8,-1/4-nu/12,-1/8+3*nu/8,-1/4+nu/12,-1/8-nu/8,nu/6,1/8-3*nu/8])
-        ke = e/(1-nu**2)* \
-            np.array([ [k[0], k[1], k[2], k[3], k[4], k[5], k[6], k[7]],
-                       [k[1], k[0], k[7], k[6], k[5], k[4], k[3], k[2]],
-                       [k[2], k[7], k[0], k[5], k[6], k[3], k[4], k[1]],
-                       [k[3], k[6], k[5], k[0], k[7], k[2], k[1], k[4]],
-                       [k[4], k[5], k[6], k[7], k[0], k[1], k[2], k[3]],
-                       [k[5], k[4], k[3], k[2], k[1], k[0], k[7], k[6]],
-                       [k[6], k[3], k[4], k[1], k[2], k[7], k[0], k[5]],
-                       [k[7], k[2], k[1], k[4], k[3], k[6], k[5], k[0]] ]);
-
+        ke = e/(1-nu**2) * \
+            np.array([[k[0], k[1], k[2], k[3], k[4], k[5], k[6], k[7]],
+                      [k[1], k[0], k[7], k[6], k[5], k[4], k[3], k[2]],
+                      [k[2], k[7], k[0], k[5], k[6], k[3], k[4], k[1]],
+                      [k[3], k[6], k[5], k[0], k[7], k[2], k[1], k[4]],
+                      [k[4], k[5], k[6], k[7], k[0], k[1], k[2], k[3]],
+                      [k[5], k[4], k[3], k[2], k[1], k[0], k[7], k[6]],
+                      [k[6], k[3], k[4], k[1], k[2], k[7], k[0], k[5]],
+                      [k[7], k[2], k[1], k[4], k[3], k[6], k[5], k[0]]])
         return ke
