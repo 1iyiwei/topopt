@@ -7,7 +7,7 @@ topology optimization
 import numpy as np
 import cv2 as cv
 import math
-
+from numpy.lib.scimath import sqrt as sqrti
 
 class Topopt(object):
     '''
@@ -126,7 +126,7 @@ class Topopt(object):
         nely, nelx = x.shape
         while (l2-l1 > lt):
             lmid = 0.5*(l2+l1)
-            xnew = np.multiply(x, np.sqrt(-dc/lmid))
+            xnew = np.multiply(x, np.real(sqrti(-dc/lmid)))
 
             x_below = np.maximum(xmin, x - move)
             x_above = np.minimum(xmax, x + move)

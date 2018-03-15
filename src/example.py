@@ -11,14 +11,14 @@ from fesolvers import CooFESolver
 from topopt import Topopt
 
 if __name__ == "__main__":
-    # material properties
     t = time.time()
+    # material properties
     young = 1
     poisson = 0.3
 
     # constraints
     volfrac = 0.4
-    xmin = 0.001
+    xmin = 1e-9
     xmax = 1.0
 
     # input parameters
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     optimizer = Topopt(fesolver, young, poisson, verbose=verbose)
 
     # compute
-    history = False
+    history = True
     x = optimizer.init(load, density_constraint)
     x, x_more = optimizer.layout(load, density_constraint, x, penal, rmin, delta, loopy, history)
 
