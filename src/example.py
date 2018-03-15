@@ -22,8 +22,8 @@ if __name__ == "__main__":
     xmax = 1.0
 
     # input parameters
-    nelx = 180*2
-    nely = 60*2
+    nelx = 180
+    nely = 60
 
     penal = 3.0
     rmin = 5.4
