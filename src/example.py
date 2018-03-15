@@ -22,11 +22,11 @@ if __name__ == "__main__":
     xmax = 1.0
 
     # input parameters
-    nelx = 300
-    nely = 100
+    nelx = 180*2
+    nely = 60*2
 
     penal = 3.0
-    rmin = 3.0
+    rmin = 5.4
 
     delta = 0.02
     loopy = math.inf
