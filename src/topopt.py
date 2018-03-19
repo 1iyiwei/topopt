@@ -5,16 +5,15 @@ topology optimization
 '''
 
 import numpy as np
-import cv2 as cv
 import math
-from numpy.lib.scimath import sqrt as sqrti
 
 class Topopt(object):
+    
     '''
     young: young's modulus
     poisson: poisson ratio
     '''
-    def __init__(self, fesolver, young=1, poisson=0.3, verbose=False):
+    def __init__(self, fesolver, young = 1, poisson = 0.3, verbose = False):
         self.fesolver = fesolver
         self.young = young
         self.poisson = poisson
@@ -22,18 +21,18 @@ class Topopt(object):
         self.verbose = verbose
 
     # topology optimization
-    def layout(self, load, constraint, x, penal, rmin, delta, loopy, history=False):
+    def layout(self, load, constraint, x, penal, rmin, delta, loopy, history = False):
 
-        loop = 0  # number of loop iterations
-        change = 1.0  # maximum density change from prior iteration
-
+        loop = 0 # number of loop iterations
+        change = 1.0 # maximum density change from prior iteration
+        
         if history:
             x_history = [x]
 
         while (change > delta) and (loop < loopy):
             loop = loop + 1
-            x, change, c = self.iter(load, constraint, x, penal, rmin)
-            if self.verbose: print('It.: {0:4d},  Obj.: {1:8.2f},  ch.: {2:0.3f}'.format(loop, c, change), flush=True)
+            x, change = self.iter(load, constraint, x, penal, rmin)
+            if self.verbose: print('iteration ', loop, ', change ', change, flush = True)
             if history: x_history.append(x)
 
         # done
@@ -71,43 +70,40 @@ class Topopt(object):
         # how much has changed?
         change = np.amax(abs(x-xold))
 
-        return x, change, c
-
-    # updated compliance algorithm
+        return x, change
+    
+    # compliance and its derivative
     def comp(self, load, x, u, ke, penal):
+        c = 0
+        dc = np.zeros(x.shape)
+
         nely, nelx = x.shape
-        xe = x.T.flatten()  # flat list wich desities
+        for ely in range(nely):
+            for elx in range(nelx):
+                ue = u[load.edofOld(elx, ely, nelx, nely)]
+                ce = np.dot(ue.transpose(), np.dot(ke, ue))
+                c = c + (x[ely,elx]**penal)*ce
+                dc[ely,elx] = -penal*(x[ely,elx]**(penal-1))*ce
 
-        edof = load.edof(nelx, nely)[0]
-        ue = u[edof]  # list with the displacements of the nodes of that element
-
-        # calculating the compliance in 3 steps
-        dot = np.dot(ke, ue.reshape((nelx*nely, 8, 1)))
-        ce = np.sum(ue.T*dot[:, :, 0], axis=0)  # element compliance
-        c = np.sum(ce * xe.T**penal)  # total compliance
-
-        dc = -penal * (xe ** (penal-1)) * ce  # compliance derivative
-        dc = dc.reshape((nelx, nely)).T
         return c, dc
 
-    # new filter based upon C++ accelerated code
+    # filter
     def filt(self, x, rmin, dc):
         rminf = math.floor(rmin)
+
+        dcn = np.zeros(x.shape)
         nely, nelx = x.shape
 
-        # define normalized convolution kernel based upon rmin
-        size = rminf*2+1
-        kernel = np.zeros((size, size))
-        for i in range(size):
-            for j in range(size):
-                dis = np.sqrt((rminf-i)**2 + (rminf-j)**2)
-                kernel[i, j] = np.max((0, rmin - dis))
-        kernel = kernel/np.sum(kernel)  # normalisation
-
-        # elementwise multiplication of x and dc
-        xdc = dc*x
-        xdcn = cv.filter2D(xdc, -1, kernel, borderType=cv.BORDER_REFLECT)
-        dcn = xdcn/x
+        for i in range(nelx):
+            for j in range(nely):
+                sum = 0.0
+                for k in range(max(i-rminf, 0), min(i+rminf+1, nelx)):
+                    for l in range(max(j-rminf, 0), min(j+rminf+1, nely)):
+                        weight = max(0, rmin - math.sqrt((i-k)**2+(j-l)**2));
+                        sum = sum + weight;
+                        dcn[j,i] = dcn[j,i] + weight*x[l,k]*dc[l,k];
+            
+                dcn[j,i] = dcn[j,i]/(x[j,i]*sum);
 
         return dcn
 
@@ -126,11 +122,11 @@ class Topopt(object):
         nely, nelx = x.shape
         while (l2-l1 > lt):
             lmid = 0.5*(l2+l1)
-            xnew = np.multiply(x, np.real(sqrti(-dc/lmid)))
+            xnew = np.multiply(x, np.sqrt(-dc/lmid))
 
             x_below = np.maximum(xmin, x - move)
             x_above = np.minimum(xmax, x + move)
-            xnew = np.maximum(x_below, np.minimum(x_above, xnew))
+            xnew = np.maximum(x_below, np.minimum(x_above, xnew));
 
             if (np.sum(xnew) - volfrac*nelx*nely) > 0:
                 l1 = lmid
@@ -144,13 +140,14 @@ class Topopt(object):
         e = young
         nu = poisson
         k = np.array([1/2-nu/6,1/8+nu/8,-1/4-nu/12,-1/8+3*nu/8,-1/4+nu/12,-1/8-nu/8,nu/6,1/8-3*nu/8])
-        ke = e/(1-nu**2) * \
-            np.array([[k[0], k[1], k[2], k[3], k[4], k[5], k[6], k[7]],
-                      [k[1], k[0], k[7], k[6], k[5], k[4], k[3], k[2]],
-                      [k[2], k[7], k[0], k[5], k[6], k[3], k[4], k[1]],
-                      [k[3], k[6], k[5], k[0], k[7], k[2], k[1], k[4]],
-                      [k[4], k[5], k[6], k[7], k[0], k[1], k[2], k[3]],
-                      [k[5], k[4], k[3], k[2], k[1], k[0], k[7], k[6]],
-                      [k[6], k[3], k[4], k[1], k[2], k[7], k[0], k[5]],
-                      [k[7], k[2], k[1], k[4], k[3], k[6], k[5], k[0]]])
+        ke = e/(1-nu**2)* \
+            np.array([ [k[0], k[1], k[2], k[3], k[4], k[5], k[6], k[7]],
+                       [k[1], k[0], k[7], k[6], k[5], k[4], k[3], k[2]],
+                       [k[2], k[7], k[0], k[5], k[6], k[3], k[4], k[1]],
+                       [k[3], k[6], k[5], k[0], k[7], k[2], k[1], k[4]],
+                       [k[4], k[5], k[6], k[7], k[0], k[1], k[2], k[3]],
+                       [k[5], k[4], k[3], k[2], k[1], k[0], k[7], k[6]],
+                       [k[6], k[3], k[4], k[1], k[2], k[7], k[0], k[5]],
+                       [k[7], k[2], k[1], k[4], k[3], k[6], k[5], k[0]] ]);
+
         return ke
