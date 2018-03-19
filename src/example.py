@@ -1,24 +1,24 @@
 '''
 tester for topology optimization code
 '''
-
-import numpy as np
+import time
 import math
 import matplotlib.pyplot as plt
 
 from loads import HalfBeam
 from constraints import DensityConstraint
-from fesolvers import LilFESolver, CooFESolver
+from fesolvers import CooFESolver
 from topopt import Topopt
 
 if __name__ == "__main__":
+    t = time.time()
     # material properties
     young = 1
     poisson = 0.3
 
     # constraints
     volfrac = 0.4
-    xmin = 0.001
+    xmin = 1e-9
     xmax = 1.0
 
     # input parameters
@@ -35,22 +35,24 @@ if __name__ == "__main__":
     load = HalfBeam(nelx, nely)
 
     # constraints
-    density_constraint = DensityConstraint(volume_frac = volfrac, density_min = xmin, density_max = xmax)
+    density_constraint = DensityConstraint(volume_frac=volfrac, density_min=xmin, density_max=xmax)
 
     # optimizer
     verbose = True
-    fesolver = CooFESolver(verbose = verbose)
-    optimizer = Topopt(fesolver, young, poisson, verbose = verbose)
+    fesolver = CooFESolver(verbose=verbose)
+    optimizer = Topopt(fesolver, young, poisson, verbose=verbose)
 
     # compute
-    history = False
+    history = True
     x = optimizer.init(load, density_constraint)
     x, x_more = optimizer.layout(load, density_constraint, x, penal, rmin, delta, loopy, history)
+
+    print('Elapsed time is: ', time.time() - t, 'seconds.')
 
     if history:
         x_history = x_more
         loop = len(x_history)
-    else:    
+    else:
         loop = x_more
         x_history = None
 

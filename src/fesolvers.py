@@ -7,8 +7,9 @@ import numpy as np
 from scipy.sparse import coo_matrix, lil_matrix, csc_matrix, csr_matrix
 from scipy.sparse.linalg import spsolve
 
+
 class FESolver(object):
-    def __init__(self, verbose = False):
+    def __init__(self, verbose=False):
         self.verbose = verbose
 
     # finite element computation for displacement
@@ -22,9 +23,9 @@ class FESolver(object):
 
         k_freedofs = self.gk_freedofs(load, x, ke, penal)
 
-        u = np.zeros(load.dim*(nely+1)*(nelx+1));
+        u = np.zeros(load.dim*(nely+1)*(nelx+1))
 
-        u[freedofs] = spsolve(k_freedofs, f[freedofs])  
+        u[freedofs] = spsolve(k_freedofs, f[freedofs])
 
         u[fixdofs] = 0.0
 
@@ -34,10 +35,10 @@ class FESolver(object):
     def gk_freedofs(self, load, x, ke, penal):
         raise NotImplementedError
 
+
 # Using lil_matrix is quite slow
 class LilFESolver(FESolver):
-    
-    def __init__(self, verbose = False):
+    def __init__(self, verbose=False):
         super().__init__(verbose)
 
     def gk_freedofs(self, load, x, ke, penal):
@@ -49,7 +50,7 @@ class LilFESolver(FESolver):
         for elx in range(nelx):
             for ely in range(nely):
                 sel = load.edof(elx, ely, nelx, nely)
-                k[np.ix_(sel, sel)] += ke*(x[ely, elx]**penal);
+                k[np.ix_(sel, sel)] += ke*(x[ely, elx]**penal)
 
         freedofs = np.array(load.freedofs())
 
@@ -57,10 +58,10 @@ class LilFESolver(FESolver):
 
         return k_freedofs
 
+
 # coo_matrix should be faster
 class CooFESolver(FESolver):
-
-    def __init__(self, verbose = False):
+    def __init__(self, verbose=False):
         super().__init__(verbose)
 
     def gk_freedofs(self, load, x, ke, penal):
