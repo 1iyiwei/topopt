@@ -5,7 +5,7 @@ import time
 import math
 import matplotlib.pyplot as plt
 
-from loads import HalfBeam
+from loads import HalfBeam, Canti, Michell
 from constraints import DensityConstraint
 from fesolvers import CooFESolver
 from topopt import Topopt
@@ -18,21 +18,21 @@ if __name__ == "__main__":
 
     # constraints
     volfrac = 0.4
-    xmin = 1e-9
+    xmin = 0.001
     xmax = 1.0
 
     # input parameters
-    nelx = 180
+    nelx = 60
     nely = 60
 
     penal = 3.0
-    rmin = 5.4
+    rmin = 2.0
 
     delta = 0.02
     loopy = math.inf
 
     # loading/problem
-    load = HalfBeam(nelx, nely)
+    load = Canti(nelx, nely)
 
     # constraints
     density_constraint = DensityConstraint(volume_frac=volfrac, density_min=xmin, density_max=xmax)
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     optimizer = Topopt(fesolver, young, poisson, verbose=verbose)
 
     # compute
-    history = True
+    history = False
     x = optimizer.init(load, density_constraint)
     x, x_more = optimizer.layout(load, density_constraint, x, penal, rmin, delta, loopy, history)
 
@@ -58,14 +58,12 @@ if __name__ == "__main__":
 
     # save
     if x_history:
-        # import scipy.misc
-        # sequence = [scipy.misc.toimage(x, cmin=0, cmax=1) for x in x_history]
         import imageio
         imageio.mimsave('topopt.gif', x_history)
 
     # plot
     plt.figure()
-    plt.imshow(x, cmap=plt.cm.gray)
+    plt.imshow(1-x, cmap=plt.cm.gray)
     plt.title(str(loop) + ' loops')
     plt.xticks([])
     plt.yticks([])

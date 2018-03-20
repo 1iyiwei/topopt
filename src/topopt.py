@@ -58,6 +58,7 @@ class Topopt(object):
 
         # displacement via finite element analysis
         u = self.fesolver.displace(load, x, ke, penal)
+        
 
         # compliance and derivative
         c, dc = self.comp(load, x, u, ke, penal)
@@ -126,7 +127,7 @@ class Topopt(object):
         nely, nelx = x.shape
         while (l2-l1 > lt):
             lmid = 0.5*(l2+l1)
-            xnew = np.multiply(x, np.real(sqrti(-dc/lmid)))
+            xnew = np.multiply(x, np.sqrt((-dc/lmid)))
 
             x_below = np.maximum(xmin, x - move)
             x_above = np.minimum(xmax, x + move)

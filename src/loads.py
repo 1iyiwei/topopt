@@ -45,11 +45,11 @@ class Load(object):
                        |                                       |
                        |                                       |
                        |                                       |
+                       |             elx, ely                  |
                        |                                       |
                        |                                       |
                        |                                       |
-                       |                                       |
-        -- 2*el+2*elx+1 , 2*el+2*elx+2 ---- 2*el+2*elx+2*nely+4 , 2*el+2*elx+2*nely+5 --
+        -- 2*el+2*elx+2 , 2*el+2*elx+3 ---- 2*el+2*elx+2*nely+4 , 2*el+2*elx+2*nely+5 --
                        |                                       |
         """
         # Creating list with element numbers
@@ -78,7 +78,7 @@ class Load(object):
         return self.alldofs()
 
 
-# example loading scenario, half mbb-beam
+# example loading scenario, half mbb-beam (symetry around y axis)
 class HalfBeam(Load):
     def __init__(self, nelx, nely):
         super().__init__(nelx, nely)
@@ -90,8 +90,54 @@ class HalfBeam(Load):
         return f
 
     def fixdofs(self):
-        # left side fixed to a wall, lower right corner fixed to a point
-        return ([x for x in range(0, self.dim*(self.nely+1), self.dim)] + [self.dim*(self.nelx+1)*(self.nely+1)-1])
+        # left side fixed to a wall (x direction only), lower right corner fixed to a point
+        n1, n2, n3, n4 = self.nodes(self.nelx-1, self.nely-1, self.nelx, self.nely)
+        return ([x for x in range(0, self.dim*(self.nely+1), self.dim)] + [self.dim*n3+1])
+
+    def freedofs(self):
+        return list(set(self.alldofs()) - set(self.fixdofs()))
+
+
+# cantilever beam load in the middle of the end
+class Canti(Load):
+    def __init__(self, nelx, nely):
+        super().__init__(nelx, nely)
+        if nely % 2 != 0:
+            raise ValueError('nely needs to be even in a cantilever beam')
+            
+    def force(self):
+        f = super().force()
+        # downward force at the right side of the cantilever
+        n1, n2, n3, n4 = self.nodes(self.nelx-1, int(self.nely/2), self.nelx, self.nely)
+        f[self.dim*n2+1] = -1
+        return f
+
+    def fixdofs(self):
+        # left side fixed to a wall (x, and y directions)
+        return ([x for x in range(0, self.dim*(self.nely+1))])
+
+    def freedofs(self):
+        return list(set(self.alldofs()) - set(self.fixdofs()))
+
+
+# the Michell structures wich analytical salutions (symetry arround y axsi)
+class Michell(Load):
+    def __init__(self, nelx, nely):
+        super().__init__(nelx, nely)
+        if nely % 2 != 0:
+            raise ValueError('nely needs to be even in a cantilever beam')
+
+    def force(self):
+        f = super().force()
+        # downward force at the right side of the cantilever
+        n1, n2, n3, n4 = self.nodes(0, int(self.nely/2), self.nelx, self.nely)
+        f[self.dim*n2+1] = -1
+        return f
+
+    def fixdofs(self):
+        # at the symety axis x direction is fixed, and point fix at middle end
+        n1, n2, n3, n4 = self.nodes(self.nelx-1, int(self.nely/2), self.nelx, self.nely)
+        return ([self.dim*n2+1]+[x for x in range(0, self.dim*(self.nely+1), self.dim)])
 
     def freedofs(self):
         return list(set(self.alldofs()) - set(self.fixdofs()))
