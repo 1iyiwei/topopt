@@ -20,7 +20,7 @@ To allow the load vector and fixdofs to change with your mesh size it is importa
 
 Sometimes a wole side is fixed (due to a wall or symetry) than using the `range(start, stop, step)` can be usefull. Take for exapmle the HalfBeam again. At the left side all movement in x direction is constrained due to symetry. As it is known that ranging numbers from 0 (the top left node its x orientation) to the botom of the last element (`self.dim*(self.nely+1)`) with steps of `self.dim` (2 in the 2D case) contains all the locations in the displacement vector that need to be fixed. Thus the code `[x for x in range(0, self.dim*(self.nely+1), self.dim)]` retuns a list with all these locations. 
 
-**FIGURE OF HalfBeam LOADCASE**
+![HalfBeamFBD](topopt/img/FBDExample.png)
 
 ## To be implemented ##
 
