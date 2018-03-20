@@ -9,6 +9,7 @@ from loads import HalfBeam, Canti, Michell
 from constraints import DensityConstraint
 from fesolvers import CooFESolver
 from topopt import Topopt
+from plotting import Plot
 
 if __name__ == "__main__":
     t = time.time()
@@ -22,17 +23,17 @@ if __name__ == "__main__":
     xmax = 1.0
 
     # input parameters
-    nelx = 60
+    nelx = 180
     nely = 60
 
     penal = 3.0
-    rmin = 2.0
+    rmin = 5.4
 
     delta = 0.02
     loopy = math.inf
 
     # loading/problem
-    load = Canti(nelx, nely)
+    load = HalfBeam(nelx, nely)
 
     # constraints
     density_constraint = DensityConstraint(volume_frac=volfrac, density_min=xmin, density_max=xmax)
@@ -62,9 +63,7 @@ if __name__ == "__main__":
         imageio.mimsave('topopt.gif', x_history)
 
     # plot
-    plt.figure()
-    plt.imshow(1-x, cmap=plt.cm.gray)
-    plt.title(str(loop) + ' loops')
-    plt.xticks([])
-    plt.yticks([])
-    plt.show()
+    pl = Plot(x, load, nelx, nely)
+    pl.figure(title='loop '+str(loop))
+    pl.boundary()
+    pl.loading()
