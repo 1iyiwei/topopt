@@ -23,7 +23,9 @@ Sometimes a wole side is fixed (due to a wall or symetry) than using the `range(
 ![HalfBeamFBD](img/FBDExample.png)
 
 ## To be implemented ##
-
+Currently two changes are proposed before the final release of the 2D software.
+ 1. Adding inactive elements, those that have a fixed density value.
+ 2. Adding a fast multigrid solver
 
 ## Special Thanks To ##
  1. Ole Sigmund and Martin Bends&#248;e from the Technical University of Denmark for there contributions to the field of topology optimization
