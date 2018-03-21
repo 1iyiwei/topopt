@@ -25,7 +25,7 @@ class FESolver(object):
 
         u = np.zeros(load.dim*(nely+1)*(nelx+1))
 
-        u[freedofs] = spsolve(k_freedofs, f[freedofs], permc_spec='COLAMD')
+        u[freedofs] = spsolve(k_freedofs, f[freedofs]) #  use_umfpack=False
         u[fixdofs] = 0.0
         return u
 
