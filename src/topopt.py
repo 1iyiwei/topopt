@@ -5,9 +5,9 @@ topology optimization
 '''
 
 import numpy as np
-import cv2 as cv
 import math
-from numpy.lib.scimath import sqrt as sqrti
+from scipy.ndimage import convolve
+
 
 class Topopt(object):
     '''
@@ -107,7 +107,7 @@ class Topopt(object):
 
         # elementwise multiplication of x and dc
         xdc = dc*x
-        xdcn = cv.filter2D(xdc, -1, kernel, borderType=cv.BORDER_REFLECT)
+        xdcn = convolve(xdc, kernel, mode='reflect')
         dcn = xdcn/x
 
         return dcn
