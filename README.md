@@ -6,7 +6,7 @@ This is an implementation of the [classic topology optimization code](http://www
 Start with [example.py](src/example.py).
 
 ## Prerequisites ##
-Python 3 with NumPy, SciPy, matplotlib, OpenCV and prefereble scikit-umfpack with eider Intel mkl or OpenBlas support. Installing OpenCV can be dificult, see the official [instalation manual](http://opencv-python-tutroals.readthedocs.io/en/latest/py_tutorials/py_setup/py_setup_in_windows/py_setup_in_windows.html) for more inforamation. The anaconda enviroment imported from Anaconda.yaml file upcomming.
+Python 3 with NumPy, SciPy, matplotlib. On Linux speed can be gained by installing scikit-umfpack with eider Intel mkl or OpenBlas support. To simplify the setup Anaconda enviroments (including Spyder) are avalible both for [Window](topopt/anaconda/TopOpt_Windows.yml) and [Linux](topopt/anaconda/TopOpt_Linux.yml). Some Windows enviroments could show an error at the `spsolve()` command in the FEM module, this error is related to umfpack, disabeling umfpack with `use_umfpack=False` as a keyword argument.
 
 ## Generating a new load class ##
 The folowing section will explain how to set up a simulation for a new geometry. One is expected to have some knowlege of FEM and topology optimization. No explanation on the simplation settings, such as the resolution, filter size or volume constrain will follow. For information on those topics I recomend reading "Topology Optimization" from M.P. Bends&#248;e and O. Sigmund.
@@ -14,7 +14,7 @@ The folowing section will explain how to set up a simulation for a new geometry.
 Making a new load class is fairly simple, make the following steps:
  1. Open the [loads.py](topopt/src/loads.py) file
  2. Copy the [HalfBeam class](https://github.com/AJJLagerweij/topopt/blob/1ef7adf60cc21a4467f51391ff65db5c5831ac3a/src/loads.py#L82-L97) to the botom of the file and change the name of the class.
- 3. Change the boundery conditions e.g. the load vector and fix certern degrees of freedom (fixdofs). The folowing seciton wil show how to do it for an example problem.
+ 3. Change the boundery conditions e.g. the load vector and fix certern degrees of freedom (fixdofs). The folowing section wil show how to do it for an example problem.
 
 To allow the load vector and fixdofs to change with your mesh size it is important to formulate it as equations of the amount of elements in x and y direction. The nodes are numbered from the top left corner and go down to the botom before starting on the next column of nodes. Funciton [nodes](https://github.com/AJJLagerweij/topopt/blob/1ef7adf60cc21a4467f51391ff65db5c5831ac3a/src/loads.py#L27) can helps with finding the nodal coodinates of point as a function of the number of elements in x and y direction. Take the HalfBeam example which among others is fixed in the y direction at the botom end of the beam. Then using `n1, n2, n3, n4 = self.nodes(self.nelx-1, self.nely-1, self.nelx, self.nely)` returns the nodal coordinates of the element at position nelx-1, nely-1. (the -1 is used as python starts counting from 0) The position of `n1` is in the top left the others are defined in clockwise order. Thus the botom right node, which is the one we need, is `n3`. To convert the nodal position to the position of the x orientation of the node in the displacement or load vector simply multiply by the dimensions used (`self.dim`). For the location of the y orientation simply add `+1` to the x location.
 
