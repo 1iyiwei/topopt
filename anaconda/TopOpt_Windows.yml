@@ -1,4 +1,4 @@
-name: TopOpt
+name: TopOpt_Windows
 channels:
 - defaults
 - conda-forge
