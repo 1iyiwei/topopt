@@ -1,4 +1,4 @@
-name: TopOptLinux_x64
+name: TopOpt_Linux
 channels:
 - conda-forge
 - defaults
