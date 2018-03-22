@@ -126,6 +126,12 @@ class Canti(Load):
     def freedofs(self):
         return list(set(self.alldofs()) - set(self.fixdofs()))
 
+    def passive(self):
+        xlist = []
+        ylist = []
+        values = []
+        return xlist, ylist, values
+
 
 # the Michell structures wich analytical salutions (symetry arround y axsi)
 class Michell(Load):
@@ -148,3 +154,9 @@ class Michell(Load):
 
     def freedofs(self):
         return list(set(self.alldofs()) - set(self.fixdofs()))
+
+    def passive(self):
+        xlist = []
+        ylist = []
+        values = []
+        return xlist, ylist, values
