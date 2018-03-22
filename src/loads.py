@@ -97,6 +97,13 @@ class HalfBeam(Load):
     def freedofs(self):
         return list(set(self.alldofs()) - set(self.fixdofs()))
 
+    def passive(self):
+        xlist = []  # np.arange(0, self.nelx/2, dtype=int)
+        ylist = []  # np.ones(np.shape(xlist), dtype=int)*int(self.nely/2)
+        values = []  # np.ones(np.shape(xlist))*0.001
+        return xlist, ylist, values
+
+
 
 # cantilever beam load in the middle of the end
 class Canti(Load):

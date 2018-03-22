@@ -29,7 +29,7 @@ if __name__ == "__main__":
     rmin = 5.4
 
     delta = 0.02
-    loopy = math.inf
+    loopy = 38  # math.inf
 
     # loading/problem
     load = HalfBeam(nelx, nely)
@@ -66,3 +66,4 @@ if __name__ == "__main__":
     pl.figure(title='loop '+str(loop))
     pl.boundary()
     pl.loading()
+    pl.show()

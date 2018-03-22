@@ -28,7 +28,7 @@ class FESolver(object):
         u = np.zeros(load.dim*(nely+1)*(nelx+1))
 
         # setting up a fast cholesky decompositon solver
-        cvxopt.cholmod.linsolve(k_free, B_free,)
+        cvxopt.cholmod.linsolve(k_free, B_free)
         u[freedofs] = np.array(B_free)[:, 0]
         return u
 

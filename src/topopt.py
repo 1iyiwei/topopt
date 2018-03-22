@@ -45,8 +45,11 @@ class Topopt(object):
     # initialization
     def init(self, load, constraint):
         (nelx, nely) = load.shape()
-        # mean density
-        return np.ones((nely, nelx))*constraint.volume_frac()
+        xlist, ylist, values = load.passive()
+        
+        x = np.ones((nely, nelx))*constraint.volume_frac()
+        x[ylist, xlist] = values
+        return x
 
     # iteration
     def iter(self, load, constraint, x, penal, rmin):
@@ -66,7 +69,7 @@ class Topopt(object):
         dc = self.filt(x, rmin, dc)
 
         # update
-        x = self.update(constraint, x, dc)
+        x = self.update(constraint, x, dc, load)
 
         # how much has changed?
         change = np.amax(abs(x-xold))
@@ -112,10 +115,11 @@ class Topopt(object):
         return dcn
 
     # optimality criteria update
-    def update(self, constraint, x, dc):
+    def update(self, constraint, x, dc, load):
         volfrac = constraint.volume_frac()
         xmin = constraint.density_min()
         xmax = constraint.density_max()
+        xlist, ylist, values = load.passive()
 
         # ugly hardwired constants to fix later
         move = 0.2 * xmax
@@ -131,6 +135,7 @@ class Topopt(object):
             x_below = np.maximum(xmin, x - move)
             x_above = np.minimum(xmax, x + move)
             xnew = np.maximum(x_below, np.minimum(x_above, xnew))
+            xnew[ylist, xlist] = values
 
             if (np.sum(xnew) - volfrac*nelx*nely) > 0:
                 l1 = lmid

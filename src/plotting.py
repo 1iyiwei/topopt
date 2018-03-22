@@ -63,3 +63,6 @@ class Plot(object):
 
                 plt.annotate('', xy=(nodex, nodey), xytext=(0, -60*force),
                              textcoords='offset points', arrowprops=arrowprops)
+
+    def show(self, block=True):
+        plt.show(block=block)
