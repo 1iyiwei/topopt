@@ -1,11 +1,8 @@
 '''
 finite element solvers for the displacement from stiffness matrix and force
 '''
-
 import numpy as np
-# https://docs.scipy.org/doc/scipy-0.18.1/reference/sparse.html
 from scipy.sparse import coo_matrix
-from scipy.sparse.linalg import spsolve
 import cvxopt
 import cvxopt.cholmod
 
