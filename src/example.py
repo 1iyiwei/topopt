@@ -3,7 +3,6 @@ tester for topology optimization code
 '''
 import time
 import math
-import matplotlib.pyplot as plt
 
 from loads import HalfBeam, Canti, Michell
 from constraints import DensityConstraint

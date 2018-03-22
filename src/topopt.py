@@ -59,7 +59,6 @@ class Topopt(object):
         # displacement via finite element analysis
         u = self.fesolver.displace(load, x, ke, penal)
         
-
         # compliance and derivative
         c, dc = self.comp(load, x, u, ke, penal)
 
