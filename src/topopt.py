@@ -124,8 +124,8 @@ class Topopt(object):
         # ugly hardwired constants to fix later
         move = 0.2 * xmax
         l1 = 0
-        l2 = 100000
-        lt = 1e-4
+        l2 = 1000000
+        lt = 1e-5
 
         nely, nelx = x.shape
         while (l2-l1 > lt):

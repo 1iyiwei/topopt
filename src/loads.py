@@ -36,21 +36,6 @@ class Load(object):
         """
         Generates an array with the position of the nodes of each element in
         the global stiffness matrix
-
-        The following nodal defenitions are used:
-        _________________
-        >>>
-                       |                                       |
-        --   2*el+2*elx , 2*el+2*elx+1 ---- 2*el+2*elx+2*nely+2 , 2*el+2*elx+2*nely+3 --
-                       |                                       |
-                       |                                       |
-                       |                                       |
-                       |             elx, ely                  |
-                       |                                       |
-                       |                                       |
-                       |                                       |
-        -- 2*el+2*elx+2 , 2*el+2*elx+3 ---- 2*el+2*elx+2*nely+4 , 2*el+2*elx+2*nely+5 --
-                       |                                       |
         """
         # Creating list with element numbers
         elx = np.repeat(range(nelx), nely).reshape((nelx*nely, 1))  # x position of element
@@ -98,11 +83,10 @@ class HalfBeam(Load):
         return list(set(self.alldofs()) - set(self.fixdofs()))
 
     def passive(self):
-        xlist = []  # np.arange(0, self.nelx/2, dtype=int)
-        ylist = []  # np.ones(np.shape(xlist), dtype=int)*int(self.nely/2)
+        elx = []  # np.arange(0, self.nelx/2, dtype=int)
+        ely = []  # np.ones(np.shape(xlist), dtype=int)*int(self.nely/2)
         values = []  # np.ones(np.shape(xlist))*0.001
-        return xlist, ylist, values
-
+        return elx, ely, values
 
 
 # cantilever beam load in the middle of the end
@@ -111,7 +95,7 @@ class Canti(Load):
         super().__init__(nelx, nely)
         if nely % 2 != 0:
             raise ValueError('nely needs to be even in a cantilever beam')
-            
+
     def force(self):
         f = super().force()
         # downward force at the right side of the cantilever
@@ -127,10 +111,10 @@ class Canti(Load):
         return list(set(self.alldofs()) - set(self.fixdofs()))
 
     def passive(self):
-        xlist = []
-        ylist = []
+        elx = []
+        ely = []
         values = []
-        return xlist, ylist, values
+        return elx, ely, values
 
 
 # the Michell structures wich analytical salutions (symetry arround y axsi)
@@ -156,7 +140,7 @@ class Michell(Load):
         return list(set(self.alldofs()) - set(self.fixdofs()))
 
     def passive(self):
-        xlist = []
-        ylist = []
+        elx = []
+        ely = []
         values = []
-        return xlist, ylist, values
+        return elx, ely, values

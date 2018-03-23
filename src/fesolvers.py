@@ -45,6 +45,7 @@ class CooFESolver(FESolver):
 
         edof, x_list, y_list = load.edof(nelx, nely)
 
+        #  change defenition to Ee(xe) = Emin + x^p (E0-Emin)
         kd = x.T.reshape(nelx*nely, 1, 1) ** penal
         value_list = (np.tile(ke, (nelx*nely, 1, 1))*kd).flatten()
 
