@@ -6,7 +6,7 @@ This is an implementation of the [classic topology optimization code](http://www
 Start with [example.py](src/example.py).
 
 ## Prerequisites ##
-Python 3 with NumPy, SciPy, matplotlib as the core. The imageio packege is required only when .gif figures are created. On Linux speed can be gained by installing scikit-umfpack with eider Intel mkl or OpenBlas support. To simplify the setup Anaconda enviroments (including Spyder) are avalible both for [Window](topopt/anaconda/TopOpt_Windows.yml) and [Linux](topopt/anaconda/TopOpt_Linux.yml). Some Windows enviroments could show an error at the `spsolve()` command in the FEM module, this error is related to umfpack, disabeling umfpack with `use_umfpack=False` as a keyword argument.
+Python 3 with NumPy, SciPy, matplotlib and cvxopt as the core. The imageio packege is required only when .gif figures are created. On Linux speed can be gained by installing scikit-umfpack with eider Intel mkl or OpenBlas support. To simplify the setup Anaconda enviroments (including Spyder) are avalible both for [Window](topopt/anaconda/TopOpt_Windows.yml) and [Linux](topopt/anaconda/TopOpt_Linux.yml). Some Windows enviroments could show an error at the `spsolve()` command in the FEM module, this error is related to umfpack, disabeling umfpack with `use_umfpack=False` as a keyword argument.
 
 ## Generating a new load class ##
 The folowing section will explain how to set up a simulation for a new geometry. One is expected to have some knowlege of FEM and topology optimization. No explanation on the simplation settings, such as the resolution, filter size or volume constrain will follow. For information on those topics I recomend reading "Topology Optimization" from M.P. Bends&#248;e and O. Sigmund.
@@ -27,7 +27,7 @@ The [passive](https://github.com/AJJLagerweij/topopt/blob/3a2151347c338621895703
 
 ## To be implemented ##
 Currently two changes are proposed before the final release of the 2D software.
- 1. Adding a fast multigrid cholesky decomposition solver
+ 1. Adding a faster algebraic multigrid preconditioner with Conjugate Gradient itterative solver
  2. Adding a MMA algorithm for better convergence
 
 ## Special Thanks To ##
