@@ -54,3 +54,4 @@ class CooFESolver(FESolver):
         k = coo_matrix((value_list, (y_list, x_list)), shape=(dof, dof)).tocsc()
         k_free = k[freedofs, :][:, freedofs].tocoo()
         return k_free
+

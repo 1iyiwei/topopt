@@ -17,22 +17,22 @@ if __name__ == "__main__":
     poisson = 0.3
 
     # constraints
-    volfrac = 0.3
+    volfrac = 0.4
     xmin = 1e-9
     xmax = 1.0
 
     # input parameters
-    nelx = 60*7
-    nely = 110*7
+    nelx = 180
+    nely = 60
 
-    penal = 3
-    rmin = 2.5
+    penal = 3.
+    rmin = 5.4
 
     delta = 0.02
-    loopy = 300  # math.inf
+    loopy = math.inf
 
     # loading/problem
-    load = Michell(nelx, nely)
+    load = HalfBeam(nelx, nely)
 
     # constraints
     density_constraint = DensityConstraint(volume_frac=volfrac, density_min=xmin, density_max=xmax)
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     optimizer = Topopt(fesolver, young, poisson, verbose=verbose)
 
     # compute
-    history = True
+    history = False
     x = optimizer.init(load, density_constraint)
     x, x_more = optimizer.layout(load, density_constraint, x, penal, rmin, delta, loopy, history)
 

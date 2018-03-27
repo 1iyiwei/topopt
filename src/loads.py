@@ -122,7 +122,7 @@ class Michell(Load):
     def __init__(self, nelx, nely):
         super().__init__(nelx, nely)
         if nely % 2 != 0:
-            raise ValueError('nely needs to be even in a cantilever beam')
+            raise ValueError('nely needs to be even in a michell strucure')
 
     def force(self):
         f = super().force()
@@ -144,3 +144,4 @@ class Michell(Load):
         ely = []
         values = []
         return elx, ely, values
+
