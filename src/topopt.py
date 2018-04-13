@@ -57,10 +57,12 @@ class Topopt(object):
         xold = x.copy()
 
         # element stiffness matrix
+        Emin = constraint.Emin
         ke = self.lk(self.young, self.poisson)
+        kmin = self.lk(Emin, self.poisson)
 
         # displacement via finite element analysis
-        u = self.fesolver.displace(load, x, ke, penal)
+        u = self.fesolver.displace(load, x, ke, kmin, penal)
         
         # compliance and derivative
         c, dc = self.comp(load, x, u, ke, penal)
@@ -91,6 +93,7 @@ class Topopt(object):
 
         dc = -penal * (xe ** (penal-1)) * ce  # compliance derivative
         dc = dc.reshape((nelx, nely)).T
+       
         return c, dc
 
     # new filter based upon C++ accelerated code
@@ -110,7 +113,7 @@ class Topopt(object):
         # elementwise multiplication of x and dc
         xdc = dc*x
         xdcn = convolve(xdc, kernel, mode='reflect')
-        dcn = xdcn/x
+        dcn = np.divide(xdcn, x, out=np.zeros_like(xdcn), where=x!=0)  # fix devision by 0
 
         return dcn
 
@@ -130,10 +133,10 @@ class Topopt(object):
         nely, nelx = x.shape
         while (l2-l1 > lt):
             lmid = 0.5*(l2+l1)
-            xnew = np.multiply(x, np.sqrt((-dc/lmid)))
-
+            xnew = np.multiply(x, np.sqrt(-dc/lmid))
             x_below = np.maximum(xmin, x - move)
             x_above = np.minimum(xmax, x + move)
+
             xnew = np.maximum(x_below, np.minimum(x_above, xnew))
             xnew[ylist, xlist] = values
 
@@ -159,3 +162,4 @@ class Topopt(object):
                       [k[6], k[3], k[4], k[1], k[2], k[7], k[0], k[5]],
                       [k[7], k[2], k[1], k[4], k[3], k[6], k[5], k[0]]])
         return ke
+

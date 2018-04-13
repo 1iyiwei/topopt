@@ -21,7 +21,8 @@ class Plot(object):
         plt.yticks([])
 
     def boundary(self):
-        wedgeprops = dict(arrowstyle="wedge, tail_width=1.", color='r')
+        wedgepropsH = dict(arrowstyle="wedge, tail_width=1.", color='g')
+        wedgepropsV = dict(arrowstyle="wedge, tail_width=1.", color='b')
 
         for i in self.fixdofs:
             if i % self.dim == 0:
@@ -30,7 +31,7 @@ class Plot(object):
                 nodey = node % (self.nely + 1)-0.5
 
                 plt.annotate('', xy=(nodex, nodey), xytext=(-15, 0),
-                             textcoords='offset points', arrowprops=wedgeprops)
+                             textcoords='offset points', arrowprops=wedgepropsH)
 
             if i % self.dim == 1:
                 node = int((i)/self.dim)
@@ -38,7 +39,7 @@ class Plot(object):
                 nodey = node % (self.nely + 1)-0.5
 
                 plt.annotate('', xy=(nodex, nodey), xytext=(0, -15),
-                             textcoords='offset points', arrowprops=wedgeprops)
+                             textcoords='offset points', arrowprops=wedgepropsV)
 
     def loading(self):
         arrowprops = dict(arrowstyle="simple",fc="g", ec="g", mutation_scale=20)

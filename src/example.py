@@ -4,7 +4,7 @@ tester for topology optimization code
 import time
 import math
 
-from loads import HalfBeam, Canti, Michell
+from loads import HalfBeam, Canti, Michell, BiAxial
 from constraints import DensityConstraint
 from fesolvers import CooFESolver
 from topopt import Topopt
@@ -17,25 +17,24 @@ if __name__ == "__main__":
     poisson = 0.3
 
     # constraints
-    volfrac = 0.4
-    xmin = 1e-9
-    xmax = 1.0
+    volfrac = 0.3
+    Emin = 1e-9
 
     # input parameters
     nelx = 180
     nely = 60
 
-    penal = 3.
-    rmin = 5.4
+    penal = 3.0
+    rmin = 1.1
 
-    delta = 0.02
+    delta = 0.002
     loopy = math.inf
 
     # loading/problem
     load = HalfBeam(nelx, nely)
 
     # constraints
-    density_constraint = DensityConstraint(volume_frac=volfrac, density_min=xmin, density_max=xmax)
+    density_constraint = DensityConstraint(volume_frac=volfrac, Emin=Emin)
 
     # optimizer
     verbose = True

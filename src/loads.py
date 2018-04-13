@@ -145,3 +145,33 @@ class Michell(Load):
         values = []
         return elx, ely, values
 
+# the biaxcal tension example
+class BiAxial(Load):
+    def __init__(self, nelx, nely):
+        super().__init__(nelx, nely)
+
+    def force(self):
+        f = super().force()
+        # uprard force at the top side
+        loc_up = np.arange(self.dim*(self.nely+1)+1, self.dim*(self.nelx)*(self.nely+1), self.dim*(self.nely+1))
+        f[loc_up] = 1
+        # right force at the right hand side
+        loc_right = np.arange(self.dim*(self.nely+1)*self.nelx+2, self.dim*(self.nely+1)*(self.nelx+1)-2, self.dim)
+        f[loc_right] = 1
+        # bottom force down
+        loc_down = np.arange(2*self.dim*(self.nely+1)-1, self.dim*(self.nely+1)*(self.nelx), self.dim*(self.nely+1))
+        f[loc_down] = -1
+        # left force left
+        loc_left = np.arange(2, self.dim*(self.nely+1)-2, self.dim)
+        f[loc_left] = -1
+        return f
+
+    def fixdofs(self):
+        return  [0, self.dim*(self.nely), self.dim*(self.nely)+1, self.dim*(self.nelx+1)*(self.nely+1)-1]
+
+    def freedofs(self):
+        return list(set(self.alldofs()) - set(self.fixdofs()))
+
+    def passive(self):
+        return [], [], []
+
