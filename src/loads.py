@@ -152,18 +152,18 @@ class BiAxial(Load):
 
     def force(self):
         f = super().force()
-        # uprard force at the top side
-        loc_up = np.arange(self.dim*(self.nely+1)+1, self.dim*(self.nelx)*(self.nely+1), self.dim*(self.nely+1))
-        f[loc_up] = 1
+        # uprard force at the top side and half load in corner
+        loc_up = np.arange(1, self.dim*(self.nelx+1)*(self.nely+1), self.dim*(self.nely+1))
+        f[loc_up] = -1
         # right force at the right hand side
-        loc_right = np.arange(self.dim*(self.nely+1)*self.nelx+2, self.dim*(self.nely+1)*(self.nelx+1)-2, self.dim)
-        f[loc_right] = 1
+        loc_right = np.arange(self.dim*(self.nely+1)*self.nelx, self.dim*(self.nely+1)*(self.nelx+1), self.dim)
+        f[loc_right] = -1
         # bottom force down
-        loc_down = np.arange(2*self.dim*(self.nely+1)-1, self.dim*(self.nely+1)*(self.nelx), self.dim*(self.nely+1))
-        f[loc_down] = -1
+        loc_down = np.arange(self.dim*(self.nely+1)-1, self.dim*(self.nely+1)*(self.nelx+1), self.dim*(self.nely+1))
+        f[loc_down] = 1
         # left force left
-        loc_left = np.arange(2, self.dim*(self.nely+1)-2, self.dim)
-        f[loc_left] = -1
+        loc_left = np.arange(0, self.dim*(self.nely+1), self.dim)
+        f[loc_left] = 1
         return f
 
     def fixdofs(self):
@@ -173,5 +173,9 @@ class BiAxial(Load):
         return list(set(self.alldofs()) - set(self.fixdofs()))
 
     def passive(self):
-        return [], [], []
-
+        elx = 2*[x for x in range(self.nelx)] + [0 for y in range(self.nely)] \
+                + [self.nelx-1 for y in range(self.nely)] + [0+1, self.nelx-2, 0+1, self.nelx-2]
+        ely = [0 for x in range(self.nelx)] + [self.nely-1 for x in range(self.nelx)] \
+                + 2*[y for y in range(self.nely)] + [0+1, 0+1, self.nely-2, self.nely-2]
+        values = np.ones((len(elx)))
+        return elx, ely, values
