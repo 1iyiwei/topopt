@@ -15,8 +15,9 @@ class Plot(object):
 
     def figure(self, title=None):
         plt.figure()
-        plt.imshow(1-self.x, cmap=plt.cm.gray)
-        plt.title(title)
+        plt.imshow(1-self.x, vmin=0, vmax=1, cmap=plt.cm.gray)
+        if title != None:
+            plt.title(title)
         plt.xticks([])
         plt.yticks([])
 
@@ -42,7 +43,7 @@ class Plot(object):
                              textcoords='offset points', arrowprops=wedgepropsV)
 
     def loading(self):
-        arrowprops = dict(arrowstyle="simple",fc="g", ec="g", mutation_scale=20)
+        arrowprops = dict(arrowstyle="simple",fc="r", ec="r", mutation_scale=20)
 
         forceloc = np.nonzero(self.force)[0]
 

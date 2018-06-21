@@ -6,7 +6,7 @@ import math
 
 from loads import HalfBeam, Canti, Michell, BiAxial
 from constraints import DensityConstraint
-from fesolvers import CooFESolver
+from fesolvers import CvxFEA, SciPyFEA
 from topopt import Topopt
 from plotting import Plot
 
@@ -17,34 +17,36 @@ if __name__ == "__main__":
     poisson = 0.3
 
     # constraints
-    volfrac = 0.3
     Emin = 1e-9
 
     # input parameters
-    nelx = 180
-    nely = 60
+    nelx = 360
+    nely = 250
+
+    volfrac = 0.2
 
     penal = 3.0
-    rmin = 1.1
+    rmin = 2.5
 
-    delta = 0.002
-    loopy = math.inf
+    delta = 0.02
+    loopy = 70
 
     # loading/problem
-    load = HalfBeam(nelx, nely)
+    load = Canti(nelx, nely)
 
     # constraints
     density_constraint = DensityConstraint(volume_frac=volfrac, Emin=Emin)
 
     # optimizer
     verbose = True
-    fesolver = CooFESolver(verbose=verbose)
+    fesolver = CvxFEA(verbose=verbose)
     optimizer = Topopt(fesolver, young, poisson, verbose=verbose)
 
     # compute
-    history = False
+    filt = 'sensitivity'
+    history = True
     x = optimizer.init(load, density_constraint)
-    x, x_more = optimizer.layout(load, density_constraint, x, penal, rmin, delta, loopy, history)
+    x, x_more = optimizer.layout(load, density_constraint, x, penal, rmin, delta, loopy, filt, history)
 
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
@@ -62,7 +64,7 @@ if __name__ == "__main__":
 
     # plot
     pl = Plot(x, load, nelx, nely)
-    pl.figure(title='loop '+str(loop))
-    pl.boundary()
+    pl.figure()
     pl.loading()
+    pl.boundary()
     pl.show()
