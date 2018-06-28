@@ -5,6 +5,7 @@ topology optimization
 '''
 import numpy as np
 import math
+from mma import mma
 from scipy.ndimage import convolve
 
 
@@ -26,16 +27,21 @@ class Topopt(object):
         if filt != 'sensitivity' and filt != 'density':
             raise ValueError('No valid filter was selected, density of sensitivity are the only options')
 
-        loop = 0  # number of loop iterations
+        itr = 0  # number of loop iterations
         change = 1.0  # maximum density change from prior iteration
+        xold1 = constraint.volfrac*np.ones((load.nely*load.nelx))
+        xold2 = constraint.volfrac*np.ones((load.nely*load.nelx))
+        low = np.zeros((load.nely*load.nelx))
+        upp = np.zeros((load.nely*load.nelx))
 
         if history:
             xf_history = [1-x]
 
-        while (change > delta) and (loop < loopy):
-            loop = loop + 1
-            x, change, c = self.iter(load, constraint, x, penal, rmin, filt)
-            if self.verbose: print('It.: {0:4d},  Obj.: {1:8.2f},  ch.: {2:0.3f}'.format(loop, c, change), flush=True)
+        while (change > delta) and (itr < loopy):
+            itr = itr + 1
+            x, change, c, xold1, xold2, low, upp = self.iter(load, constraint, x, penal, rmin, filt, itr, xold1, xold2, low, upp)
+
+            if self.verbose: print('It.: {0:4d},  Obj.: {1:8.2f},  ch.: {2:0.3f}'.format(itr, c, change), flush=True)
             if history:
                 xf = self.densityfilt(x, rmin, filt)
                 xf_history.append(1-xf)
@@ -47,7 +53,7 @@ class Topopt(object):
         if history:
             return xf, xf_history
         else:
-            return xf, loop
+            return xf, itr
 
     # initialization
     def init(self, load, constraint):
@@ -59,9 +65,7 @@ class Topopt(object):
         return x
 
     # iteration
-    def iter(self, load, constraint, x, penal, rmin, filt):
-        xold = x.copy()
-
+    def iter(self, load, constraint, x, penal, rmin, filt, itr, xold1, xold2, low, upp):
         # element stiffness matrix
         Emin = constraint.Emin
         ke = self.lk(self.young, self.poisson)
@@ -70,22 +74,41 @@ class Topopt(object):
         # applying the density filter if required
         xf = self.densityfilt(x, rmin, filt)
 
-        # displacement via finite element analysis
+        # displacement via FEA
         u = self.fesolver.displace(load, xf, ke, kmin, penal)
 
-        # compliance and derivative
+        # compliance, its derivative
         c, dc = self.comp(load, xf, u, ke, penal)
 
         # applying the sensitvity filter if required
         dcf = self.sensitivityfilt(xf, rmin, dc, filt)
 
-        # update
-        x = self.update(constraint, x, dcf, load)
+        # Prepairing MMA update scheme
+        m = 1  # amount of constraint functions
+        n = load.nelx*load.nely  # amount of elements
+        xmin = constraint.xmin(load, x)  # vector with min element density
+        xmax = constraint.xmax(load, x)  # vector with max element density
+        x = x.flatten()
+        dcf = dcf.flatten()
+        volcon = constraint.current_volconstrain(xf, load)  # value of constraint function
+        dvolcondx = constraint.volume_derivative(load)  # constraint derivative
+        a0 = 1
+        a = np.zeros((m))
+        c_ = 1000*np.ones((m))
+        d = a
 
-        # how much has changed?
-        change = np.amax(abs(x-xold))
+        # Execute MMA update scheme
+        xnew, low, upp = mma(m, n, itr, x, xmin, xmax, xold1, xold2, c, dcf, volcon, dvolcondx, low, upp, a0, a, c_, d)
 
-        return x, change, c
+        # Update variables
+        xold2 = xold1
+        xold1 = x
+        x = xnew.reshape((load.nely, load.nelx))
+
+        # What is the maximum change
+        change = np.amax(abs(xnew - xold1))
+
+        return x, change, c, xold1, xold2, low, upp
 
     # updated compliance algorithm
     def comp(self, load, x, u, ke, penal):
@@ -161,36 +184,6 @@ class Topopt(object):
             dcn = dc
 
         return dcn
-
-    # optimality criteria update
-    def update(self, constraint, x, dc, load):
-        volfrac = constraint.volume_frac()
-        xmin = constraint.density_min()
-        xmax = constraint.density_max()
-        xlist, ylist, values = load.passive()
-
-        # ugly hardwired constants to fix later
-        move = 0.2 * xmax
-        l1 = 0
-        l2 = 1000000
-        lt = 1e-5
-
-        nely, nelx = x.shape
-        while (l2-l1 > lt):
-            lmid = 0.5*(l2+l1)
-            xnew = np.multiply(x, np.sqrt(-dc/lmid))
-            x_below = np.maximum(xmin, x - move)
-            x_above = np.minimum(xmax, x + move)
-
-            xnew = np.maximum(x_below, np.minimum(x_above, xnew))
-            xnew[ylist, xlist] = values
-
-            if (np.sum(xnew) - volfrac*nelx*nely) > 0:
-                l1 = lmid
-            else:
-                l2 = lmid
-
-        return xnew
 
     # element (local) stiffness matrix
     def lk(self, young, poisson):

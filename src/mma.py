@@ -10,7 +10,6 @@ Translated to python by A.J.J. Lagerweij TU Delft June 2018
 import numpy as np
 from scipy.sparse import spdiags, csc_matrix
 
-
 # MMA problem linearisation
 def mma(m, n, itr, xval, xmin, xmax, xold1, xold2, f0val, df0dx, fval, dfdx, low, upp, a0, a, c, d):
     '''
@@ -76,7 +75,7 @@ def mma(m, n, itr, xval, xmin, xmax, xold1, xold2, f0val, df0dx, fval, dfdx, low
         Column vector with the lower asymptotes, calculated and used in the
         current MMA subproblem
     upp : 1-D array len(n)
-        Column vector with the upper asymptotes, calculated anscipy.sparse.csc_matrixd used in the
+        Column vector with the upper asymptotes, calculated and used in the
         current MMA subproblem
     '''
 
@@ -92,11 +91,11 @@ def mma(m, n, itr, xval, xmin, xmax, xold1, xold2, f0val, df0dx, fval, dfdx, low
     zeron = np.zeros((n))
 
     # calculation of the upper and lower asymptotes
-    if itr < 2:
+    if itr <= 2:
         low = xval - asyinit*(xmax-xmin)
         upp = xval + asyinit*(xmax-xmin)
     else:
-        zzz = (xval-xold1)/(xold1-xold2)
+        zzz = np.divide(xval-xold1, xold1-xold2, out=np.zeros_like(xval), where=xold1-xold2!=0)
         factor = eeen.copy()
         factor[np.where(zzz > 0)] = asyincr
         factor[np.where(zzz < 0)] = asydecr
@@ -230,7 +229,7 @@ def solvemma(m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d):
             dpsidx = plam/ux2 - qlam/xl2
             delx = dpsidx - epsvecn/(x-alfa) + epsvecn/(beta-x)
             dely = c + d*y - lam - epsvecm/y
-            delz = a0 - np.dot(a,lam) - epsi/z
+            delz = a0 - np.dot(a, lam) - epsi/z
             dellam = gvec - a*z - y - b + epsvecm/lam
             diagx = plam/ux3 + qlam/xl3
             diagx = 2*diagx + xsi/(x-alfa) + eta/(beta-x)
@@ -244,7 +243,7 @@ def solvemma(m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d):
                 blam = dellam + dely/diagy - np.dot(GG, delx/diagx)
                 bb = np.hstack([blam, delz])
                 Alam = spdiags(diaglamyi, 0, m, m) + np.dot(GG, spdiags(diagxinv, 0, n, n)*GG.T)
-                AA = np.block([[Alam, a[np.newaxis].T],[a, (-zet/z)]])
+                AA = np.block([[Alam, a[np.newaxis].T], [a, (-zet/z)]])
                 solut = np.linalg.solve(AA, bb)
                 dlam = solut[0:m]
                 dz = solut[m]
@@ -270,7 +269,7 @@ def solvemma(m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d):
             dmu = -mu + epsvecm/y - (mu*dy)/y
             dzet = -zet + epsi/z - zet*dz/z
             ds = -s + epsvecm/lam - (s*dlam)/lam
-            xx  = np.hstack([ y.T,  z,  lam.T,  xsi.T,  eta.T,  mu.T,  zet,  s.T])
+            xx = np.hstack([y.T, z, lam.T, xsi.T, eta.T, mu.T, zet, s.T])
             dxx = np.hstack([dy.T, dz, dlam.T, dxsi.T, deta.T, dmu.T, dzet, ds.T])
 
             stepxx = -1.01*dxx/xx  # check what is the correct formulation
@@ -329,15 +328,15 @@ def solvemma(m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d):
                 residu1 = np.hstack([rex.T, rey.T, rez])
                 residu2 = np.hstack([relam.T, rexsi.T, reeta.T, remu.T, rezet, res.T])
                 residu = np.hstack([residu1, residu2])
-                resinew= np.sqrt(np.dot(residu, residu))
+                resinew = np.sqrt(np.dot(residu, residu))
                 steg = steg/2
 
             residunorm = resinew
             residumax = np.max(np.abs(residu))
             steg = 2*steg
 
-#            if ittt <= 199:
-#                print('epsi = ', epsi)
-#                print('ittt = ', ittt)
+        if ittt >= 199:
+            print('epsi = ', epsi)
+            print('ittt = ', ittt)
         epsi = 0.1*epsi
     return x, y, z, lam, xsi, eta, mu, zet, s

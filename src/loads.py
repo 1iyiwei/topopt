@@ -89,6 +89,36 @@ class HalfBeam(Load):
         return elx, ely, values
 
 
+# example loading scenario, half mbb-beam without use of symetry axis
+class Beam(Load):
+    def __init__(self, nelx, nely):
+        super().__init__(nelx, nely)
+        if nelx % 2 != 0:
+            raise ValueError('nelx needs to be even in a mbb beam')
+
+    def force(self):
+        f = super().force()
+        # downward force in the middle of the upper part
+        n1, n2, n3, n4 = self.nodes(int(self.nelx/2), 0, self.nelx, self.nely)
+        f[self.dim*n1+1] = -1.0
+        return f
+
+    def fixdofs(self):
+        # left side fixed to a wall (x direction only), lower right corner fixed to a point
+        n11, n12, n13, n14 = self.nodes(0, self.nely-1, self.nelx, self.nely)
+        n21, n22, n23, n24 = self.nodes(self.nelx-1, self.nely-1, self.nelx, self.nely)
+        return ([self.dim*n14, self.dim*n14+1, self.dim*n23+1])
+
+    def freedofs(self):
+        return list(set(self.alldofs()) - set(self.fixdofs()))
+
+    def passive(self):
+        elx = []  # np.arange(0, self.nelx/2, dtype=int)
+        ely = []  # np.ones(np.shape(xlist), dtype=int)*int(self.nely/2)
+        values = []  # np.ones(np.shape(xlist))*0.001
+        return elx, ely, values
+
+
 # cantilever beam load in the middle of the end
 class Canti(Load):
     def __init__(self, nelx, nely):

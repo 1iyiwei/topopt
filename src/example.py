@@ -4,7 +4,7 @@ tester for topology optimization code
 import time
 import math
 
-from loads import HalfBeam, Canti, Michell, BiAxial
+from loads import HalfBeam, Beam, Canti, Michell, BiAxial
 from constraints import DensityConstraint
 from fesolvers import CvxFEA, SciPyFEA
 from topopt import Topopt
@@ -18,24 +18,24 @@ if __name__ == "__main__":
 
     # constraints
     Emin = 1e-9
+    volfrac = 0.5
+    move = 1
 
     # input parameters
-    nelx = 360
-    nely = 250
-
-    volfrac = 0.2
+    nelx = 350
+    nely = 50
 
     penal = 3.0
-    rmin = 2.5
+    rmin = 1.5
 
+    loopy = 1000  # math.inf
     delta = 0.02
-    loopy = 70
 
     # loading/problem
-    load = Canti(nelx, nely)
+    load = Beam(nelx, nely)
 
-    # constraints
-    density_constraint = DensityConstraint(volume_frac=volfrac, Emin=Emin)
+    # constraints5
+    den_con = DensityConstraint(load, move, volume_frac=volfrac, Emin=Emin)
 
     # optimizer
     verbose = True
@@ -43,10 +43,10 @@ if __name__ == "__main__":
     optimizer = Topopt(fesolver, young, poisson, verbose=verbose)
 
     # compute
-    filt = 'sensitivity'
+    filt = 'density'
     history = True
-    x = optimizer.init(load, density_constraint)
-    x, x_more = optimizer.layout(load, density_constraint, x, penal, rmin, delta, loopy, filt, history)
+    x = optimizer.init(load, den_con)
+    x, x_more = optimizer.layout(load, den_con, x, penal, rmin, delta, loopy, filt, history)
 
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
