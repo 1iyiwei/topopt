@@ -2,7 +2,7 @@
 
 ![halfbeam](./img/topopt.gif)
 
-This is an implementation of the [classic topology optimization code](http://www.topopt.dtu.dk/) described in [A 99 line topology optimization code written in Matlab](http://www.topopt.dtu.dk/files/matlab.pdf) by Ole Sigmund.
+This is an implementation of the [classic topology optimization code](http://www.topopt.dtu.dk/) described in [A 99 line topology optimization code written in Matlab](http://www.topopt.dtu.dk/files/matlab.pdf) by Ole Sigmund. The main difference is that this code is written in python and that a method of moving asymptotes update scheme is used, MMA is developed by Krister Svanberg. 
 Start with [example.py](src/example.py).
 
 ## Prerequisites ##
@@ -28,8 +28,9 @@ The [passive](https://github.com/AJJLagerweij/topopt/blob/3a2151347c338621895703
 ## To be implemented ##
 Currently two changes are proposed before the final release of the 2D software.
  1. Adding a faster algebraic multigrid preconditioner with Conjugate Gradient itterative solver
- 2. Adding a MMA algorithm for better convergence
+ 2. Adding a version of the code that can do actuator design (displacement maximization)
 
 ## Special Thanks To ##
  1. Ole Sigmund and Martin Bends&#248;e from the Technical University of Denmark for there contributions to the field of topology optimization
  2. Li-Yi Wei from the University of Hong Kong for making a beautiful [python code](https://github.com/1iyiwei/topopt)
+ 3. Svanberg, K. (1987). The method of moving asymptotes—a new method for structural optimization. International Journal for Numerical Methods in Engineering, 24(2), 359–373. https://doi.org/10.1002/nme.1620240207
