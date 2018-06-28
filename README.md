@@ -3,7 +3,7 @@
 ![halfbeam](./img/topopt.gif)
 
 This is an implementation of the [classic topology optimization code](http://www.topopt.dtu.dk/) described in [A 99 line topology optimization code written in Matlab](http://www.topopt.dtu.dk/files/matlab.pdf) by Ole Sigmund. The main difference is that this code is written in python and that a method of moving asymptotes update scheme is used, [MMA](https://doi.org/10.1002/nme.1620240207) is developed by Krister Svanberg. Currently two versions of the code exist, a compilance minimalization and a actuator design version that maximizes the displacement at a certain point.
-Start with [example.py](topopt/src_Compliance/example.py).
+Start with [example.py]( topopt/src_Compliance/example.py ).
 
 ## Prerequisites ##
 Python 3 with NumPy, SciPy, matplotlib and cvxopt as the core. The imageio packege is required only when .gif figures are created. To simplify the setup Anaconda enviroments (including Spyder) are avalible both for [Window](topopt/anaconda/TopOpt_Windows.yml) and [Linux](topopt/anaconda/TopOpt_Linux.yml).
