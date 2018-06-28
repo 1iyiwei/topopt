@@ -22,8 +22,8 @@ if __name__ == "__main__":
     move = 1
 
     # input parameters
-    nelx = 350
-    nely = 50
+    nelx = 500
+    nely = 100
 
     penal = 3.0
     rmin = 1.5
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     delta = 0.02
 
     # loading/problem
-    load = Beam(nelx, nely)
+    load = Canti(nelx, nely)
 
     # constraints5
     den_con = DensityConstraint(load, move, volume_frac=volfrac, Emin=Emin)
