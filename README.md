@@ -33,4 +33,4 @@ Currently two changes are proposed before the final release of the 2D software.
 ## Special Thanks To ##
  1. Ole Sigmund and Martin Bends&#248;e from the Technical University of Denmark for there contributions to the field of topology optimization
  2. Li-Yi Wei from the University of Hong Kong for making a beautiful [python code](https://github.com/1iyiwei/topopt)
- 3. Svanberg, K. (1987). The method of moving asymptotes—a new method for structural optimization. International Journal for Numerical Methods in Engineering, 24(2), 359–373. [DOI: 10.1002/nme.162024027](https://doi.org/10.1002/nme.1620240207)
+ 3. Svanberg, K. (1987). The method of moving asymptotes — a new method for structural optimization. International Journal for Numerical Methods in Engineering, 24(2), 359–373. [DOI: 10.1002/nme.162024027](https://doi.org/10.1002/nme.1620240207)
