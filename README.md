@@ -3,16 +3,16 @@
 ![halfbeam](./img/topopt.gif)
 
 This is an implementation of the [classic topology optimization code](http://www.topopt.dtu.dk/) described in [A 99 line topology optimization code written in Matlab](http://www.topopt.dtu.dk/files/matlab.pdf) by Ole Sigmund. The main difference is that this code is written in python and that a method of moving asymptotes update scheme is used, [MMA](https://doi.org/10.1002/nme.1620240207) is developed by Krister Svanberg. Currently two versions of the code exist, a compilance minimalization and a actuator design version that maximizes the displacement at a certain point.
-Start with [example.py]( topopt/src/example.py ).
+Start with [example.py](./src_Compliance/example.py).
 
 ## Prerequisites ##
-Python 3 with NumPy, SciPy, matplotlib and cvxopt as the core. The imageio packege is required only when .gif figures are created. To simplify the setup Anaconda enviroments (including Spyder) are avalible both for [Window](topopt/anaconda/TopOpt_Windows.yml) and [Linux](topopt/anaconda/TopOpt_Linux.yml).
+Python 3 with NumPy, SciPy, matplotlib and cvxopt as the core. The imageio packege is required only when .gif figures are created. To simplify the setup Anaconda enviroments (including Spyder) are avalible both for [Window](./anaconda/TopOpt_Windows.yml) and [Linux](./anaconda/TopOpt_Linux.yml).
 
 ## Generating a new load class ##
 The folowing section will explain how to set up a simulation for a new geometry. One is expected to have some knowlege of FEM and topology optimization. No explanation on the simplation settings, such as the resolution, filter size or volume constrain will follow. For information on those topics I recomend reading "Topology Optimization" from M.P. Bends&#248;e and O. Sigmund.
 
 Making a new load class is fairly simple, make the following steps:
- 1. Open the [loads.py](topopt/src_Compliance/loads.py) file
+ 1. Open the [loads.py](./src_Compliance/loads.py) file
  2. Copy the [HalfBeam class](https://github.com/AJJLagerweij/topopt/blob/0343ef3eeac7ce95a76d9c00cfbf2ee66c383696/src_Compliance/loads.py#L66-L89) to the botom of the file and change the name of the class.
  3. Change the boundery conditions e.g. the load vector and fix certain degrees of freedom (fixdofs). The folowing section wil show how to do it for an example problem.
  4. Change the passive elements defenition, those that do not change in desity, for example with a density of 0.0001 as a hole is planned there.
@@ -23,7 +23,7 @@ Sometimes a wole side is fixed (due to a wall or symetry) than using the `range(
 
 The [passive](https://github.com/AJJLagerweij/topopt/blob/0343ef3eeac7ce95a76d9c00cfbf2ee66c383696/src_Compliance/loads.py#L85-L89) elements defenition is fairly simple, three list (or arrays) need to be exported, elx contains the x coordinates of the fixed element, ely the y coordinates and lastly the values list contains the value at the given coordinate. The order of the elements should be the same in all three lists.
 
-![HalfBeamFBD](img/FBDExample.png)
+![HalfBeamFBD](./img/FBDExample.png)
 
 ## To be implemented ##
 Currently two changes are proposed before the final release of the 2D software.
