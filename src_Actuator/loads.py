@@ -75,7 +75,7 @@ class Inverter(Load):
 
     def force(self):
         f = super().force()
-        # downward force at the upper left corner
+        # positive horizontal force bottom left corner
         f[self.dim*self.nely] = 1.0
         return f
 
