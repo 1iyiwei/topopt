@@ -1,5 +1,5 @@
 '''
-tester for topology optimization code
+tester for topology compliant optimization code
 '''
 import time
 import math

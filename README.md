@@ -25,7 +25,7 @@ The [passive](https://github.com/AJJLagerweij/topopt/blob/0343ef3eeac7ce95a76d9c
 
 The same steps need no be taken to create a new actuator load case, but copy the [Iverter class](https://github.com/AJJLagerweij/topopt/blob/03e8451693da05fe35e824b04702f0e5392996f7/src_Compliance/loads.py#L71-L101) located in the src_Actuator folder. There is two extra steps however:
  1. Add the location and orientation of the actuator output. This is done with the [displaceloc function](https://github.com/AJJLagerweij/topopt/blob/03e8451693da05fe35e824b04702f0e5392996f7/src_Compliance/loads.py#L82-L87) which works similar as a force vector.
- 2. Chose the [ext_stiffness](https://github.com/AJJLagerweij/topopt/blob/03e8451693da05fe35e824b04702f0e5392996f7/src_Compliance/example.py#L18) which is the external spring stiffness of the in and output.
+ 2. Chose the [ext_stiffness](https://github.com/AJJLagerweij/topopt/blob/03e8451693da05fe35e824b04702f0e5392996f7/src_Actuator/example.py#L18) which is the external spring stiffness of the in and output.
 
 ![HalfBeamFBD](./img/FBDExample.png)
 
