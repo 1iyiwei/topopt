@@ -23,7 +23,7 @@ Sometimes a wole side is fixed (due to a wall or symetry) than using the `range(
 
 The [passive](https://github.com/AJJLagerweij/topopt/blob/0343ef3eeac7ce95a76d9c00cfbf2ee66c383696/src_Compliance/loads.py#L85-L89) elements defenition is fairly simple, three list (or arrays) need to be exported, elx contains the x coordinates of the fixed element, ely the y coordinates and lastly the values list contains the value at the given coordinate. The order of the elements should be the same in all three lists.
 
-The same steps need no be taken to create a new actuator load case, but copy the [Iverter class](https://github.com/AJJLagerweij/topopt/blob/59266aa4b883c275de1d3175ea43ad3af0239c06/src_Actuator/loads.py#L71-L101) located in the src_Actuator folder. There is two extra steps however:
+The same steps need no be taken to create a new actuator load case, but copy the [Inverter class](https://github.com/AJJLagerweij/topopt/blob/59266aa4b883c275de1d3175ea43ad3af0239c06/src_Actuator/loads.py#L71-L101) located in the src_Actuator folder. There is two extra steps however:
  1. Add the location and orientation of the actuator output. This is done with the [displaceloc function](https://github.com/AJJLagerweij/topopt/blob/59266aa4b883c275de1d3175ea43ad3af0239c06/src_Actuator/loads.py#L82-L87) which works similar as a force vector.
  2. Chose the [ext_stiffness](https://github.com/AJJLagerweij/topopt/blob/59266aa4b883c275de1d3175ea43ad3af0239c06/src_Actuator/example.py#L18) which is the external spring stiffness of the in and output.
 
@@ -37,4 +37,4 @@ Currently two changes are proposed before the final release of the 2D software.
 ## Special Thanks To ##
  1. Ole Sigmund and Martin Bends&#248;e from the Technical University of Denmark for there contributions to the field of topology optimization
  2. Li-Yi Wei from the University of Hong Kong for making a beautiful [python code](https://github.com/1iyiwei/topopt)
- 3. Svanberg, K. (1987). The method of moving asymptotes — a new method for structural optimization. International Journal for Numerical Methods in Engineering, 24(2), 359–373. [DOI: 10.1002/nme.162024027](https://doi.org/10.1002/nme.1620240207)
+ 3. Svanberg, K. (1987). The method of moving asymptotes — a new method for structural optimization. International Journal for Numerical Methods in Engineering, 24(2), 359–373. DOI: [10.1002/nme.162024027](https://doi.org/10.1002/nme.1620240207)
