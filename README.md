@@ -23,12 +23,16 @@ Sometimes a wole side is fixed (due to a wall or symetry) than using the `range(
 
 The [passive](https://github.com/AJJLagerweij/topopt/blob/0343ef3eeac7ce95a76d9c00cfbf2ee66c383696/src_Compliance/loads.py#L85-L89) elements defenition is fairly simple, three list (or arrays) need to be exported, elx contains the x coordinates of the fixed element, ely the y coordinates and lastly the values list contains the value at the given coordinate. The order of the elements should be the same in all three lists.
 
+The same steps need no be taken to create a new actuator load case, but copy the [Iverter class](https://github.com/AJJLagerweij/topopt/blob/03e8451693da05fe35e824b04702f0e5392996f7/src_Compliance/loads.py#L71-L101) located in the src_Actuator folder. There is two extra steps however:
+ 1. Add the location and orientation of the actuator output. This is done with the [displaceloc function](https://github.com/AJJLagerweij/topopt/blob/03e8451693da05fe35e824b04702f0e5392996f7/src_Compliance/loads.py#L82-L87) which works similar as a force vector.
+ 2. Chose the [ext_stiffness](https://github.com/AJJLagerweij/topopt/blob/03e8451693da05fe35e824b04702f0e5392996f7/src_Compliance/example.py#L18) which is the external spring stiffness of the in and output.
+
 ![HalfBeamFBD](./img/FBDExample.png)
 
 ## To be implemented ##
 Currently two changes are proposed before the final release of the 2D software.
  1. Adding a faster algebraic multigrid preconditioner with Conjugate Gradient itterative solver
- 2. Adding a version of the code that can do actuator design (displacement maximization)
+ 2. Fixing the error in the MMA combined with sensitivity filter
 
 ## Special Thanks To ##
  1. Ole Sigmund and Martin Bends&#248;e from the Technical University of Denmark for there contributions to the field of topology optimization

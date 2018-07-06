@@ -31,6 +31,14 @@ class CSCStiffnessMatrix(object):
         # coo_matrix sums duplicated entries and sipmlyies slicing
         dof = load.dim*(nelx+1)*(nely+1)
         k = coo_matrix((value_list, (y_list, x_list)), shape=(dof, dof)).tocsc()
+
+        # adding external spring stiffness to load and actuator locations
+        loc_force = np.where(load.force() != 0)[0]
+        loc_actuator = np.where(load.displaceloc() != 0)[0]
+        loc = np.hstack((loc_force, loc_actuator))
+        k[loc, loc] += load.ext_stiff*np.ones(len(loc))
+
+        # selecting only the free directions of the siffness matirx
         k = k[freedofs, :][:, freedofs]
 
         return k
@@ -46,18 +54,21 @@ class CvxFEA(CSCStiffnessMatrix):
         nely, nelx = x.shape
 
         f = load.force()
-        B_free = cvxopt.matrix(f[freedofs])
+        l = load.displaceloc()
+        B_free = cvxopt.matrix(np.hstack((f[freedofs], l[freedofs])))
 
         k_free = self.gk_freedofs(load, x, ke, kmin, penal).tocoo()
         k_free = cvxopt.spmatrix(k_free.data, k_free.row, k_free.col)
 
-        u = np.zeros(load.dim*(nely+1)*(nelx+1))
+        u = np.zeros((load.dim*(nely+1)*(nelx+1), 1))
+        lamba = np.zeros((load.dim*(nely+1)*(nelx+1), 1))
 
         # setting up a fast cholesky decompositon solver
         cvxopt.cholmod.linsolve(k_free, B_free)
-        u[freedofs] = np.array(B_free)[:, 0]
+        u[freedofs] = np.array(B_free[:, 0])
+        lamba[freedofs] = np.array(B_free[:, 1])
 
-        return u
+        return u, lamba
 
 
 class SciPyFEA(CSCStiffnessMatrix):
@@ -69,11 +80,17 @@ class SciPyFEA(CSCStiffnessMatrix):
         freedofs = np.array(load.freedofs())
         nely, nelx = x.shape
 
-        f_free = load.force()[freedofs]
+        f = load.force()
+        l = load.displaceloc()
+
+        f_free = np.hstack((f[freedofs], l[freedofs]))
         k_free = self.gk_freedofs(load, x, ke, kmin, penal)
 
         # solving the system f = Ku with scipy
-        u = np.zeros(load.dim*(nely+1)*(nelx+1))
-        u[freedofs] = spsolve(k_free, f_free)
+        u = np.zeros((load.dim*(nely+1)*(nelx+1), 1))
+        lamba = np.zeros((load.dim*(nely+1)*(nelx+1), 1))        
+        res = spsolve(k_free, f_free)
+        u[freedofs] = res[:, 0]
+        lamba[freedofs] = res[:, 1]
 
-        return u
+        return u, lamba

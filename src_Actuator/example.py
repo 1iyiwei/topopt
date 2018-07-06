@@ -4,7 +4,7 @@ tester for topology optimization code
 import time
 import math
 
-from loads import ###
+from loads import Inverter
 from constraints import DensityConstraint
 from fesolvers import CvxFEA, SciPyFEA
 from topopt import Topopt
@@ -15,24 +15,25 @@ if __name__ == "__main__":
     # material properties
     young = 1
     poisson = 0.3
+    ext_stiff = 0.1
 
     # constraints
     Emin = 1e-9
-    volfrac = 0.5
+    volfrac = 0.3
     move = 1
 
-    # input parameters
-    nelx = 500
-    nely = 100
+    # mesh dimensions
+    nelx = 40
+    nely = 20
 
+    # optimization settings
     penal = 3.0
-    rmin = 1.5
-
+    rmin = 1.2
     loopy = 1000  # math.inf
-    delta = 0.02
+    delta = 0.001
 
     # loading/problem
-    load = Canti(nelx, nely)
+    load = Inverter(nelx, nely, ext_stiff)
 
     # constraints5
     den_con = DensityConstraint(load, move, volume_frac=volfrac, Emin=Emin)

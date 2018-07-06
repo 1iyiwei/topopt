@@ -39,9 +39,9 @@ class Topopt(object):
 
         while (change > delta) and (itr < loopy):
             itr = itr + 1
-            x, change, c, xold1, xold2, low, upp = self.iter(load, constraint, x, penal, rmin, filt, itr, xold1, xold2, low, upp)
+            x, change, uout, xold1, xold2, low, upp = self.iter(load, constraint, x, penal, rmin, filt, itr, xold1, xold2, low, upp)
 
-            if self.verbose: print('It.: {0:4d},  Obj.: {1:8.2f},  ch.: {2:0.3f}'.format(itr, c, change), flush=True)
+            if self.verbose: print('It.: {0:4d},  Obj.: {1:8.4f},  ch.: {2:0.3f}'.format(itr, uout, change), flush=True)
             if history:
                 xf = self.densityfilt(x, rmin, filt)
                 xf_history.append(1-xf)
@@ -75,13 +75,13 @@ class Topopt(object):
         xf = self.densityfilt(x, rmin, filt)
 
         # displacement via FEA
-        u = self.fesolver.displace(load, xf, ke, kmin, penal)
+        u, lamba = self.fesolver.displace(load, xf, ke, kmin, penal)
 
         # compliance, its derivative
-        c, dc = self.comp(load, xf, u, ke, penal)
+        uout, duout = self.disp(load, xf, u, lamba, ke, penal)
 
         # applying the sensitvity filter if required
-        dcf = self.sensitivityfilt(xf, rmin, dc, filt)
+        duoutf = self.sensitivityfilt(xf, rmin, duout, filt)
 
         # Prepairing MMA update scheme
         m = 1  # amount of constraint functions
@@ -89,7 +89,7 @@ class Topopt(object):
         xmin = constraint.xmin(load, x)  # vector with min element density
         xmax = constraint.xmax(load, x)  # vector with max element density
         x = x.flatten()
-        dcf = dcf.flatten()
+        duoutf = duoutf.flatten()
         volcon = constraint.current_volconstrain(xf, load)  # value of constraint function
         dvolcondx = constraint.volume_derivative(load)  # constraint derivative
         a0 = 1
@@ -98,7 +98,7 @@ class Topopt(object):
         d = a
 
         # Execute MMA update scheme
-        xnew, low, upp = mma(m, n, itr, x, xmin, xmax, xold1, xold2, c, dcf, volcon, dvolcondx, low, upp, a0, a, c_, d)
+        xnew, low, upp = mma(m, n, itr, x, xmin, xmax, xold1, xold2, uout, duoutf, volcon, dvolcondx, low, upp, a0, a, c_, d)
 
         # Update variables
         xold2 = xold1
@@ -108,27 +108,30 @@ class Topopt(object):
         # What is the maximum change
         change = np.amax(abs(xnew - xold1))
 
-        return x, change, c, xold1, xold2, low, upp
+        return x, change, uout, xold1, xold2, low, upp
 
     # updated compliance algorithm
-    def comp(self, load, x, u, ke, penal):
-        '''funcion calculates compliance and compliance density derivative'''
+    def disp(self, load, x, u, lamba, ke, penal):
+        '''funcion calculates displacement at the actuator tip (dout) and
+        the displacement density derivative'''
 
         nely, nelx = x.shape
         xe = x.T.flatten()  # flat list wich desities
-
         edof = load.edof(nelx, nely)[0]
         ue = u[edof]  # list with the displacements of the nodes of that element
+        lamba = lamba[edof] # list with lamda result for each node of every element
 
-        # calculating the compliance in 3 steps
+        # calculate displacment at actuator tip
+        l = load.displaceloc()
+        uout = np.dot(l.T, u)[0, 0]
+
+        # calculating the displacement derivative in 3 steps
         dot = np.dot(ke, ue.reshape((nelx*nely, 8, 1)))
-        ce = np.sum(ue.T*dot[:, :, 0], axis=0)  # element compliance
-        c = np.sum(ce * xe.T**penal)  # total compliance
+        ce = np.sum(lamba.T*dot[:, :, 0], axis=1)  # element compliance
+        duout = penal * (xe ** (penal-1)) * ce  # compliance derivative
+        duout = duout.reshape((load.nelx, load.nely)).T
 
-        dc = -penal * (xe ** (penal-1)) * ce  # compliance derivative
-        dc = dc.reshape((nelx, nely)).T
-
-        return c, dc
+        return uout, duout
 
     # sensitivity filter
     def densityfilt(self, x, rmin, filt):

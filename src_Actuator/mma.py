@@ -84,8 +84,8 @@ def mma(m, n, itr, xval, xmin, xmax, xold1, xold2, f0val, df0dx, fval, dfdx, low
     move = 1.0
     albefa = 0.1
     asyinit = 0.5
-    asyincr = 1.2
-    asydecr = 0.7
+    asyincr = 1.05
+    asydecr = 0.65
     eeen = np.ones((n))
     eeem = np.ones((m))
     zeron = np.zeros((n))

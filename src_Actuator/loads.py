@@ -8,10 +8,11 @@ import numpy as np
 
 
 class Load(object):
-    def __init__(self, nelx, nely):
+    def __init__(self, nelx, nely, ext_stiff):
         self.nelx = nelx
         self.nely = nely
         self.dim = 2
+        self.ext_stiff = ext_stiff
 
     '''
     different convention from numpy array shape: x/y versus row/col
@@ -24,6 +25,7 @@ class Load(object):
         return (nely+1)*elx + ely
 
     # compute the 4 boundary nodes of an element
+    # requires more testing, errors might exist here
     def nodes(self, elx, ely, nelx, nely):
         n1 = self.node(elx,     ely,     nelx, nely) 
         n2 = self.node(elx + 1, ely,     nelx, nely) 
@@ -51,7 +53,10 @@ class Load(object):
         return edof, x_list, y_list
 
     def force(self):
-        return np.zeros(self.dim*(self.nely+1)*(self.nelx+1))
+        return np.zeros((self.dim*(self.nely+1)*(self.nelx+1), 1))
+
+    def displaceloc(self):
+        return np.zeros((self.dim*(self.nely+1)*(self.nelx+1), 1))
 
     def alldofs(self):
         return [x for x in range(self.dim*(self.nely+1)*(self.nelx+1))]
@@ -63,28 +68,34 @@ class Load(object):
         return self.alldofs()
 
 
-# example loading scenario, half mbb-beam (symetry around y axis)
-#class HalfBeam(Load):
-#    def __init__(self, nelx, nely):
-#        super().__init__(nelx, nely)
-#
-#    def force(self):
-#        f = super().force()
-#        # downward force at the upper left corner
-#        f[self.dim-1] = -1.0
-#        return f
-#
-#    def fixdofs(self):
-#        # left side fixed to a wall (x direction only), lower right corner fixed to a point
-#        n1, n2, n3, n4 = self.nodes(self.nelx-1, self.nely-1, self.nelx, self.nely)
-#        return ([x for x in range(0, self.dim*(self.nely+1), self.dim)] + [self.dim*n3+1])
-#
-#    def freedofs(self):
-#        return list(set(self.alldofs()) - set(self.fixdofs()))
-#
-#    def passive(self):
-#        elx = []  # np.arange(0, self.nelx/2, dtype=int)
-#        ely = []  # np.ones(np.shape(xlist), dtype=int)*int(self.nely/2)
-#        values = []  # np.ones(np.shape(xlist))*0.001
-#        return elx, ely, values
+# example loading scenario, inverter with horizontal mirror axis
+class Inverter(Load):
+    def __init__(self, nelx, nely, ext_stiff):
+        super().__init__(nelx, nely, ext_stiff)
 
+    def force(self):
+        f = super().force()
+        # downward force at the upper left corner
+        f[self.dim*self.nely] = 1.0
+        return f
+
+    def displaceloc(self):
+        dout = super().displaceloc()
+        # actuater location is horizontal in the bottom right
+        # positive movement is in the negative x direction
+        dout[-2] = -1
+        return dout
+
+    def fixdofs(self):
+        # bottom fixed to the wall (y direction only), top left corner fixed to a point
+        fix1 = np.arange(self.dim*self.nely + 1, self.dim*(self.nelx+1)*(self.nely+1), self.dim*(self.nely+1))
+        return (np.hstack((fix1, [0, 1, 2, 3]))).tolist()
+
+    def freedofs(self):
+        return list(set(self.alldofs()) - set(self.fixdofs()))
+
+    def passive(self):
+        elx = []  # np.arange(0, self.nelx/2, dtype=int)
+        ely = []  # np.ones(np.shape(xlist), dtype=int)*int(self.nely/2)
+        values = []  # np.ones(np.shape(xlist))*0.001
+        return elx, ely, values
