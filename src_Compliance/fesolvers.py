@@ -20,7 +20,8 @@ class CSCStiffnessMatrix(object):
 
     def gk_freedofs(self, load, x, ke, kmin, penal):
         freedofs = np.array(load.freedofs())
-        nelx, nely = load.shape()
+        nelx = load.nelx
+        nely = load.nely
 
         edof, x_list, y_list = load.edof(nelx, nely)
 

@@ -4,24 +4,31 @@ Plotting the simulated TopOpt geometry with boundery conditions and loads
 import matplotlib.pyplot as plt
 import numpy as np
 
+
 class Plot(object):
-    def __init__(self, x, load, nelx, nely):
+    def __init__(self, x, load, nelx, nely, plotting=False):
         self.x = x
         self.fixdofs = load.fixdofs()
         self.force = load.force()
         self.nelx = nelx
         self.nely = nely
+        self.plotting = plotting
         self.dim = 2
 
     def figure(self, title=None):
+        if self.plotting is not True:
+            return
+
         plt.figure()
         plt.imshow(1-self.x, vmin=0, vmax=1, cmap=plt.cm.gray)
-        if title != None:
+        if title is not None:
             plt.title(title)
         plt.xticks([])
         plt.yticks([])
 
     def boundary(self):
+        if self.plotting is not True:
+            return
         wedgepropsH = dict(arrowstyle="wedge, tail_width=1.", color='g')
         wedgepropsV = dict(arrowstyle="wedge, tail_width=1.", color='b')
 
@@ -43,6 +50,8 @@ class Plot(object):
                              textcoords='offset points', arrowprops=wedgepropsV)
 
     def loading(self):
+        if self.plotting is not True:
+            return
         arrowprops = dict(arrowstyle="simple",fc="r", ec="r", mutation_scale=20)
 
         forceloc = np.nonzero(self.force)[0]
@@ -66,5 +75,7 @@ class Plot(object):
                 plt.annotate('', xy=(nodex, nodey), xytext=(0, -60*force),
                              textcoords='offset points', arrowprops=arrowprops)
 
-    def show(self, block=True):
-        plt.show(block=block)
+    def show(self):
+        if self.plotting is not True:
+            return
+        plt.show()

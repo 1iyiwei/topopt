@@ -8,16 +8,19 @@ import numpy as np
 
 
 class Load(object):
-    def __init__(self, nelx, nely):
+    def __init__(self, nelx, nely, young, Emin, poisson):
         self.nelx = nelx
         self.nely = nely
+        self.young = young
+        self.Emin = Emin
+        self.poisson = poisson
         self.dim = 2
 
-    '''
-    different convention from numpy array shape: x/y versus row/col
-    '''
-    def shape(self):
-        return (self.nelx, self.nely)
+#    '''
+#    different convention from numpy array shape: x/y versus row/col
+#    '''
+#    def shape(self):
+#        return (self.nely, self.nelx)
 
     # compute 1D index from 2D position for node (boundary of element)
     def node(self, elx, ely, nelx, nely):
@@ -50,6 +53,21 @@ class Load(object):
         y_list = np.tile(edof, 8).flatten()  # flat list pointer of each node in element
         return edof, x_list, y_list
 
+    # element (local) stiffness matrix
+    def lk(self, E, nu):
+        """ Returns a siffness matrix depending on E and nu """
+        k = np.array([1/2-nu/6,1/8+nu/8,-1/4-nu/12,-1/8+3*nu/8,-1/4+nu/12,-1/8-nu/8,nu/6,1/8-3*nu/8])
+        ke = E/(1-nu**2) * \
+            np.array([[k[0], k[1], k[2], k[3], k[4], k[5], k[6], k[7]],
+                      [k[1], k[0], k[7], k[6], k[5], k[4], k[3], k[2]],
+                      [k[2], k[7], k[0], k[5], k[6], k[3], k[4], k[1]],
+                      [k[3], k[6], k[5], k[0], k[7], k[2], k[1], k[4]],
+                      [k[4], k[5], k[6], k[7], k[0], k[1], k[2], k[3]],
+                      [k[5], k[4], k[3], k[2], k[1], k[0], k[7], k[6]],
+                      [k[6], k[3], k[4], k[1], k[2], k[7], k[0], k[5]],
+                      [k[7], k[2], k[1], k[4], k[3], k[6], k[5], k[0]]])
+        return ke
+
     def force(self):
         return np.zeros(self.dim*(self.nely+1)*(self.nelx+1))
 
@@ -65,8 +83,8 @@ class Load(object):
 
 # example loading scenario, half mbb-beam (symetry around y axis)
 class HalfBeam(Load):
-    def __init__(self, nelx, nely):
-        super().__init__(nelx, nely)
+    def __init__(self, nelx, nely, young, Emin, poisson):
+        super().__init__(nelx, nely, young, Emin, poisson)
 
     def force(self):
         f = super().force()
@@ -91,8 +109,8 @@ class HalfBeam(Load):
 
 # example loading scenario, half mbb-beam without use of symetry axis
 class Beam(Load):
-    def __init__(self, nelx, nely):
-        super().__init__(nelx, nely)
+    def __init__(self, nelx, nely, young, Emin, poisson):
+        super().__init__(nelx, nely, young, Emin, poisson)
         if nelx % 2 != 0:
             raise ValueError('nelx needs to be even in a mbb beam')
 
@@ -121,8 +139,8 @@ class Beam(Load):
 
 # cantilever beam load in the middle of the end
 class Canti(Load):
-    def __init__(self, nelx, nely):
-        super().__init__(nelx, nely)
+    def __init__(self, nelx, nely, young, Emin, poisson):
+        super().__init__(nelx, nely, young, Emin, poisson)
         if nely % 2 != 0:
             raise ValueError('nely needs to be even in a cantilever beam')
 
@@ -149,8 +167,8 @@ class Canti(Load):
 
 # the Michell structures wich analytical salutions (symetry arround y axsi)
 class Michell(Load):
-    def __init__(self, nelx, nely):
-        super().__init__(nelx, nely)
+    def __init__(self, nelx, nely, young, Emin, poisson):
+        super().__init__(nelx, nely, young, Emin, poisson)
         if nely % 2 != 0:
             raise ValueError('nely needs to be even in a michell strucure')
 
@@ -177,8 +195,8 @@ class Michell(Load):
 
 # the biaxcal tension example
 class BiAxial(Load):
-    def __init__(self, nelx, nely):
-        super().__init__(nelx, nely)
+    def __init__(self, nelx, nely, young, Emin, poisson):
+        super().__init__(nelx, nely, young, Emin, poisson)
 
     def force(self):
         f = super().force()
