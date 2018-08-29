@@ -67,4 +67,4 @@ class Plot(object):
                              textcoords='offset points', arrowprops=arrowprops)
 
     def show(self, block=True):
-        plt.show(block=block)
+        plt.show()

@@ -84,8 +84,8 @@ def mma(m, n, itr, xval, xmin, xmax, xold1, xold2, f0val, df0dx, fval, dfdx, low
     move = 1.0
     albefa = 0.1
     asyinit = 0.5
-    asyincr = 1.05
-    asydecr = 0.65
+    asyincr = 1.2
+    asydecr = 0.7
     eeen = np.ones((n))
     eeem = np.ones((m))
     zeron = np.zeros((n))
@@ -335,8 +335,9 @@ def solvemma(m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d):
             residumax = np.max(np.abs(residu))
             steg = 2*steg
 
-        if ittt >= 199:
-            print('epsi = ', epsi)
-            print('ittt = ', ittt)
+        if ittt >= 198:
+            print('    MMA itteration runout')
+            print('      ittt = ', ittt)
+            print('      epsi = ', epsi)
         epsi = 0.1*epsi
     return x, y, z, lam, xsi, eta, mu, zet, s

@@ -28,8 +28,8 @@ if __name__ == "__main__":
 
     # optimization settings
     penal = 3.0
-    rmin = 1.2
-    loopy = 1000  # math.inf
+    rmin = 1.5
+    loopy = 10  # math.inf
     delta = 0.001
 
     # loading/problem
@@ -40,12 +40,12 @@ if __name__ == "__main__":
 
     # optimizer
     verbose = True
-    fesolver = CvxFEA(verbose=verbose)
+    fesolver = SciPyFEA(verbose=verbose)
     optimizer = Topopt(fesolver, young, poisson, verbose=verbose)
 
     # compute
     filt = 'density'
-    history = True
+    history = False
     x = optimizer.init(load, den_con)
     x, x_more = optimizer.layout(load, den_con, x, penal, rmin, delta, loopy, filt, history)
 

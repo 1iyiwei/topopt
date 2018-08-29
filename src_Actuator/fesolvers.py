@@ -90,7 +90,7 @@ class SciPyFEA(CSCStiffnessMatrix):
         u = np.zeros((load.dim*(nely+1)*(nelx+1), 1))
         lamba = np.zeros((load.dim*(nely+1)*(nelx+1), 1))        
         res = spsolve(k_free, f_free)
-        u[freedofs] = res[:, 0]
-        lamba[freedofs] = res[:, 1]
+        u[freedofs] = res[:, 0].reshape((len(freedofs), 1))
+        lamba[freedofs] = res[:, 1].reshape((len(freedofs), 1))
 
         return u, lamba

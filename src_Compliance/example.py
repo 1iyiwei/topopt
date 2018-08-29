@@ -18,18 +18,18 @@ if __name__ == "__main__":
 
     # constraints
     Emin = 1e-9
-    volfrac = 0.5
+    volfrac = 0.4
     move = 1
 
     # input parameters
-    nelx = 500
-    nely = 100
+    nelx = 50
+    nely = 40
 
     penal = 3.0
     rmin = 1.5
 
-    loopy = 1000  # math.inf
-    delta = 0.02
+    loopy = 10  # math.inf
+    delta = 0.001
 
     # loading/problem
     load = Canti(nelx, nely)
@@ -46,6 +46,7 @@ if __name__ == "__main__":
     filt = 'density'
     history = True
     x = optimizer.init(load, den_con)
+    print('Elapsed time is: ', time.time() - t, 'seconds.')
     x, x_more = optimizer.layout(load, den_con, x, penal, rmin, delta, loopy, filt, history)
 
     print('Elapsed time is: ', time.time() - t, 'seconds.')
@@ -67,4 +68,3 @@ if __name__ == "__main__":
     pl.figure()
     pl.loading()
     pl.boundary()
-    pl.show()

@@ -335,8 +335,9 @@ def solvemma(m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d):
             residumax = np.max(np.abs(residu))
             steg = 2*steg
 
-        if ittt >= 199:
-            print('epsi = ', epsi)
-            print('ittt = ', ittt)
+        if ittt >= 198:
+            print('    MMA itteration runout')
+            print('      ittt = ', ittt)
+            print('      epsi = ', epsi)
         epsi = 0.1*epsi
     return x, y, z, lam, xsi, eta, mu, zet, s
