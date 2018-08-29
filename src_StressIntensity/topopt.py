@@ -201,7 +201,7 @@ class Topopt(object):
 
     # Importing the stiffness matrixes
     def import_stiffness(self, elementtype, E, nu):
-        file = '../Stiffness Matrices/' + elementtype + '.csv'
+        file = 'Stiffness Matrices/' + elementtype + '.csv'
 
         # import file
         with open(file, 'r') as f:
