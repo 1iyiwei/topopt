@@ -1,7 +1,11 @@
 '''
-topology optimization
+Topology Optimization class that handles the itterations, objective functions,
+filters and update scheme. It requires to call upon a constraint, load case and
+FE solver classes.
 
-2D only for now
+Bram Lagerweij
+Aerospace Structures and Materials Department TU Delft
+2018
 '''
 import numpy as np
 import math
@@ -11,62 +15,157 @@ from scipy.sparse import spdiags, csc_matrix
 
 class Topopt(object):
     '''
-    young: young's modulus
-    poisson: poisson ratio
+    This is the optimisation object itself. It contains the initialisation of
+    the density distribution.
+
+    Atributes
+    -------
+    constraint : object of DensityConstraint class
+        The constraints for this optimization problem.
+    load : object, child of the Loads class
+        The loadcase(s) considerd for this optimisation problem.
+    fesolver : object, child of the CSCStiffnessMatrix class
+        The finite element solver.
+    verbose : bool
+        Printing itteration results.
+    itr : int
+        Number of iterations performed
+    x : 2-D array size(nely, nelx)
+        Array containing the current densities of every element.
+    xold1 : 1D array len(nelx*nely)
+        Flattend density distribution one iteration ago.
+    xold2 : 1D array len(nelx*nely)
+        Flattend density distribution two iteration ago.
+    low : 1D array len(nelx*nely)
+        Column vector with the lower asymptotes, calculated and used in the
+        MMA subproblem of the previous itteration.
+    upp : 1D array len(nelx*nely)
+        Column vector with the lower asymptotes, calculated and used in the
+        MMA subproblem of the previous itteration.
+
+    Methods
+    -------
+    layout(self, penal, rmin, delta, loopy, filt, history=False)
+        Solves the topology optimisation problem.
+    iter(penal, rmin, filt, itr, xold1, xold2, low, upp)
+        Performs one itteration of the topology optimisation problem.
+    comp(load, x, u, ke, penal)
+        Calculates the compliance and compliance derivative of a itteration.
+    densityfilt(self, x, rmin, filt)
+        Filters the densities over a radius of rmin.
+    sensitivityfilt(self, x, rmin, dc, filt)
+        Filters sensitivity with a radius of rmin.
+    mma(self, m, n, itr, xval, xmin, xmax, xold1, xold2, f0val, df0dx, fval, dfdx, low, upp, a0, a, c, d)
+        Prepears a convex reprensentation of the local optimisation problem.
+    solvemma(m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d)
+        Solves the locally convex problem with a dual-primal Newton method
     '''
-    def __init__(self, constraint, load, fesolver, young=1, poisson=0.3, verbose=False):
+    def __init__(self, constraint, load, fesolver, verbose=False):
         self.constraint = constraint
         self.load = load
         self.fesolver = fesolver
-        self.young = young
-        self.poisson = poisson
-        self.dim = 2
         self.verbose = verbose
+        self.itr = 0
 
         # setting up starting density array
-        x = np.ones((load.nely, load.nelx))*constraint.volume_frac()
+        x = np.ones((load.nely, load.nelx))*constraint.volume_frac
         xlist, ylist, values = load.passive()
         x[ylist, xlist] = values
         self.x = x
+        self.xold1 = np.copy(x).flatten()
+        self.xold2 = np.copy(x).flatten()
+        self.low = 0*np.copy(x).flatten()
+        self.upp = 0*np.copy(x).flatten()
 
     # topology optimization
     def layout(self, penal, rmin, delta, loopy, filt, history=False):
+        """
+        Solves the topology optimisation problem by looping over the iter
+        function.
+
+        Parameters
+        ----------
+        penal : float
+            Material model penalisation (SIMP).
+        rmin : float
+            Filter size.
+        delta : float
+            Convergence is roached when delta > change.
+        loopy : int
+            Amount of iteration allowed.
+        filt : str
+            The filter type that is selected, either 'sensitivity' or 'density'.
+        history : bool
+            Do the intermediate results need to be stored.
+
+        Returns
+        -------
+        xf : array size(nely, nelx)
+            Density distribution resulting from the optimisation.
+        xf_history : list of arrays len(itterations size(nely, nelx))
+            List with the density distributions of all itterations, None when
+            history != True.
+        """
         # check if an existing filter was selected
         if filt != 'sensitivity' and filt != 'density':
             raise ValueError('No valid filter was selected, density of sensitivity are the only options')
 
-        itr = 0  # number of loop iterations
         change = 1.0  # maximum density change from prior iteration
-        xold1 = np.copy(self.x).flatten()
-        xold2 = np.copy(self.x).flatten()
-        low = 0*np.copy(self.x).flatten()
-        upp = 0*np.copy(self.x).flatten()
 
         if history:
             xf_history = [1-self.x]
 
-        while (change > delta) and (itr < loopy):
-            itr = itr + 1
-            change, c, xold1, xold2, low, upp = self.iter(penal, rmin, filt, itr, xold1, xold2, low, upp)
+        while (change > delta) and (self.itr < loopy):
+            self.itr += 1
+            change, c = self.iter(penal, rmin, filt)
 
             if self.verbose:
-                print('It.: {0:4d},  Obj.: {1:8.2f},  ch.: {2:0.3f}'.format(itr, c, change), flush=True)
+                print('It.: {0:4d},  Obj.: {1:8.2f},  ch.: {2:0.3f}'.format(self.itr, c, change), flush=True)
 
             if history:
-                xf = self.densityfilt(self.x, rmin, filt)
+                xf = self.densityfilt(rmin, filt)
                 xf_history.append(1-xf)
 
         # the filtered density is the physical desity
-        xf = self.densityfilt(self.x, rmin, filt)
+        xf = self.densityfilt(rmin, filt)
 
         # done
         if history:
             return xf, xf_history
         else:
-            return xf, itr
+            return xf, None
 
     # iteration
-    def iter(self, penal, rmin, filt, itr, xold1, xold2, low, upp):
+    def iter(self, penal, rmin, filt):
+        """
+        This funcion performs one itteration of the topology optimisation
+        problem. It
+
+        - loads the constraints,
+        - calculates the stiffness matrices,
+        - executes the density filter,
+        - executes the FEA solver,
+        - calls upon the compliance and compliance sensitivity calculation,
+        - executes the sensitivity filter,
+        - executes the MMA update scheme,
+        - and finaly updates density distribution (design).
+
+        Parameters
+        -------
+        penal : float
+            Material model penalisation (SIMP).
+        rmin : float
+            Filter size.
+        filt : str
+            The filter type that is selected, either 'sensitivity' or 'density'.
+
+        Returns
+        -------
+        change : float
+            Largest difference between the new and old density distribution.
+        c : float
+            Compliance for the current design.
+        """
         # setting selfs to local defenition for simplicity
         constraint = self.constraint
         load = self.load
@@ -76,13 +175,13 @@ class Topopt(object):
         kmin = load.lk(load.Emin, load.poisson)
 
         # applying the density filter if required
-        xf = self.densityfilt(self.x, rmin, filt)
+        xf = self.densityfilt(rmin, filt)
 
         # displacement via FEA
         u = self.fesolver.displace(load, xf, ke, kmin, penal)
 
         # compliance, its derivative
-        c, dc = self.comp(load, xf, u, ke, penal)
+        c, dc = self.comp(xf, u, ke, penal)
 
         # applying the sensitvity filter if required
         dcf = self.sensitivityfilt(xf, rmin, dc, filt)
@@ -91,37 +190,57 @@ class Topopt(object):
         m = 1  # amount of constraint functions
         n = load.nelx*load.nely  # amount of elements
         x = np.copy(self.x).flatten()
-        xmin = constraint.xmin(load, self.x)  # vector with min element density
-        xmax = constraint.xmax(load, self.x)  # vector with max element density
+        xmin = constraint.xmin(load, self.x).flatten()
+        xmax = constraint.xmax(load, self.x).flatten()
         dcf = dcf.flatten()
         volcon = constraint.current_volconstrain(xf)  # value of constraint function
-        dvolcondx = constraint.volume_derivative(load)  # constraint derivative
+        dvolcondx = constraint.volume_derivative  # constraint derivative
         a0 = 1
         a = np.zeros((m))
         c_ = 1000*np.ones((m))
         d = a
 
         # Execute MMA update scheme
-        xnew, low, upp = self.mma(m, n, itr, x, xmin, xmax, xold1, xold2, c, dcf, volcon, dvolcondx, low, upp, a0, a, c_, d)
+        xnew, self.low, self.upp = self.mma(m, n, self.itr, x, xmin, xmax, self.xold1, self.xold2, c, dcf, volcon, dvolcondx, self.low, self.upp, a0, a, c_, d)
 
         # Update variables
-        xold2 = xold1
-        xold1 = x
+        self.xold2 = self.xold1
+        self.xold1 = x
         self.x = xnew.reshape((load.nely, load.nelx))
 
         # What is the maximum change
-        change = np.amax(abs(xnew - xold1))
+        change = np.amax(abs(xnew - self.xold1))
 
-        return change, c, xold1, xold2, low, upp
+        return change, c
 
     # updated compliance algorithm
-    def comp(self, load, x, u, ke, penal):
-        '''funcion calculates compliance and compliance density derivative'''
+    def comp(self, x, u, ke, penal):
+        """
+        This funcion calculates compliance and compliance density derivative.
+
+        Parameters
+        -------
+        x : 2-D array size(nely, nelx)
+            Possibly filterd density distribution.
+        u : 1-D array len(max(edof)+1)
+            Displacement of all degrees of freedom.
+        ke : 2-D array size(8, 8)
+            Element stiffness matrix with full density.
+        penal : float
+            Material model penalisation (SIMP).
+
+        Returns
+        -------
+        c : float
+            Compliance for the current design.
+        dc : 2-D array size(nely, nelx)
+            Compliance sensitivity to density changes.
+        """
 
         nely, nelx = x.shape
         xe = x.T.flatten()  # flat list wich desities
 
-        edof = load.edof(nelx, nely)[0]
+        edof = self.load.edof()[0]
         ue = u[edof]  # list with the displacements of the nodes of that element
 
         # calculating the compliance in 3 steps
@@ -135,13 +254,28 @@ class Topopt(object):
         return c, dc
 
     # sensitivity filter
-    def densityfilt(self, x, rmin, filt):
-        ''' filters the density with a radius of rmin if:
+    def densityfilt(self, rmin, filt):
+        """
+        Filters with a normalized convolution on the densities with a radius
+        of rmin if:
 
-            >>> filt=='density'  '''
+            >>> filt=='density'
+
+        Parameters
+        ----------
+        rmin : float
+            Filter size.
+        filt : str
+            The filter type that is selected, either 'sensitivity' or 'density'.
+
+        Returns
+        ------
+        xf : 2-D array size(nely, nelx)
+            Filterd density distribution.
+        """
         if filt == 'density':
             rminf = math.floor(rmin)
-            nely, nelx = x.shape
+            nely, nelx = self.x.shape
 
             # define normalized convolution kernel based upon rmin
             size = rminf*2+1
@@ -153,19 +287,33 @@ class Topopt(object):
             kernel = kernel/np.sum(kernel)  # normalisation
 
             # apply convolution filter
-            xf = convolve(x, kernel, mode='reflect')
+            xf = convolve(self.x, kernel, mode='reflect')
 
         else:
-            xf = x
+            xf = self.x
 
         return xf
 
     # sensitivity filter
     def sensitivityfilt(self, x, rmin, dc, filt):
-        ''' filters sensitivity with a radius of rmin if:
+        """
+        Filters with a normalized convolution on the sensitivity with a
+        radius of rmin if:
 
             >>> filt=='sensitivity'
-        '''
+
+        Parameters
+        ----------
+        rmin : float
+            Filter size.
+        filt : str
+            The filter type that is selected, either 'sensitivity' or 'density'.
+
+        Returns
+        ------
+        dcf : 2-D array size(nely, nelx)
+            Filterd sensitivity distribution.
+        """
         if filt == 'sensitivity':
             rminf = math.floor(rmin)
             nely, nelx = x.shape
@@ -206,7 +354,7 @@ class Topopt(object):
         m : int
             The number of general constraints.
         n : int
-            The number of variables x_j
+            The number of variables x_j.
         itr : int
             Current iteration number ( =1 the first time mmasub is called).
         xval : 1-D array len(n)
@@ -229,10 +377,10 @@ class Topopt(object):
             calculated at xval.
         dfdx : 2-D array size(m x n)
             (m x n)-matrix with the derivatives of the constraint functions f_i
-            with respect to the variables x_j, calculated at xval
+            with respect to the variables x_j, calculated at xval.
         low : 1-D array len(n)
             Vector with the lower asymptotes from the previous iteration
-            (provided that iter>1).
+            (provided thnp.array([1,2])at iter>1).
         upp : 1-D array len(n)
             Vector with the upper asymptotes from the previous iteration
             (provided that iter>1).
@@ -252,10 +400,10 @@ class Topopt(object):
             current MMA subproblem.
         low : 1-D array len(n)
             Column vector with the lower asymptotes, calculated and used in the
-            current MMA subproblem
+            current MMA subproblem.
         upp : 1-D array len(n)
             Column vector with the upper asymptotes, calculated and used in the
-            current MMA subproblem
+            current MMA subproblem.
 
 
         Version September 2007 (and a small change August 2008)
@@ -263,16 +411,15 @@ class Topopt(object):
         Krister Svanberg <krille@math.kth.se>
         Department of Mathematics KTH, SE-10044 Stockholm, Sweden.
 
-        Translated to python by A.J.J. Lagerweij TU Delft June 2018
+        Translated to python 3 by A.J.J. Lagerweij TU Delft June 2018
         '''
 
-        epsimin = 10**(-7)
+        epsimin = np.sqrt(m + n)*10**(-9)
         raa0 = 0.00001
-        move = 1.0
         albefa = 0.1
         asyinit = 0.5
-        asyincr = 1.2
-        asydecr = 0.7
+        asyincr = 1.06
+        asydecr = 0.65
         eeen = np.ones((n))
         eeem = np.ones((m))
         zeron = np.zeros((n))
@@ -297,11 +444,11 @@ class Topopt(object):
 
         # calculation of the bounds alfa and beta
         zzz1 = low + albefa*(xval - low)
-        zzz2 = xval - move*(xmax - xmin)
+        zzz2 = xval - (xmax - xmin)
         zzz = np.maximum(zzz1, zzz2)
         alfa = np.maximum(zzz, xmin)
         zzz1 = upp - albefa*(upp-xval)
-        zzz2 = xval + move*(xmax - xmin)
+        zzz2 = xval + (xmax - xmin)
         zzz = np.minimum(zzz1, zzz2)
         beta = np.minimum(zzz, xmax)
 
