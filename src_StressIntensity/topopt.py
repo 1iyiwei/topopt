@@ -46,7 +46,7 @@ class Topopt(object):
             x, change, uout, xold1, xold2, low, upp = self.iter(load, constraint, x, penal, rmin, filt, itr, xold1, xold2, low, upp)
 
             if self.verbose: print('It.: {0:4d},  Obj.: {1:8.4f},  ch.: {2:0.3f}'.format(itr, uout, change), flush=True)
-            if history:
+            if history and itr % 1 == 0:
                 xf = self.densityfilt(x, rmin, filt)
                 xf_history.append(1-xf)
 

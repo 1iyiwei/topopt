@@ -24,30 +24,31 @@ if __name__ == "__main__":
 
     # constraints
     Emin = 1e-9
-    volfrac = 0.55
-    move = 0.5
+    volfrac = 0.35
+    move = 1
 
     # input parameters
-    nelx = 120
-    nely = 40
+    nelx = 200*6
+    nely = 100*2
 
     # optimizer parameters
     penal = 3.0
-    rmin = 1.5
-    filt = 'sensitivity'
+    rmin = 1.25
+    filt = 'density'
     loopy = math.inf
-    delta = 0.001
+    delta = 0.005
 
     # plotting and printing options
     verbose = True
     plotting = True
     history = True
+    save_plot = False
 
     # constraints object created
     den_con = DensityConstraint(nelx, nely, move, volume_frac=volfrac)
 
     # loading case object, other classes can be selected and created
-    load = HalfBeam(nelx, nely, young, Emin, poisson)
+    load = Canti(nelx, nely, young, Emin, poisson)
 
     # FEA object is generated, other solvers can be selected and created
     fesolver = CvxFEA(verbose=verbose)
@@ -60,13 +61,19 @@ if __name__ == "__main__":
     x, x_history = optimizer.layout(penal, rmin, delta, loopy, filt, history)
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
-    # plot
-    pl = Plot(x, load, nelx, nely, plotting)
-    pl.figure()
-    pl.loading()
-    pl.boundary()
+    # plotting
+    pl = Plot(nelx, nely)
+    pl.loading(load)
+    pl.boundary(load)
+    pl.add(x, animated=False)
 
-    # save
+    if save_plot:
+        pl.save('topopt')
+    t = time.time()
     if history:
-        import imageio
-        imageio.mimsave('topopt.gif', x_history)
+        for i in x_history:
+            pl.add(i, animated=True)
+        pl.save('topopt', fps=30)
+    print('Elapsed time is: ', time.time() - t, 'seconds.')
+    if plotting:
+        pl.show()

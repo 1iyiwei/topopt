@@ -1,12 +1,12 @@
 # Topology optimization #
 
-![halfbeam](./img/topopt.gif)
+![Cantilever](./img/topopt.mp4)
 
-This is an implementation of the [classic topology optimization code](http://www.topopt.dtu.dk/) described in [A 99 line topology optimization code written in Matlab](http://www.topopt.dtu.dk/files/matlab.pdf) by Ole Sigmund. The main difference is that this code is written in python and that a method of moving asymptotes update scheme is used, [MMA](https://doi.org/10.1002/nme.1620240207) is developed by Krister Svanberg. Currently two versions of the code exist, a compilance minimalization and a actuator design version that maximizes the displacement at a certain point.
+This is an implementation of the [classic topology optimization code](http://www.topopt.dtu.dk/) described in [A 99 line topology optimization code written in Matlab](http://www.topopt.dtu.dk/files/matlab.pdf) by Ole Sigmund. The main difference is that this code is written in python and that a method of moving asymptotes update scheme is used, [MMA](https://doi.org/10.1002/nme.1620240207) is developed by Krister Svanberg. Currently three versions of the code exist, a compilance minimalization, a actuator design version that maximizes the displacement at a certain point and a sress intensity minimisation code.
 Start with [example.py](./src_Compliance/example.py).
 
 ## Prerequisites ##
-Python 3 with NumPy, SciPy, matplotlib and cvxopt as the core. The imageio packege is required only when .gif figures are created. To simplify the setup Anaconda enviroments (including Spyder) are avalible both for [Window](./anaconda/TopOpt_Windows.yml) and [Linux](./anaconda/TopOpt_Linux.yml).
+Python 3 with NumPy, SciPy, matplotlib and cvxopt as the core. The ffmpeg packege is required only when .mp4 movies are created. To simplify the setup Anaconda enviroments (including Spyder) are avalible both for [Window](./anaconda/TopOpt_Windows.yml) and [Linux](./anaconda/TopOpt_Linux.yml).
 
 ## Generating a new load class ##
 The folowing section will explain how to set up a simulation for a new geometry. One is expected to have some knowlege of FEM and topology optimization. No explanation on the simplation settings, such as the resolution, filter size or volume constrain will follow. For information on those topics I recomend reading "Topology Optimization" from M.P. Bends&#248;e and O. Sigmund.
@@ -30,9 +30,11 @@ The same steps need no be taken to create a new actuator load case, but copy the
 ![HalfBeamFBD](./img/FBDExample.png)
 
 ## To be implemented ##
-Currently two changes are proposed before the final release of the 2D software.
- 1. Adding a faster algebraic multigrid preconditioner with Conjugate Gradient itterative solver
- 2. Fixing the error in the MMA combined with sensitivity filter
+Currently four changes are propose:
+ 1. Adding a faster algebraic multigrid preconditioner with Conjugate Gradient itterative solver.
+ 2. Fixing the division by zero error in the MMA combined with passive elements.
+ 3. Improof documentation of the Inverter and StressIntensity codes.
+ 4. Add multiloadcase optimisation capebilities.
 
 ## Special Thanks To ##
  1. Ole Sigmund and Martin Bends&#248;e from the Technical University of Denmark for there contributions to the field of topology optimization

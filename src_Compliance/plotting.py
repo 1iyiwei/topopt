@@ -6,6 +6,7 @@ Aerospace Structures and Materials Department TU Delft
 2018
 """
 import matplotlib.pyplot as plt
+import matplotlib.animation as anim
 import numpy as np
 
 
@@ -15,117 +16,152 @@ class Plot(object):
     algorithem. It can print the density distribution, the boundary conditions
     and the forces.
 
-    Atributes
-    --------
-    x : 2-D array size(nely, nelx)
-        Density distribution.
-    load : object, child of the Loads class
-        The loadcase(s) considerd for this optimisation problem.
+    Parameters
+    ----------
     nelx : int
         Number of elements in x direction.
     nely : int
         Number of elements in y direction.
-    plotting : bool
-        Figure is only plotted if plotting == True
+    title : str
+        Title of the plot if required.
+
+    Atributes
+    --------
+    nelx : int
+        Number of elements in x direction.
+    nely : int
+        Number of elements in y direction.
+    fig : matplotlib.pyplot figure
+        An empty figure of size nelx/10 and nely/10*1.2 inch.
+    ax : matplotlib.pyplot axis
+        The axis system that belongs to fig.
+    images : 1-D list with imshow objects
+        This list contains all density distributions that need to be plotted.
 
     Methods
     -------
-    figure(title=None)
-        Plotting the density distribution.
+    add(x, animate)
+        Adding a plot of the density distribution to the figure.
     boundary()
         Plotting the boundary conditions.
     loading()
         Plotting the forces acting on the problem.
+    save(filename, fps)
+        Saving an plot in svg or mp4 format.
     show()
         Displaying the generated figure.
     """
-    def __init__(self, x, load, nelx, nely, plotting=False):
-        self.x = x
-        self.fixdofs = load.fixdofs()
-        self.force = load.force()
+    def __init__(self, nelx, nely, title=None):
+        # turning off the interactive plotting of matplotlib.pyplot
+        plt.ioff()
         self.nelx = nelx
         self.nely = nely
-        self.plotting = plotting
-        self.dim = 2
+        self.fig = plt.figure()
+        self.fig.set_size_inches(nelx/10, 1.2*nely/10)
+        self.ax = self.fig.add_axes([0.05, 0.05, 0.9, 0.8], frameon=False, aspect=1)
+        self.ax.set_xticks([])
+        self.ax.set_yticks([])
+        if title is not None:
+            self.fig.title(title)
+        self.images = []
 
-    def figure(self, title=None):
+    def add(self, x, animated=False):
         """
-        Plotting the density distribution where a title can be added.
+        Adding a plot of the density distribution to the figure.
 
         Parameters
         ----------
-        title : str
-            A title that can be given to the plot.
+        x : 2-D array size(nely, nelx)
+            The density distribution.
+        animated : bool
+            An animated figure is genereted when history = True.
         """
-        if self.plotting is not True:
-            return
+        plt_im = plt.imshow(1-x, vmin=0, vmax=1, cmap=plt.cm.gray, animated=animated)
+        self.images.append([plt_im])
 
-        plt.figure()
-        plt.imshow(1-self.x, vmin=0, vmax=1, cmap=plt.cm.gray)
-        if title is not None:
-            plt.title(title)
-        plt.xticks([])
-        plt.yticks([])
 
-    def boundary(self):
+    def boundary(self, load):
         """
         Plotting the boundary conditions.
+
+        Parameters
+        --------
+        load : object, child of the Loads class
+            The loadcase(s) considerd for this optimisation problem.
         """
-        if self.plotting is not True:
-            return
         wedgepropsH = dict(arrowstyle="wedge, tail_width=1.", color='g')
         wedgepropsV = dict(arrowstyle="wedge, tail_width=1.", color='b')
 
-        for i in self.fixdofs:
-            if i % self.dim == 0:
-                node = int((i)/self.dim)
+        for i in load.fixdofs():
+            if i % load.dim == 0:
+                node = int((i)/load.dim)
                 nodex = int(node/(self.nely + 1))-0.5
                 nodey = node % (self.nely + 1)-0.5
 
-                plt.annotate('', xy=(nodex, nodey), xytext=(-15, 0),
-                             textcoords='offset points', arrowprops=wedgepropsH)
+                self.ax.annotate('', xy=(nodex, nodey), xytext=(-15, 0),
+                                  textcoords='offset points', arrowprops=wedgepropsH)
 
-            if i % self.dim == 1:
-                node = int((i)/self.dim)
+            if i % load.dim == 1:
+                node = int((i)/load.dim)
                 nodex = int(node/(self.nely + 1))-0.5
                 nodey = node % (self.nely + 1)-0.5
 
-                plt.annotate('', xy=(nodex, nodey), xytext=(0, -15),
-                             textcoords='offset points', arrowprops=wedgepropsV)
+                self.ax.annotate('', xy=(nodex, nodey), xytext=(0, -15),
+                                  textcoords='offset points', arrowprops=wedgepropsV)
 
-    def loading(self):
+    def loading(self, load):
         """
         Plotting the loading conditions.
+
+        Parameters
+        --------
+        load : object, child of the Loads class
+            The loadcase(s) considerd for this optimisation problem.
         """
-        if self.plotting is not True:
-            return
         arrowprops = dict(arrowstyle="simple",fc="r", ec="r", mutation_scale=20)
 
-        forceloc = np.nonzero(self.force)[0]
+        forceloc = np.nonzero(load.force())[0]
 
         for i in forceloc:
-            force = self.force[i]
+            force = load.force()[i]
 
-            if i % self.dim == 0:
-                node = int((i)/self.dim)
+            if i % load.dim == 0:
+                node = int((i)/load.dim)
                 nodex = int(node/(self.nely + 1))-0.5
                 nodey = node % (self.nely + 1)-0.5
 
-                plt.annotate('', xy=(nodex, nodey), xytext=(-60*force, 0),
-                             textcoords='offset points', arrowprops=arrowprops)
+                self.ax.annotate('', xy=(nodex, nodey), xytext=(-force, 0),
+                                  textcoords='offset points', arrowprops=arrowprops)
 
-            if i % self.dim == 1:
-                node = int((i)/self.dim)
+            if i % load.dim == 1:
+                node = int((i)/load.dim)
                 nodex = int(node/(self.nely + 1))-0.5
                 nodey = node % (self.nely + 1)-0.5
 
-                plt.annotate('', xy=(nodex, nodey), xytext=(0, -60*force),
-                             textcoords='offset points', arrowprops=arrowprops)
+                self.ax.annotate('', xy=(nodex, nodey), xytext=(0, -60*force),
+                                  textcoords='offset points', arrowprops=arrowprops)
+
+    def save(self, filename, fps=1):
+        """
+        Saving an plot in svg or mp4 format, depending on the length of the
+        images part.
+        
+        Parameters
+        ---------
+        filename : str
+            Name of the file, excluding the file exstension.
+        fps : int
+            Amount of frames per second if the plots are animations.
+        """
+        if len(self.images) == 1:
+            self.fig.savefig(filename+'.svg')
+        else:
+            writer = anim.FFMpegFileWriter()
+            animation = anim.ArtistAnimation(self.fig, self.images)
+            animation.save(filename+'.mp4', writer=writer, fps=fps, extra_args=['-vcodec', 'libx264'])
 
     def show(self):
         """
-        Displaying the generated figure
+        Showing the plot in a window.
         """
-        if self.plotting is not True:
-            return
-        plt.show()
+        self.fig.show()

@@ -20,23 +20,23 @@ if __name__ == "__main__":
     # constraints
     Emin = 1e-9
     volfrac = 1.1
-    move = 0.5
+    move = 1
 
     # mesh dimensions
     nelx = 300
     nely = 320
-    crack_length = 150
+    crack_length = 200
 
     # optimization settings
     penal = 1.0
-    rmin = 1.1
-    loopy = math.inf
+    rmin = 1.2
+    loopy = 1000 # math.inf
     delta = 0.01
 
     # loading/problem
     load = CompactTension(nelx, crack_length, ext_stiff)   
 
-    # constraints5
+    # constraints
     den_con = DensityConstraint(load, move, volume_frac=volfrac, density_min=1, density_max=2.0, Emin=Emin)
 
     # optimizer
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     optimizer = Topopt(fesolver, load, den_con, young, poisson, verbose=verbose)
 
     # compute
-    filt = 'density'
+    filt = 'sensitivity'
     history = True
     x = optimizer.init(load, den_con)
     x, x_more = optimizer.layout(load, den_con, x, penal, rmin, delta, loopy, filt, history)
