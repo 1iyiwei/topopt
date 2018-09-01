@@ -57,7 +57,10 @@ class Plot(object):
         self.nelx = nelx
         self.nely = nely
         self.fig = plt.figure()
-        self.fig.set_size_inches(nelx/10, 1.2*nely/10)
+        xsize = 100*nelx/1920
+        ysize = 100*nely/1080*1.2
+        schale = max(xsize, ysize)
+        self.fig.set_size_inches(nelx/schale, 1.2*nely/schale)
         self.ax = self.fig.add_axes([0.05, 0.05, 0.9, 0.8], frameon=False, aspect=1)
         self.ax.set_xticks([])
         self.ax.set_yticks([])
@@ -141,11 +144,11 @@ class Plot(object):
                 self.ax.annotate('', xy=(nodex, nodey), xytext=(0, -60*force),
                                   textcoords='offset points', arrowprops=arrowprops)
 
-    def save(self, filename, fps=1):
+    def save(self, filename, fps=30):
         """
         Saving an plot in svg or mp4 format, depending on the length of the
-        images part.
-        
+        images list. The FasterFFMpegWriter is used when videos are generated.
+
         Parameters
         ---------
         filename : str
@@ -156,12 +159,42 @@ class Plot(object):
         if len(self.images) == 1:
             self.fig.savefig(filename+'.svg')
         else:
-            writer = anim.FFMpegFileWriter()
-            animation = anim.ArtistAnimation(self.fig, self.images)
-            animation.save(filename+'.mp4', writer=writer, fps=fps, extra_args=['-vcodec', 'libx264'])
+            writer = FasterFFMpegWriter(fps=fps, bitrate=1800)
+            animation = anim.ArtistAnimation(self.fig, self.images, interval=1, blit=True, repeat=False)
+            animation.save(filename+'.mp4', writer=writer)
 
     def show(self):
         """
         Showing the plot in a window.
         """
         self.fig.show()
+
+
+class FasterFFMpegWriter(anim.FFMpegWriter):
+    '''FFMpeg-pipe writer bypassing figure.savefig. To improof saving speed'''
+
+    def __init__(self, **kwargs):
+        '''Initialize the Writer object and sets the default frame_format.'''
+        super().__init__(**kwargs)
+        self.frame_format = 'argb'
+
+    def grab_frame(self, **savefig_kwargs):
+        '''
+        Grab the image information from the figure and save as a movie frame.
+
+        Doesn't use savefig to be faster: savefig_kwargs will be ignored.
+        '''
+        try:
+            # re-adjust the figure size and dpi in case it has been changed by
+            # the user. We must ensure that every frame is the same size or
+            # the movie will not save correctly.
+            self.fig.set_size_inches(self._w, self._h)
+            self.fig.set_dpi(self.dpi)
+            # Draw and save the frame as an argb string to the pipe sink
+            self.fig.canvas.draw()
+            self._frame_sink().write(self.fig.canvas.tostring_argb()) 
+        except (RuntimeError, IOError) as e:
+            out, err = self._proc.communicate()
+            raise IOError('Error saving animation to file (cause: {0}) '
+                      'Stdout: {1} StdError: {2}. It may help to re-run '
+                      'with --verbose-debug.'.format(e, out, err)) 
