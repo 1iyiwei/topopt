@@ -1,6 +1,6 @@
 # Topology optimization #
 
-![Cantilever](./img/topopt.mp4)
+<video src="./img/topopt.mp4" width="1920" height="384" controls preload></video>
 
 This is an implementation of the [classic topology optimization code](http://www.topopt.dtu.dk/) described in [A 99 line topology optimization code written in Matlab](http://www.topopt.dtu.dk/files/matlab.pdf) by Ole Sigmund. The main difference is that this code is written in python and that a method of moving asymptotes update scheme is used, [MMA](https://doi.org/10.1002/nme.1620240207) is developed by Krister Svanberg. Currently three versions of the code exist, a compilance minimalization, a actuator design version that maximizes the displacement at a certain point and a stress intensity minimisation code.
 Start with [example.py](./src_Compliance/example.py).
