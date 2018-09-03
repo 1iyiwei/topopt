@@ -2,7 +2,8 @@
 Constraints class used to specify the density constraints of the topology
 optimisation problem. It contains functions for minimum and maximum element
 density in the upcomming iteration and the magnitude of the volume constraint
-function itself of the current design.
+function itself of the current design. This version of the code is used for the
+global compliance minimization.
 
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft

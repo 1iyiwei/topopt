@@ -1,20 +1,22 @@
-'''
+"""
 Topology Optimization class that handles the itterations, objective functions,
 filters and update scheme. It requires to call upon a constraint, load case and
-FE solver classes.
+FE solver classes. This version of the code is meant for global compliance
+minimization.
 
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft
 2018
-'''
+"""
+
 import numpy as np
 import math
 from scipy.ndimage import convolve
-from scipy.sparse import spdiags, csc_matrix
+from scipy.sparse import spdiags
 
 
 class Topopt(object):
-    '''
+    """
     This is the optimisation object itself. It contains the initialisation of
     the density distribution.
 
@@ -59,7 +61,7 @@ class Topopt(object):
         Prepears a convex reprensentation of the local optimisation problem.
     solvemma(m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d)
         Solves the locally convex problem with a dual-primal Newton method
-    '''
+    """
     def __init__(self, constraint, load, fesolver, verbose=False):
         self.constraint = constraint
         self.load = load
@@ -235,7 +237,6 @@ class Topopt(object):
         dc : 2-D array size(nely, nelx)
             Compliance sensitivity to density changes.
         """
-
         nely, nelx = x.shape
         xe = x.T.flatten()  # flat list wich desities
 
@@ -303,6 +304,10 @@ class Topopt(object):
 
         Parameters
         ----------
+        x : 2-D array size(nely, nelx)
+            Current density ditribution.
+        dc : 2-D array size(nely, nelx
+            Compliance sensitivity to density changes.
         rmin : float
             Filter size.
         filt : str

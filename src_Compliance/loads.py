@@ -1,12 +1,12 @@
-'''
+"""
 This file containts the Load class that allows the generation of an object that
 contains geometric, mesh, loads and boundary conditions that belong to the
-load case.
+load case. This version of the code is meant for global compliance minimization.
 
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft
 2018
-'''
+"""
 
 import numpy as np
 
@@ -48,16 +48,16 @@ class Load(object):
     lk(E, nu)
         Calculates the element stiffness matrix.
     force()
-        Returns an 1D array, the force vector of the loading condition.
+        Returns an 1-D array, the force vector of the loading condition.
     alldofs()
         Returns a list with all degrees of freedom.
     fixdofs()
         Returns a list with indices that are fixed by the boundary conditions.
     freedofs()
-        Returns a list of arr indices that are not fixed
+        Returns a list of arr indices that are not fixede
     passive()
         Retuns three lists containing the location and magnitude of fixed
-        density values
+        density valuese
     """
     def __init__(self, nelx, nely, young, Emin, poisson):
         self.nelx = nelx

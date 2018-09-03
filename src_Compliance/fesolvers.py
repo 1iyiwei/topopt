@@ -1,5 +1,6 @@
 """
 Finite element solvers for the displacement from stiffness matrix and force
+vector. This version of the code is meant for global compliance minimization.
 
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft
@@ -138,7 +139,7 @@ class CvxFEA(CSCStiffnessMatrix):
 
         Returns
         -------
-        u : 1-D array len(max(edof)+1)
+        u : 1-D array len(max(edof))
             Displacement of all degrees of freedom
         """
         freedofs = np.array(load.freedofs())

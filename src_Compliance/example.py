@@ -1,5 +1,7 @@
 """
 This is the main progam code that sets up the topology optimisation problem.
+This optimisation tries to mimimize the global compliance and thus maximizing
+the stiffness.
 
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft
@@ -28,27 +30,27 @@ if __name__ == "__main__":
     move = 1
 
     # input parameters
-    nelx = 200*6
-    nely = 100*2
+    nelx = 200
+    nely = 50
 
     # optimizer parameters
     penal = 3.0
-    rmin = 1.5
-    filt = 'density'
-    loopy = 400  # math.inf
+    rmin = 1.75
+    filt = 'sensitivity'
+    loopy = 1000  # math.inf
     delta = 0.005
 
     # plotting and printing options
     verbose = True
     plotting = True
-    save_plot = False
-    history = True
+    save_plot = True
+    history = False
 
     # constraints object created
     den_con = DensityConstraint(nelx, nely, move, volume_frac=volfrac)
 
     # loading case object, other classes can be selected and created
-    load = Canti(nelx, nely, young, Emin, poisson)
+    load = HalfBeam(nelx, nely, young, Emin, poisson)
 
     # FEA object is generated, other solvers can be selected and created
     fesolver = CvxFEA(verbose=verbose)
