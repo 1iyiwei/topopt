@@ -29,7 +29,7 @@ The same steps need no be taken to create a new actuator load case, but copy the
  1. Add the location and orientation of the actuator output. This is done with the [displaceloc function](https://github.com/AJJLagerweij/topopt/blob/455e2723b66b0be2c2eea74a514b9ee37709f416/src_Actuator/loads.py#L82-L87) which works similar as a force vector.
  2. Chose the [ext_stiffness](https://github.com/AJJLagerweij/topopt/blob/59266aa4b883c275de1d3175ea43ad3af0239c06/src_Actuator/example.py#L18) which is the external spring stiffness of the in and output.
 
-![HalfBeamFBD](./img/HalfBeamFBD.svg)
+![HalfBeamFBD](https://cdn.rawgit.com/AJJLagerweij/topopt/5f818813/img/HalfBeamFBD.svg)
 
 ## To be implemented ##
 Currently four changes are propose:
