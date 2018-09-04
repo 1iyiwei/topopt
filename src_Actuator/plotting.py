@@ -133,7 +133,7 @@ class Plot(object):
                 nodex = int(node/(self.nely + 1))-0.5
                 nodey = node % (self.nely + 1)-0.5
 
-                self.ax.annotate('', xy=(nodex, nodey), xytext=(-force, 0),
+                self.ax.annotate('', xy=(nodex, nodey), xytext=(-60*force, 0),
                                   textcoords='offset points', arrowprops=arrowprops)
 
             if i % load.dim == 1:

@@ -30,27 +30,27 @@ if __name__ == "__main__":
     move = 1
 
     # input parameters
-    nelx = 200
-    nely = 50
+    nelx = 200*8
+    nely = 50*6
 
     # optimizer parameters
     penal = 3.0
-    rmin = 1.75
+    rmin = 3
     filt = 'sensitivity'
-    loopy = 1000  # math.inf
+    loopy = 150  # math.inf
     delta = 0.005
 
     # plotting and printing options
     verbose = True
     plotting = True
     save_plot = True
-    history = False
+    history = True
 
     # constraints object created
     den_con = DensityConstraint(nelx, nely, move, volume_frac=volfrac)
 
     # loading case object, other classes can be selected and created
-    load = HalfBeam(nelx, nely, young, Emin, poisson)
+    load = Canti(nelx, nely, young, Emin, poisson)
 
     # FEA object is generated, other solvers can be selected and created
     fesolver = CvxFEA(verbose=verbose)
@@ -70,12 +70,12 @@ if __name__ == "__main__":
     pl.add(x)
 
     if save_plot:
-        pl.save('topopt')
+        pl.save('Cantilever')
 
     if history:
         for i in x_history:
             pl.add(i, animated=True)
-        pl.save('topopt')
+        pl.save('Canti')
 
     if plotting:
         pl.show()

@@ -1,4 +1,4 @@
-'''
+"""
 Constraints class used to specify the density constraints of the topology
 optimisation problem. It contains functions for minimum and maximum element
 density in the upcomming iteration and the magnitude of the volume constraint
@@ -8,7 +8,8 @@ compliant design, local displacement maximisation.
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft
 2018
-'''
+"""
+
 import numpy as np
 
 

@@ -20,11 +20,11 @@ from plotting import Plot
 if __name__ == "__main__":
     # material properties
     young = 1
+    Emin = 1e-9
     poisson = 0.3
     ext_stiff = 0.1
 
     # constraints
-    Emin = 1e-9
     volfrac = 0.3
     move = 1
 

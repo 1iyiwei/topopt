@@ -15,7 +15,6 @@ from scipy.ndimage import convolve
 from scipy.sparse import spdiags
 
 
-
 class Topopt(object):
     """
     This is the optimisation object itself. It contains the initialisation of
@@ -105,7 +104,8 @@ class Topopt(object):
             self.itr += 1
             change, uout = self.iter(penal, rmin, filt)
 
-            if self.verbose: print('It.: {0:4d},  Obj.: {1:8.4f},  ch.: {2:0.3f}'.format(self.itr, uout, change), flush=True)
+            if self.verbose:
+                print('It.: {0:4d},  U_out.: {1:8.4f},  ch.: {2:0.3f}'.format(self.itr, uout, change), flush=True)
 
             if history:
                 xf = self.densityfilt(rmin, filt)
@@ -164,7 +164,7 @@ class Topopt(object):
         # displacement via FEA
         u, lamba = self.fesolver.displace(load, xf, ke, kmin, penal)
 
-        # compliance, its derivative
+        # displacement and its derivative
         uout, duout = self.disp(xf, u, lamba, ke, penal)
 
         # applying the sensitvity filter if required
@@ -263,7 +263,6 @@ class Topopt(object):
         """
         if filt == 'density':
             rminf = math.floor(rmin)
-            nely, nelx = self.x.shape
 
             # define normalized convolution kernel based upon rmin
             size = rminf*2+1
@@ -308,7 +307,6 @@ class Topopt(object):
         """
         if filt == 'sensitivity':
             rminf = math.floor(rmin)
-            nely, nelx = x.shape
 
             # define normalized convolution kernel based upon rmin
             size = rminf*2+1

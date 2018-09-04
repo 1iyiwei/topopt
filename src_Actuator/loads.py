@@ -10,7 +10,6 @@ Aerospace Structures and Materials Department TU Delft
 
 import numpy as np
 
-
 class Load(object):
     """
     Load parent class that contains the basic functions used in all load cases.
@@ -35,6 +34,9 @@ class Load(object):
         Poisson ration of the material.
     dim : int
         Amount of dimensions conciderd in the problem, set at 2.
+    ext_stiff : float
+        Extra stiffness to be added to global stiffness matrix. Due to
+        interactions with meganisms outside design domain.
 
     Methods
     ------
@@ -42,6 +44,9 @@ class Load(object):
         Returns the topleft node number of the element.
     nodes(elx, ely)
         Returns all nodes of the element.
+    edof()
+        Generats an array with the possitions af all degrees of freedom that
+        belong to all elements.
     edof()
         Generats an array with the possitions af all degrees of freedom that
         belong to all elements.
@@ -74,7 +79,7 @@ class Load(object):
     # compute 1D index from 2D position for node (boundary of element)
     def node(self, elx, ely):
         """
-        Calculates the topleft node number of the requested element
+        Calculates the topleft node number of the requested element.
 
         Parameters
         ---------
@@ -86,7 +91,7 @@ class Load(object):
         Returns
         -------
         topleft : int
-            The node number of the top left node
+            The node number of the top left node.
         """
         return (self.nely+1)*elx + ely
 
@@ -258,7 +263,7 @@ class Load(object):
 # example loading scenario, inverter with horizontal mirror axis
 class Inverter(Load):
     """
-    This child of the Loads class represents a top half of the symetric inverter
+    This child of the Load class represents a top half of the symetric inverter
     design used for MEMS actuators. It contains an positive horizontal force at
     the bottom left corner which causes a negative displacement at the bottom
     right corner.
@@ -266,7 +271,7 @@ class Inverter(Load):
     Methods
     --------
     No methods are added compared to the parrent class. Only the force,
-    displacementloc and fixdof equations are changed to contain the propper
+    displaceloc and fixdof equations are changed to contain the propper
     values for the boundary conditions and optimisation objective.
     """
     def __init__(self, nelx, nely, young, Emin, poisson, ext_stiff):
@@ -280,7 +285,7 @@ class Inverter(Load):
         Returns
         ------
         f : 1-D column array length covering all degrees of freedom
-            Value of 1 at the index related to the bottom left node.           
+            Value of 1 at the index related to the bottom left node.
         """
         f = super().force()
         f[self.dim*self.nely] = 1.0

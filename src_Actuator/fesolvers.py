@@ -130,12 +130,7 @@ class CvxFEA(CSCStiffnessMatrix):
         """
         FE solver based upon a Supernodal Sparse Cholesky Factorization. It
         requires the instalation of the cvx module. It solves both the FEA
-        equalibrium and adjoint problems.
-
-        See: Y. Chen, T. A. Davis, W. W. Hager, S. Rajamanickam, "Algorithm
-        887: CHOLMOD, Supernodal Sparse Cholesky Factorization and
-        Update/Downdate", ACM Transactions on Mathematical Software, 35(3),
-        22:1-22:14, 2008.
+        equalibrium and adjoint problems. [1]_
 
         Parameters
         -------
@@ -156,6 +151,13 @@ class CvxFEA(CSCStiffnessMatrix):
             The displacement vector.
         lamba : 1-D column array shape(max(edof), 1)
             Adjoint equation solution.
+
+        References
+        ---------
+        .. [1] Y. Chen, T. A. Davis, W. W. Hager, S. Rajamanickam, "Algorithm
+            887: CHOLMOD, Supernodal Sparse Cholesky Factorization and
+            Update/Downdate", ACM Transactions on Mathematical Software, 35(3),
+            22:1-22:14, 2008.
         """
         freedofs = np.array(load.freedofs())
         nely, nelx = x.shape
