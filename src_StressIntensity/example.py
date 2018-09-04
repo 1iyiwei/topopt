@@ -1,6 +1,14 @@
-'''
-tester for topology compliant optimization code
-'''
+"""
+This is the main progam code that sets up the topology optimisation problem.
+This optimisation tries to minimize the stress intensity factor. Which should
+maximise the fatigue crack propegation life and thus the increase damage
+tolerance.
+
+Bram Lagerweij
+Aerospace Structures and Materials Department TU Delft
+2018
+"""
+
 import time
 import math
 
@@ -11,62 +19,64 @@ from topopt import Topopt
 from plotting import Plot
 
 if __name__ == "__main__":
-    t = time.time()
     # material properties
     young = 1
+    Emin = 1e-9
     poisson = 0.3
     ext_stiff = 0.0
 
     # constraints
-    Emin = 1e-9
     volfrac = 1.1
     move = 1
 
     # mesh dimensions
-    nelx = 300
-    nely = 320
-    crack_length = 200
+    nelx = 100
+    nely = 100
+    crack_length = 30
 
-    # optimization settings
+    # optimization parameters
     penal = 1.0
     rmin = 1.2
-    loopy = 1000 # math.inf
+    filt = 'sensitivity'
+    loopy = 20  # math.inf
     delta = 0.01
 
-    # loading/problem
-    load = CompactTension(nelx, crack_length, ext_stiff)   
-
-    # constraints
-    den_con = DensityConstraint(load, move, volume_frac=volfrac, density_min=1, density_max=2.0, Emin=Emin)
-
-    # optimizer
+    # plotting and printing options
     verbose = True
+    plotting = True
+    save_plot = False
+    history = True
+
+    # loading case object, other classes can be selected and created
+    load = DoubleEdgeCrack(nelx, young, Emin, poisson, ext_stiff)   
+
+    # constraints object created
+    den_con = DensityConstraint(load, move, volume_frac=volfrac, density_min=1, density_max=2.0)
+
+    # FEA object is generated, other solvers can be selected and created
     fesolver = CvxFEA(verbose=verbose)
-    optimizer = Topopt(fesolver, load, den_con, young, poisson, verbose=verbose)
+
+    # create optimizer object and initialise the problem
+    optimizer = Topopt(den_con, load, fesolver, verbose=verbose)
 
     # compute
-    filt = 'sensitivity'
-    history = True
-    x = optimizer.init(load, den_con)
-    x, x_more = optimizer.layout(load, den_con, x, penal, rmin, delta, loopy, filt, history)
-
+    t = time.time()
+    x, x_history = optimizer.layout(penal, rmin, delta, loopy, filt, history)
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
+    # plotting
+    pl = Plot(load)
+    pl.loading(load)
+    pl.boundary(load)
+    pl.add(x)
+
+    if save_plot:
+        pl.save('topopt')
+
     if history:
-        x_history = x_more
-        loop = len(x_history)
-    else:
-        loop = x_more
-        x_history = None
+        for i in x_history:
+            pl.add(i, animated=True)
+        pl.save('topopt')
 
-    # save
-    if x_history:
-        import imageio
-        imageio.mimsave('topopt.gif', x_history)
-
-    # plot
-    pl = Plot(x, load, nelx, nely)
-    pl.figure(den_con)
-    pl.loading()
-    pl.boundary()
-    pl.show()
+    if plotting:
+        pl.show()

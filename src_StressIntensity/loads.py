@@ -1,33 +1,143 @@
-'''
-loading scenario aka boundary condition
-density at elements, force/displacement at nodes (element corners)
-dofs are for displacements
-'''
+"""
+This file containts the Load class that allows the generation of an object that
+contains geometric, mesh, loads and boundary conditions that belong to the
+load case. This version of the code is meant for stress intensity minimization.
+
+Bram Lagerweij
+Aerospace Structures and Materials Department TU Delft
+2018
+"""
 
 import numpy as np
-
+from math import *
+import csv
 
 class Load(object):
-    def __init__(self, nelx, nely, ext_stiff, hoe):
+    """
+    Load parent class that contains the basic functions used in all load cases.
+    This class and its children do cantain information about the load case
+    conciderd in the optimisation. The load case consists of the mesh, the
+    loads, and the boundaries conditions. The class is constructed such that
+    new load cases can be generated simply by adding a child and changing the
+    function related to the geometry, loads and boundaries.
+
+    Atributes
+    -------
+    nelx : int
+        Number of elements in x direction.
+    nely : int
+        Number of elements in y direction.
+    dim : int
+        Amount of dimensions conciderd in the problem, set at 2.
+    edof : 2-D list size(nelx*nely, # degrees of freedom per element)
+        The list with all elements and their degree of freedom numbers.
+    x_list : 1-D array
+        The list with the x indices of all ellements to be inserted into
+        the global stiffniss matrix.
+    y_list : 1-D array
+        The list with the y indices of all ellements to be inserted into
+        the global stiffniss matrix.
+    young : float
+        Youngs modulus of the materias.
+    Emin : float
+        Artifical Youngs modulus of the material to ensure a stable FEA.
+        It is used in the SIMP based material model.
+    poisson : float
+        Poisson ration of the material.
+    k_list : list len(nelx*nely)
+        List with element stiffness matrices of full density.
+    kmin_list : list len(nelx*nely)
+        List with element stifness matrices at 0 density.
+    ext_stiff : float
+        Extra stiffness to be added to global stiffness matrix. Due to
+        interactions with meganisms outside design domain.
+
+    Methods
+    ------
+    node(elx, ely)
+        Returns the topleft node number of the element.
+    nodes(elx, ely)
+        Returns all nodes of the element.
+    edof()
+        Generats an array with the possitions af all degrees of freedom that
+        belong to all elements.
+    import_stiffness(elementtype, E, nu)
+        Imports and reads stiffness matrices from .csv file
+    reset_Kij()
+        Bug fix that removes Kij as a global variable.
+    lk(load, E, nu)
+        Generates a list with all element stiffness matrices.
+    force()
+        Returns an 2-D column array, the force vector of the loading condition.
+    kiloc()
+        Returns a 2-D column array, a vector, l, locating the stress intensity
+        node, such that u·l = KI
+    alldofs()
+        Returns a list with all degrees of freedom.
+    fixdofs()
+        Returns a list with indices that are fixed by the boundary conditions.
+    freedofs()
+        Returns a list of arr indices that are not fixede
+    passive()
+        Retuns three lists containing the location and magnitude of fixed
+        density valuese
+    """
+    def __init__(self, nelx, nely, young, Emin, poisson, ext_stiff, hoe):
         self.nelx = nelx
         self.nely = nely
         self.dim = 2
+        self.edof, self.x_list, self.y_list = self.edof(nelx, nely, hoe)
+        self.young = young
+        self.Emin = Emin
+        self.poisson = poisson
+        self.k_list = self.lk(young, poisson)
+        self.kmin_list = self.lk(Emin, poisson)
         self.ext_stiff = ext_stiff
-        self.edof, self.x_list, self.y_list, self.maxnode = self.edof(nelx, nely, hoe)
-
-    '''
-    different convention from numpy array shape: x/y versus row/col
-    '''
-    def shape(self):
-        return (self.nelx, self.nely)
 
     # compute 1D index from 2D position for node (boundary of element)
     def node(self, elx, ely):
+        """
+        Calculates the topleft node number of the requested element. Does not
+        toke Higher Order Elements in account.
+
+        Parameters
+        ---------
+        elx : int
+            X position of the conciderd element.
+        ely : int
+            Y position of the conciderd element.
+
+        Returns
+        -------
+        topleft : int
+            The node number of the top left node.
+        """
         return (self.nely+1)*elx + ely
 
     # compute the 4 boundary nodes of an element
-    # requires more testing, errors might exist here
     def nodes(self, elx, ely):
+        """
+        Calculates all node numbers of the requested element. Does not take
+        Higher Order Elements in account.
+
+        Parameters
+        ---------
+        elx : int
+            X position of the conciderd element.
+        ely : int
+            Y position of the conciderd element.
+
+        Returns
+        -------
+        n0 : int
+            The node number of the bottom left node.
+        n1 : int
+            The node number of the bottom right node.
+        n2 : int
+            The node number of the top left node.
+        n3 : int
+            The node number of the top right node.
+        """
         n3 = self.node(elx,     ely    ) 
         n2 = self.node(elx + 1, ely    ) 
         n1 = self.node(elx + 1, ely + 1) 
@@ -37,8 +147,20 @@ class Load(object):
     # edof that returns an array
     def edof(self, nelx, nely, hoe):
         """
-        Generates an 2D list with the position of the nodes of each element in
-        the global stiffness matrix
+        Generates an array with the position of the nodes of each element in
+        the global stiffness matrix. This takes the Higher Order Elements in
+        account.
+
+        Results
+        ------
+        edof : 2-D list size(nelx*nely, # degrees of freedom per element)
+            The list with all elements and their degree of freedom numbers.
+        x_list : 1-D array
+            The list with the x indices of all ellements to be inserted into
+            the global stiffniss matrix.
+        y_list : 1-D array
+            The list with the y indices of all ellements to be inserted into
+            the global stiffniss matrix.
         """
         # Creating list with element numbers
         elx = np.repeat(range(nelx), nely).reshape((nelx*nely, 1))  # x position of element
@@ -100,39 +222,245 @@ class Load(object):
         x_list = [item for sublist in x_list for subsublist in sublist for item in subsublist]
         y_list = [edofi*len(edofi) for edofi in edof]
         y_list = [item for sublist in y_list for item in sublist]
-        maxnode = max(x_list)
 
-        return edof, np.array(x_list), np.array(y_list), maxnode
+        return edof, np.array(x_list), np.array(y_list)
+
+    # Importing the stiffness matrixes
+    def import_stiffness(self, elementtype, E, nu):
+        """
+        This function imports a matrix from a csv file that has variables to
+        the material properties. The correct material properties are added.
+
+        Parameters
+        ----------
+        elementtype : str
+            Describes what .csv file should be used for the import.
+        E : float
+            Youngs modulus of the material.
+        nu : float
+            Poissons ratio of the material.
+
+        Returns
+        -------
+        lk : array size(dofs, dofs)
+            Element stiffness matrix
+        """
+        file = 'Stiffness Matrices/' + elementtype + '.csv'
+
+        # import file
+        with open(file, 'r') as f:
+            reader = csv.reader(f)
+            k = list(reader)
+        f.close()
+
+        # generate empy matrix with correct size
+        lk = np.zeros((len(k), len(k)))
+
+        for i in range(len(k)):
+            for j in range(len(k[i])):
+                kij = k[i][j].strip()
+                exec("Kij = {}".format(kij), locals(), globals())
+                lk[i, j] = Kij
+        self.reset_Kij()
+        return lk
+
+    # reset global Kij, fixes bug with exec??
+    def reset_Kij(self):
+        """
+        Resets the global variable Kij. This is neccesary as function
+        import_stiffness will not clean up its local variables itself.
+        """
+        global Kij
+        del Kij
+
+    # list with all local stiffeness matrix of every element
+    def lk(self, E, nu):
+        """
+        Generates a list with all element stiffness matrices. It differenciates
+        between the element types used.
+
+        Parameters
+        ---------
+        E : float
+            Youngs modulus of the material.
+        nu : float
+            Poissons ratio of the material.
+
+        Returns
+        k : list len(nelx*nely)
+            Returns a list with all local stiffness matrices.
+        """
+        k = []
+        for elx in range(self.nelx):
+            for ely in range(self.nely):
+                if [elx, ely] in self.hoe:
+                    index = [i for i, x in enumerate(self.hoe) if x == [elx, ely]][0]
+                    if self.hoe_type[index] == '-1,-1':
+                        k.append(self.import_stiffness('Stiffness_Cubic_PlaneStress_Enriched(-1:-1)', E, nu))
+                    elif self.hoe_type[index] == '-1,1':
+                        k.append(self.import_stiffness('Stiffness_Cubic_PlaneStress_Enriched(-1:1)', E, nu))
+                    elif self.hoe_type[index] == '1,-1':
+                        k.append(self.import_stiffness('Stiffness_Cubic_PlaneStress_Enriched(1:-1)', E, nu))
+                    elif self.hoe_type[index] == '1,1':
+                        k.append(self.import_stiffness('Stiffness_Cubic_PlaneStress_Enriched(1:1)', E, nu))
+                    else:
+                        raise Exception('The element type requested does not exist')
+                else:
+                    kk = np.array([1/2-nu/6,1/8+nu/8,-1/4-nu/12,-1/8+3*nu/8,-1/4+nu/12,-1/8-nu/8,nu/6,1/8-3*nu/8])
+                    ke = E/(1-nu**2) * \
+                        np.array([[kk[0], kk[1], kk[2], kk[3], kk[4], kk[5], kk[6], kk[7]],
+                                  [kk[1], kk[0], kk[7], kk[6], kk[5], kk[4], kk[3], kk[2]],
+                                  [kk[2], kk[7], kk[0], kk[5], kk[6], kk[3], kk[4], kk[1]],
+                                  [kk[3], kk[6], kk[5], kk[0], kk[7], kk[2], kk[1], kk[4]],
+                                  [kk[4], kk[5], kk[6], kk[7], kk[0], kk[1], kk[2], kk[3]],
+                                  [kk[5], kk[4], kk[3], kk[2], kk[1], kk[0], kk[7], kk[6]],
+                                  [kk[6], kk[3], kk[4], kk[1], kk[2], kk[7], kk[0], kk[5]],
+                                  [kk[7], kk[2], kk[1], kk[4], kk[3], kk[6], kk[5], kk[0]]])
+                    k.append(ke)
+
+        return k
 
     def force(self):
-        max_node = self.maxnode + 1
-        return np.zeros((max_node, 1))
+        """
+        Returns an 1D array, the force vector of the loading condition.
 
-    def displaceloc(self):
-        max_node = self.maxnode + 1
-        return np.zeros((max_node, 1))
+        Returns
+        -------
+        f : 1-D column array length covering all degrees of freedom
+            Empy force vector.
+        """
+        num_dofs = max(self.x_list) + 1
+        return np.zeros((num_dofs, 1))
+
+    def kiloc(self):
+        """
+        The location of the stress intensity factor KI can be found at the
+        second last index.
+
+        Returns
+        -------
+        l : 1-D column array length covering all degrees of freedom
+            Zeros except for the second last index.
+        """
+        num_dofs = max(self.x_list) + 1
+        l = np.zeros((num_dofs, 1))
+
+        # higher order element
+        ele = self.hoe[0][0]*self.nely + self.hoe[0][1]
+        node = self.edof[ele][-2]  # node with K_I
+        l[node] = 1
+        return l
 
     def alldofs(self):
-        max_node = self.maxnode + 1
-        return [x for x in range(max_node)]
+        """
+        Returns a list with all degrees of freedom.
+
+        Returns
+        -------
+        all : 1-D list
+            List with numbers from 0 to the maximum degree of freedom number.
+        """
+        num_dofs = max(self.x_list) + 1
+        return [x for x in range(num_dofs)]
 
     def fixdofs(self):
+        """
+        Returns a list with indices that are fixed by the boundary conditions.
+
+        Returns
+        -------
+        fix : 1-D list
+            List with all the numbers of fixed degrees of freedom. This list is
+            empty in this parrent class.
+        """
         return []
 
     def freedofs(self):
-        return self.alldofs()
+        """
+        Returns a list of arr indices that are not fixed
+
+        Returns
+        -------
+        free : 1-D list
+            List containing all elemens of alldogs except those that appear in
+            the freedofs list.
+        """
+        return list(set(self.alldofs()) - set(self.fixdofs()))
+
+    def passive(self):
+        """
+        Retuns three lists containing the location and magnitude of fixed
+        density values
+
+
+        Returns
+        ------
+        elx : 1-D list
+            X coordinates of all passive elements, empty for the parrent class.
+        ely : 1-D list
+            Y ccordinates of all passive elements, empty for the parrent class.
+        values : 1-D list
+            Density values of all passive elements, empty for the parrent class.
+        """
+        return [], [], []
 
 
 # example loading scenario, inverter with horizontal mirror axis
 class EdgeCrack(Load):
-    def __init__(self, nelx, nely, crack_length, ext_stiff):
+    """
+    This child class of Load class represents the symetric top half of an edge
+    crack. The crack is positioned to the bottom left and propegates towards
+    the right. Special elements are placed around the crack tip. The plate is
+    subjected to a distributed tensile load (σ=1) on the top.
+
+    For a perfectly flat plate analytical expressions for K_I are known. [1]_
+
+    The stress intensity factors calculated can be be interperted in two ways:
+
+    1. Without schaling. This means that all elements have a size of 2 length units.
+    2. With schaling, comparison to reality should be based upon. ::
+
+        Kreal = sigma_real * sqrt(real_crack_length) * Ksim/sqrt(2*crack_length)
+
+    Atributes
+    ---------
+    Two attributes are added with respect to the parrent class.
+
+    crack_length : int
+        Is the amount of elements that the crack is long.
+    hoe : list len(2)
+        List containing the x end y element locations that need to be enriched.
+
+    Methods
+    -------
+    No methods are added compared to the parrent class. Only the force and
+    fixdof are changed to contain the propper values for the boundary
+    conditions.
+
+    References
+    ----------
+    .. [1] Tada, H., Paris, P., & Irwin, G. (2000). "Part II 2.10-2.12 The
+        Single Edge Notch Test Specimen", The stress analysis of cracks handbook
+        (3rd ed.). New York: ASME Press, pp:52-54.
+    """
+    def __init__(self, nelx, nely, crack_length, young, Emin, poisson, ext_stiff):
         self.crack_length = crack_length
         self.hoe = [[crack_length-1, nely-1], [crack_length, nely-1]]
         self.hoe_type = ['1,-1', '-1,-1']
 
-        super().__init__(nelx, nely, ext_stiff, self.hoe)
+        super().__init__(nelx, nely, young, Emin, poisson, ext_stiff, self.hoe)
 
     def force(self):
+        """
+        The top of the design space is pulled upwards by 1MPa. This means that
+        the nodal forces are 2 upwards, except for the top corners they have a
+        load of 1 only.
+
+        Returns
+        -------
+        f : 1-D column array length covering all degrees of freedom
+            Force vector.
+        """
         f = super().force()
         top_ele = [x for x in range(0, self.nelx*self.nely, self.nely)]
         forceloc = [self.edof[i][5] for i in top_ele][:-1]
@@ -141,16 +469,16 @@ class EdgeCrack(Load):
         f[[self.edof[i][5] for i in top_ele][-1]] = 1
         return f
 
-    def displaceloc(self):
-        dout = super().displaceloc()
-        # higher order element
-        ele = self.hoe[0][0]*self.nely + self.hoe[0][1]
-        # node with K_I
-        node = self.edof[ele][-2]
-        dout[node] = -1
-        return dout
-
     def fixdofs(self):
+        """
+        The boundary conditions limmit y-translation at the bottom of the design
+        space (due to symetry) and x-translations at the top (due to the clamps)
+
+        Returns
+        ------
+        fix : 1-D list
+            List with all the numbers of fixed degrees of freedom.
+        """
         # higher order element after crack
         ele = self.nely*(self.crack_length+1)-1
         bottom = [1, 3, 5]
@@ -169,10 +497,21 @@ class EdgeCrack(Load):
 
         return (np.hstack((fix, fix1, fix2))).tolist()
 
-    def freedofs(self):
-        return list(set(self.alldofs()) - set(self.fixdofs()))
-
     def passive(self):
+        """
+        Retuns three lists containing the location and magnitude of fixed
+        density values. The elements around the crack tip are fixed at a
+        density of one.
+
+        Returns
+        ------
+        elx : 1-D list
+            X coordinates of all passive elements, empty for the parrent class.
+        ely : 1-D list
+            Y ccordinates of all passive elements, empty for the parrent class.
+        values : 1-D list
+            Density values of all passive elements, empty for the parrent class.
+        """
         elx = [self.crack_length-1, self.crack_length]
         ely = [self.nely-1, self.nely-1]
         values = [1 for x in elx]
@@ -180,16 +519,67 @@ class EdgeCrack(Load):
 
 
 class DoubleEdgeCrack(Load):
-    def __init__(self, nelx, ext_stiff):
-        self.nelx = nelx
-        self.nely = 4*nelx
+    """
+    This child class of Load class represents the symetric top rigth quarter of
+    an double edge crack plate. The crack is positioned to the bottom left and
+    propegatestowards the right. Special elements are placed around the crack
+    tip. The plate is subjected to a distributed tensile load (σ=1) on the top.
+
+    For a perfectly flat plate analytical expressions for K_I are known. [1]_
+        
+    The stress intensity factors calculated can be be interperted in two ways:
+
+    1. Without schaling. This means that all elements have a size of 2 length units.
+    2. With schaling, comparison to reality should be based upon. ::
+
+        Kreal = sigma_real * sqrt(real_crack_length) * Ksim/sqrt(2*crack_length)
+
+    Atributes
+    ---------
+    Two attributes are added and one was changed with respect to the parrent
+    class.
+
+    nely : int
+        Number of y elements, this is now a function of nelx.
+    crack_length : int
+        Is the amount of elements that the crack is long, this is a function of
+        nelx.
+    hoe : list len(2)
+        List containing the x end y element locations that need to be enriched.
+
+    Methods
+    -------
+    No methods are added compared to the parrent class. Only the force,
+    fixdof and passive equations are changed to contain the
+    propper values for the boundary conditions and
+    passive elements.
+
+    References
+    ----------
+    .. [1] Tada, H., Paris, P., & Irwin, G. (2000). "Part II 2.6-2.9a The
+        Double Edge Notch Test Specimen", The stress analysis of cracks handbook
+        (3rd ed.). New York: ASME Press, pp:46-51.
+    """
+    def __init__(self, nelx, young, Emin, poisson, ext_stiff):
+        nelx = nelx
+        nely = 4*nelx
         self.crack_length = int(nelx/5*2)
-        self.hoe = [[self.crack_length-1, self.nely-1], [self.crack_length, self.nely-1]]
+        self.hoe = [[self.crack_length-1, nely-1], [self.crack_length, nely-1]]
         self.hoe_type = ['1,-1', '-1,-1']
 
-        super().__init__(nelx, self.nely, ext_stiff, self.hoe)
+        super().__init__(nelx, nely, young, Emin, poisson, ext_stiff, self.hoe)
 
     def force(self):
+        """
+        The top of the design space is pulled upwards by 1MPa. This means that
+        the nodal forces are 2 upwards, except for the top left corner has
+        a load of 1 only.
+
+        Returns
+        -------
+        f : 1-D column array length covering all degrees of freedom
+            Force vector
+        """
         f = super().force()
         top_ele = [x for x in range(0, self.nelx*self.nely, self.nely)]
         forceloc = [self.edof[i][5] for i in top_ele]
@@ -197,16 +587,16 @@ class DoubleEdgeCrack(Load):
         f[1] = 1
         return f
 
-    def displaceloc(self):
-        dout = super().displaceloc()
-        # higher order element
-        ele = self.hoe[0][0]*self.nely + self.hoe[0][1]
-        # node with K_I
-        node = self.edof[ele][-2]
-        dout[node] = -1
-        return dout
-
     def fixdofs(self):
+        """
+        The right side is fixed in x direction (symetry around the y axis) while
+        the bottom side is fixed in y direction (symetry around the x axis).
+
+        Returns
+        -------
+        fix : 1-D list
+            List with all the numbers of fixed degrees of freedom.
+        """
         # higher order element after crack
         ele = self.nely*(self.crack_length+1)-1
         bottom = [1, 3, 5]
@@ -226,10 +616,21 @@ class DoubleEdgeCrack(Load):
 
         return (np.hstack((fix, fix1, fix2))).tolist()
 
-    def freedofs(self):
-        return list(set(self.alldofs()) - set(self.fixdofs()))
-
     def passive(self):
+        """
+        Retuns three lists containing the location and magnitude of fixed
+        density values. The elements around the crack tip are fixed at a
+        density of one.
+
+        Returns
+        ------
+        elx : 1-D list
+            X coordinates of all passive elements, empty for the parrent class.
+        ely : 1-D list
+            Y ccordinates of all passive elements, empty for the parrent class.
+        values : 1-D list
+            Density values of all passive elements, empty for the parrent class.
+        """
         elx = [self.crack_length-1, self.crack_length]
         ely = [self.nely-1, self.nely-1]
         values = [1 for x in elx]
@@ -237,32 +638,80 @@ class DoubleEdgeCrack(Load):
 
 
 class CompactTension(Load):
-    def __init__(self, nelx, crack_length, ext_stiff):
-        self.nelx = nelx
-        self.nely = int(np.round(nelx/1.25*1.2/2))
+    """
+    This child class of Load class represents the symetric top half of an
+    compact tension specimen. The crack is positioned to the bottom left and
+    propegatestowards the right. Special elements are placed around the crack
+    tip. The plate is subjected to upwards load of one. The design follows the
+    ASTM standard. [1]_
+
+    For a perfectly flat plate analytical expressions for K_I do exist. [1]_
+    [2]_
+
+    The stress intensity factors calculated is for the case where the element
+    size is the real dimensions times two and a load of 1.
+
+    Atributes
+    ---------
+    Two attributes are added and one was changed with respect to the parrent
+    class.
+
+    nely : int
+        Number of y elements, this is now a function of nelx.
+    crack_length : int
+        Is the amount of elements that the crack is long.
+    hoe : list len(2)
+        List containing the x end y element locations that need to be enriched.
+
+    Methods
+    -------
+    No methods are added compared to the parrent class. Only the force and
+    fixdof are changed to contain the propper values for the boundary
+    conditions.
+
+    References
+    ----------
+    .. [1] ASTM Standard E647-15e1, “Standard Test Method for Measurement of
+        Fatigue Crack Growth Rates,” ASTM Book of Standards, vol. 0.30.1, 2015.
+    .. [2] Tada, H., Paris, P., & Irwin, G. (2000). "Part II 2.19-2.21 The
+        Compact Tension Test Specimen", The stress analysis of cracks handbook
+        (3rd ed.). New York: ASME Press, pp:61-63.
+    """
+    def __init__(self, nelx, young, Emin, poisson, crack_length, ext_stiff):
+        nelx = nelx
+        nely = int(np.round(nelx/1.25*1.2/2))
         self.crack_length = crack_length
-        self.hoe = [[self.crack_length-1, self.nely-1], [self.crack_length, self.nely-1]]
+        self.hoe = [[self.crack_length-1, nely-1], [self.crack_length, nely-1]]
         self.hoe_type = ['1,-1', '-1,-1']
 
-        super().__init__(nelx, self.nely, ext_stiff, self.hoe)
+        super().__init__(nelx, nely, young, Emin, poisson, ext_stiff, self.hoe)
 
     def force(self):
+        """
+        The ASTM standard requires the force to be located approx. 1/5 of nelx
+        and at 0.195 * nely from the top.
+
+        Returns
+        f : 1-D column array length covering all degrees of freedom
+            Force vector
+        """
         f = super().force()
         load_ele = int(self.nely/0.6*0.325)+int(self.nelx/5)*self.nely
         forceloc = self.edof[load_ele][3]
         f[forceloc] = 1
         return f
 
-    def displaceloc(self):
-        dout = super().displaceloc()
-        # higher order element
-        ele = self.hoe[0][0]*self.nely + self.hoe[0][1]
-        # node with K_I
-        node = self.edof[ele][-2]
-        dout[node] = -1
-        return dout
-
     def fixdofs(self):
+        """
+        The bottom of the design space is fixed in y direction (due to symetry
+        around the x axis). While at the location that the load is introduced
+        both the x and y translations are constraint.
+
+        Returns
+        -------
+        fix : 1-D list
+            List with all the numbers of fixed degrees of freedom.
+        """
         # higher order element after crack
         ele = self.nely*(self.crack_length+1)-1
         bottom = [1, 3, 5]
@@ -279,12 +728,3 @@ class CompactTension(Load):
         fix2 = self.edof[load_ele][2]
 
         return (np.hstack((fix, fix1, fix2))).tolist()
-
-    def freedofs(self):
-        return list(set(self.alldofs()) - set(self.fixdofs()))
-
-    def passive(self):
-        elx = [self.crack_length-1, self.crack_length]
-        ely = [self.nely-1, self.nely-1]
-        values = [1 for x in elx]
-        return elx, ely, values
