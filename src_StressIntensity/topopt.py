@@ -53,7 +53,7 @@ class Topopt(object):
         self.itr = 0
 
         # setting up starting density array
-        x = np.ones((load.nely, load.nelx))*constraint.volume_frac
+        x = np.ones((load.nely, load.nelx))*constraint.density_min
         xlist, ylist, values = load.passive()
         x[ylist, xlist] = values
         self.x = x
@@ -102,10 +102,10 @@ class Topopt(object):
 
         while (change >= delta) and (self.itr < loopy):
             self.itr += 1
-            change, ki = self.iter(penal, rmin, filt)
+            change, ki, volcon = self.iter(penal, rmin, filt)
 
             if self.verbose:
-                print('It.: {0:4d},  K_I.: {1:8.4f},  ch.: {2:0.3f}'.format(self.itr, ki, change), flush=True)
+                print('It.: {0:4d},  K_I.: {1:8.4f},  ch.: {2:0.3f},  vol.con.: {3:0.3f}'.format(self.itr, ki, change, volcon), flush=True)
 
             if history:
                 xf = self.densityfilt(rmin, filt)
@@ -159,7 +159,7 @@ class Topopt(object):
 
         # Repair constant values after filtering of round off errors ect
         xlist, ylist, values = load.passive()
-        self.x[ylist, xlist] = values
+        xf[ylist, xlist] = values
 
         # displacement via FEA
         u, lamba = self.fesolver.displace(load, xf, load.k_list, load.kmin_list, penal)
@@ -195,7 +195,7 @@ class Topopt(object):
         # What is the maximum change
         change = np.amax(abs(xnew - self.xold1))
 
-        return change, ki
+        return change, ki, volcon
 
     # updated compliance algorithm
     def ki(self, x, u, lamba, ke, penal):

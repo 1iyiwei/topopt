@@ -21,24 +21,24 @@ from plotting import Plot
 if __name__ == "__main__":
     # material properties
     young = 1
-    Emin = 1e-9
     poisson = 0.3
     ext_stiff = 0.0
 
     # constraints
-    volfrac = 1.1
-    move = 1
+    Emin = 1e-9
+    volfrac = 1.05
+    move = 0.5
 
     # mesh dimensions
-    nelx = 100
-    nely = 100
-    crack_length = 30
+    nelx = 200
+    nely = 200
+    crack_length = 60
 
     # optimization parameters
     penal = 1.0
-    rmin = 1.2
+    rmin = 1.1
     filt = 'sensitivity'
-    loopy = 20  # math.inf
+    loopy = 300  # math.inf
     delta = 0.01
 
     # plotting and printing options
@@ -48,10 +48,10 @@ if __name__ == "__main__":
     history = True
 
     # loading case object, other classes can be selected and created
-    load = DoubleEdgeCrack(nelx, young, Emin, poisson, ext_stiff)   
+    load = CompactTension(nelx, crack_length, young, Emin, poisson, ext_stiff)   
 
     # constraints object created
-    den_con = DensityConstraint(load, move, volume_frac=volfrac, density_min=1, density_max=2.0)
+    den_con = DensityConstraint(load, move, volume_frac=volfrac, density_min=1, density_max=2)
 
     # FEA object is generated, other solvers can be selected and created
     fesolver = CvxFEA(verbose=verbose)

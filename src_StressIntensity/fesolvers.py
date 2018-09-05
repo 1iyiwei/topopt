@@ -88,7 +88,7 @@ class CSCStiffnessMatrix(object):
         value_list = np.array(value_list)
 
         # coo_matrix sums duplicated entries and sipmlyies slicing
-        dof = max(load.x_list) + 1
+        dof = load.num_dofs
         k = coo_matrix((value_list, (load.y_list, load.x_list)), shape=(dof, dof)).tocsc()
 
         # adding external spring stiffness to load and actuator locations
@@ -167,9 +167,9 @@ class CvxFEA(CSCStiffnessMatrix):
         k_free = self.gk_freedofs(load, x, ke, kmin, penal).tocoo()
         k_free = cvxopt.spmatrix(k_free.data, k_free.row, k_free.col)
 
-        max_dof = max(load.x_list) + 1
-        u = np.zeros((max_dof, 1))
-        lamba = np.zeros((max_dof, 1))
+        num_dof = load.num_dofs
+        u = np.zeros((num_dof, 1))
+        lamba = np.zeros((num_dof, 1))
 
         # setting up a fast cholesky decompositon solver
         cvxopt.cholmod.linsolve(k_free, B_free)
@@ -237,9 +237,9 @@ class SciPyFEA(CSCStiffnessMatrix):
         k_free = self.gk_freedofs(load, x, ke, kmin, penal)
 
         # solving the system f = Ku with scipy
-        max_dof = max(load.x_list) + 1
-        u = np.zeros((max_dof, 1))
-        lamba = np.zeros((max_dof, 1))
+        num_dof = load.num_dofs
+        u = np.zeros((num_dof, 1))
+        lamba = np.zeros((num_dof, 1))
 
         res = spsolve(k_free, f_free)
         u[freedofs] = res[:, 0].reshape(len(freedofs), 1)

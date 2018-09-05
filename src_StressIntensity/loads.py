@@ -37,6 +37,8 @@ class Load(object):
     y_list : 1-D array
         The list with the y indices of all ellements to be inserted into
         the global stiffniss matrix.
+    num_dofs : int
+        Amount of degrees of freedom.
     young : float
         Youngs modulus of the materias.
     Emin : float
@@ -86,7 +88,7 @@ class Load(object):
         self.nelx = nelx
         self.nely = nely
         self.dim = 2
-        self.edof, self.x_list, self.y_list = self.edof(nelx, nely, hoe)
+        self.edof, self.x_list, self.y_list, self.num_dofs = self.edof(nelx, nely, hoe)
         self.young = young
         self.Emin = Emin
         self.poisson = poisson
@@ -161,6 +163,8 @@ class Load(object):
         y_list : 1-D array
             The list with the y indices of all ellements to be inserted into
             the global stiffniss matrix.
+        num_dofs : int
+            The amount of degrees of freedom.
         """
         # Creating list with element numbers
         elx = np.repeat(range(nelx), nely).reshape((nelx*nely, 1))  # x position of element
@@ -222,8 +226,10 @@ class Load(object):
         x_list = [item for sublist in x_list for subsublist in sublist for item in subsublist]
         y_list = [edofi*len(edofi) for edofi in edof]
         y_list = [item for sublist in y_list for item in sublist]
+        
+        num_dofs = max(x_list) + 1
 
-        return edof, np.array(x_list), np.array(y_list)
+        return edof, np.array(x_list), np.array(y_list), num_dofs
 
     # Importing the stiffness matrixes
     def import_stiffness(self, elementtype, E, nu):
@@ -329,8 +335,7 @@ class Load(object):
         f : 1-D column array length covering all degrees of freedom
             Empy force vector.
         """
-        num_dofs = max(self.x_list) + 1
-        return np.zeros((num_dofs, 1))
+        return np.zeros((self.num_dofs, 1))
 
     def kiloc(self):
         """
@@ -342,8 +347,7 @@ class Load(object):
         l : 1-D column array length covering all degrees of freedom
             Zeros except for the second last index.
         """
-        num_dofs = max(self.x_list) + 1
-        l = np.zeros((num_dofs, 1))
+        l = np.zeros((self.num_dofs, 1))
 
         # higher order element
         ele = self.hoe[0][0]*self.nely + self.hoe[0][1]
@@ -360,8 +364,7 @@ class Load(object):
         all : 1-D list
             List with numbers from 0 to the maximum degree of freedom number.
         """
-        num_dofs = max(self.x_list) + 1
-        return [x for x in range(num_dofs)]
+        return [x for x in range(self.num_dofs)]
 
     def fixdofs(self):
         """
@@ -677,7 +680,7 @@ class CompactTension(Load):
         Compact Tension Test Specimen", The stress analysis of cracks handbook
         (3rd ed.). New York: ASME Press, pp:61-63.
     """
-    def __init__(self, nelx, young, Emin, poisson, crack_length, ext_stiff):
+    def __init__(self, nelx, crack_length, young, Emin, poisson, ext_stiff):
         nelx = nelx
         nely = int(np.round(nelx/1.25*1.2/2))
         self.crack_length = crack_length
@@ -705,7 +708,7 @@ class CompactTension(Load):
         """
         The bottom of the design space is fixed in y direction (due to symetry
         around the x axis). While at the location that the load is introduced
-        both the x and y translations are constraint.
+        x translations are constraint.
 
         Returns
         -------
@@ -728,3 +731,23 @@ class CompactTension(Load):
         fix2 = self.edof[load_ele][2]
 
         return (np.hstack((fix, fix1, fix2))).tolist()
+
+    def passive(self):
+        """
+        Retuns three lists containing the location and magnitude of fixed
+        density values. The elements around the crack tip are fixed at a
+        density of one.
+
+        Returns
+        ------
+        elx : 1-D list
+            X coordinates of all passive elements, empty for the parrent class.
+        ely : 1-D list
+            Y ccordinates of all passive elements, empty for the parrent class.
+        values : 1-D list
+            Density values of all passive elements, empty for the parrent class.
+        """
+        elx = [self.crack_length-1, self.crack_length]
+        ely = [self.nely-1, self.nely-1]
+        values = [1 for x in elx]
+        return elx, ely, values
