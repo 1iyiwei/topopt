@@ -17,7 +17,7 @@ class DensityConstraint(object):
     """
     This object relates to the constraints used in this optimization.
     It can be used for the MMA updatescheme to derive what the limit is for all
-    element densities at every itteration.
+    element densities that are allowed to change at every itteration.
     The class itself is not changed by the itterations.
 
     Attributes
@@ -26,6 +26,8 @@ class DensityConstraint(object):
         Number of elements in x direction.
     nely : int
         Number of elements in y direction.
+    free_ele : 1-D list
+        All element nubers that ar allowed to change.
     move : float
         Maximum change in density of an element over 1 itteration.
     volume_frac : float
@@ -49,13 +51,14 @@ class DensityConstraint(object):
     def __init__(self, load, move, volume_frac, density_min=0.0, density_max=1.0):
         self.nelx = load.nelx
         self.nely = load.nely
+        elx, ely, values, self.ele_free = load.passive()
         self.move = move
         self.volume_frac = volume_frac
-        self.volume_derivative = 1/(load.nelx*load.nely*volume_frac)*np.ones((1, load.nely*load.nelx))
+        self.volume_derivative = 1/((self.nelx*self.nely)*volume_frac)*np.ones((1, load.nely*load.nelx))
         self.density_min = density_min
         self.density_max = density_max
 
-    def xmin(self, load, x):
+    def xmin(self, x):
         """
         This function calculates the minimum density value of all ellements of
         this itteration.
@@ -72,13 +75,11 @@ class DensityConstraint(object):
         xmin : 2D array size(nely, nelx)
             Minimum density values of this itteration for the update scheme.
         """
-        elx, ely, value = load.passive()
         xmin = self.density_min*np.ones((self.nely, self.nelx))
         xmin = np.maximum(xmin, x - self.move)
-        x[ely, elx] = value
         return xmin
 
-    def xmax(self, load, x):
+    def xmax(self, x):
         """
         This function calculates the maximum density value of all ellements of
         this itteration.
@@ -95,10 +96,8 @@ class DensityConstraint(object):
         xmax : 2D array size(nely, nelx)
             Maximum density values of this itteration after updating.
         """
-        elx, ely, value = load.passive()
         xmax = self.density_max*np.ones((self.nely, self.nelx))
         xmax = np.minimum(xmax, x + self.move)
-        x[ely, elx] = value
         return xmax
 
     def current_volconstrain(self, x):
@@ -118,5 +117,5 @@ class DensityConstraint(object):
         curvol : float
             Curent value of the density constraint function.
         """
-        cur_vol = np.sum(x)/(self.nelx*self.nely*self.volume_frac) - 1
+        cur_vol = np.sum(x)/((self.nelx*self.nely)*self.volume_frac) - 1
         return cur_vol

@@ -32,6 +32,8 @@ class Topopt(object):
         Printing itteration results.
     itr : int
         Number of iterations performed
+    free_ele : 1-D list
+        All element nubers that ar allowed to change.
     x : 2-D array size(nely, nelx)
         Array containing the current densities of every element.
     xold1 : 1D array len(nelx*nely)
@@ -54,13 +56,13 @@ class Topopt(object):
 
         # setting up starting density array
         x = np.ones((load.nely, load.nelx))*constraint.density_min
-        xlist, ylist, values = load.passive()
+        xlist, ylist, values, self.ele_free = load.passive()
         x[ylist, xlist] = values
         self.x = x
-        self.xold1 = np.copy(x).flatten()
-        self.xold2 = np.copy(x).flatten()
-        self.low = 0*np.copy(x).flatten()
-        self.upp = 0*np.copy(x).flatten()
+        self.xold1 = np.copy(x).flatten()[self.ele_free]
+        self.xold2 = np.copy(x).flatten()[self.ele_free]
+        self.low = 0*np.copy(x).flatten()[self.ele_free]
+        self.upp = 0*np.copy(x).flatten()[self.ele_free]
 
     # topology optimization
     def layout(self, penal, rmin, delta, loopy, filt, history=False):
@@ -90,6 +92,8 @@ class Topopt(object):
         xf_history : list of arrays len(itterations size(nely, nelx))
             List with the density distributions of all itterations, None when
             history != True.
+        ki : float
+            Stress intensity factor final design.
         """
         # check if an existing filter was selected
         if filt != 'sensitivity' and filt != 'density':
@@ -105,7 +109,7 @@ class Topopt(object):
             change, ki, volcon = self.iter(penal, rmin, filt)
 
             if self.verbose:
-                print('It.: {0:4d},  K_I.: {1:8.4f},  ch.: {2:0.3f},  vol.con.: {3:0.3f}'.format(self.itr, ki, change, volcon), flush=True)
+                print('It.: {0:4d},  K_I.: {1:8.4f},  ch.: {2:0.3f}'.format(self.itr, ki, change), flush=True)
 
             if history:
                 xf = self.densityfilt(rmin, filt)
@@ -115,9 +119,9 @@ class Topopt(object):
         xf = self.densityfilt(rmin, filt)
 
         if history:
-            return xf, xf_history
+            return xf, xf_history, ki
         else:
-            return xf, None
+            return xf, None, ki
 
     # iteration
     def iter(self, penal, rmin, filt):
@@ -157,10 +161,6 @@ class Topopt(object):
         # applying the density filter if required
         xf = self.densityfilt(rmin, filt)
 
-        # Repair constant values after filtering of round off errors ect
-        xlist, ylist, values = load.passive()
-        xf[ylist, xlist] = values
-
         # displacement via FEA
         u, lamba = self.fesolver.displace(load, xf, load.k_list, load.kmin_list, penal)
 
@@ -170,22 +170,23 @@ class Topopt(object):
         # applying the sensitvity filter if required
         dkif = self.sensitivityfilt(xf, rmin, dki, filt)
 
-        # Prepairing MMA update scheme
+        # Prepairing MMA update scheme, only for free elements
         m = 1  # amount of constraint functions
-        n = load.nelx*load.nely  # amount of elements
-        x = np.copy(self.x).flatten()
-        xmin = constraint.xmin(load, self.x).flatten()
-        xmax = constraint.xmax(load, self.x).flatten()
-        dkif = dkif.flatten()
+        n = len(self.ele_free)  # load.nelx*load.nely  # amount of elements
+        x = np.copy(self.x).flatten()[self.ele_free]
+        xmin = constraint.xmin(self.x).flatten()[self.ele_free]
+        xmax = constraint.xmax(self.x).flatten()[self.ele_free]
+        dkif = dkif.flatten()[self.ele_free]
         volcon = constraint.current_volconstrain(xf)  # value of constraint function
-        dvolcondx = constraint.volume_derivative # constraint derivative
+        dvolcondx = constraint.volume_derivative[:, self.ele_free] # constraint derivative
         a0 = 1
         a = np.zeros((m))
         c_ = 1000*np.ones((m))
         d = a
 
         # Execute MMA update scheme
-        xnew, self.low, self.upp = self.mma(m, n, self.itr, x, xmin, xmax, self.xold1, self.xold2, ki, dkif, volcon, dvolcondx, self.low, self.upp, a0, a, c_, d)
+        xnew = np.copy(self.x).flatten()
+        xnew[self.ele_free], self.low, self.upp = self.mma(m, n, self.itr, x, xmin, xmax, self.xold1, self.xold2, ki, dkif, volcon, dvolcondx, self.low, self.upp, a0, a, c_, d)
 
         # Update variables
         self.xold2 = self.xold1
@@ -193,7 +194,7 @@ class Topopt(object):
         self.x = xnew.reshape((load.nely, load.nelx))
 
         # What is the maximum change
-        change = np.amax(abs(xnew - self.xold1))
+        change = np.amax(abs(xnew[self.ele_free] - self.xold1))
 
         return change, ki, volcon
 
@@ -252,6 +253,8 @@ class Topopt(object):
 
             >>> filt=='density'
 
+        The relusting geometry retains passive elements.
+
         Parameters
         ----------
         rmin : float
@@ -278,6 +281,8 @@ class Topopt(object):
 
             # apply convolution filter
             xf = convolve(self.x, kernel, mode='reflect')
+            elx, ely, values, free_ele = self.load.passive()
+            xf[ely, elx] = values
 
         else:
             xf = self.x
@@ -481,9 +486,11 @@ class Topopt(object):
 
     def solvemma(self, m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d):
         '''
-        This function solves the MMA subproblem with a primal-dual Newton method:
+        This function solves the MMA subproblem with a primal-dual Newton
+        method:
 
-        minimize   SUM[ p0j/(uppj-xj) + q0j/(xj-lowj) ] + a0*z + SUM[ ci*yi + 0.5*di*(yi)^2 ],
+        minimize   SUM[ p0j/(uppj-xj) + q0j/(xj-lowj) ] + a0*z + SUM[ ci*yi +
+        0.5*di*(yi)^2 ],
 
         subject to SUM[ pij/(uppj-xj) + qij/(xj-lowj) ] - ai*z - yi <= bi,
         alfaj <=  xj <=  betaj,  yi >= 0,  z >= 0.

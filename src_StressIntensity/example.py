@@ -11,6 +11,7 @@ Aerospace Structures and Materials Department TU Delft
 
 import time
 import math
+import numpy as np
 
 from loads import EdgeCrack, DoubleEdgeCrack, CompactTension
 from constraints import DensityConstraint
@@ -18,37 +19,39 @@ from fesolvers import CvxFEA, SciPyFEA
 from topopt import Topopt
 from plotting import Plot
 
+
 if __name__ == "__main__":
     # material properties
     young = 1
     poisson = 0.3
     ext_stiff = 0.0
-
+    
     # constraints
     Emin = 1e-9
-    volfrac = 1.05
+    volfrac = 1.1
     move = 0.5
-
+    
     # mesh dimensions
-    nelx = 200
-    nely = 200
-    crack_length = 60
-
+    nelx = 500
+#    nely = 200
+    crack_length = 40*5
+    
     # optimization parameters
     penal = 1.0
-    rmin = 1.1
-    filt = 'sensitivity'
-    loopy = 300  # math.inf
-    delta = 0.01
+    rmin = 1.5
+    filt = 'density'
+    loopy = 1000  # math.inf
+    delta = 0.001
 
     # plotting and printing options
     verbose = True
     plotting = True
-    save_plot = False
+    save_plot = True
     history = True
+    save_pointcloud = True
 
     # loading case object, other classes can be selected and created
-    load = CompactTension(nelx, crack_length, young, Emin, poisson, ext_stiff)   
+    load = CompactTension(nelx, crack_length, young, Emin, poisson, ext_stiff)
 
     # constraints object created
     den_con = DensityConstraint(load, move, volume_frac=volfrac, density_min=1, density_max=2)
@@ -61,22 +64,30 @@ if __name__ == "__main__":
 
     # compute
     t = time.time()
-    x, x_history = optimizer.layout(penal, rmin, delta, loopy, filt, history)
+    x, x_history, ki = optimizer.layout(penal, rmin, delta, loopy, filt, history)
     print('Elapsed time is: ', time.time() - t, 'seconds.')
+    
+    # fixing symetry, only when required
+    x = np.vstack((x, np.flip(x, 0)))
 
     # plotting
-    pl = Plot(load)
+    directory = 'CT0002/'
+    pl = Plot(load, directory)
     pl.loading(load)
     pl.boundary(load)
-    pl.add(x)
-
-    if save_plot:
-        pl.save('topopt')
 
     if history:
         for i in x_history:
             pl.add(i, animated=True)
-        pl.save('topopt')
+        pl.save('video')
+
+    pl.add(x, animated=False)
+
+    if save_plot:
+        pl.save('figure')
 
     if plotting:
         pl.show()
+
+    if save_pointcloud:
+        pl.saveXYZ(x, x_size=60, thickness=1)

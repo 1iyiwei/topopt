@@ -177,7 +177,7 @@ class Load(object):
         edof[::2] = self.dim*node_loc
         edof[1::2] = self.dim*node_loc + 1
         edof = edof.T[0]
-        
+
         # shift all elements such that proper space is create around higher order elements
         edofold = edof.copy()
         for i in range(len(hoe)):
@@ -226,7 +226,7 @@ class Load(object):
         x_list = [item for sublist in x_list for subsublist in sublist for item in subsublist]
         y_list = [edofi*len(edofi) for edofi in edof]
         y_list = [item for sublist in y_list for item in sublist]
-        
+
         num_dofs = max(x_list) + 1
 
         return edof, np.array(x_list), np.array(y_list), num_dofs
@@ -514,11 +514,19 @@ class EdgeCrack(Load):
             Y ccordinates of all passive elements, empty for the parrent class.
         values : 1-D list
             Density values of all passive elements, empty for the parrent class.
+        fix_ele : 1-D list
+            List with all element numbers that are allowed to change.
         """
         elx = [self.crack_length-1, self.crack_length]
         ely = [self.nely-1, self.nely-1]
         values = [1 for x in elx]
-        return elx, ely, values
+
+        fixele = []
+        for i in range(len(elx)):
+            fixele.append(self.nelx*ely[i] + elx[i])
+        free_ele = list(set(range(self.nelx*self.nely)) - set(fixele))
+
+        return elx, ely, values, free_ele
 
 
 class DoubleEdgeCrack(Load):
@@ -529,7 +537,7 @@ class DoubleEdgeCrack(Load):
     tip. The plate is subjected to a distributed tensile load (σ=1) on the top.
 
     For a perfectly flat plate analytical expressions for K_I are known. [1]_
-        
+
     The stress intensity factors calculated can be be interperted in two ways:
 
     1. Without schaling. This means that all elements have a size of 2 length units.
@@ -633,11 +641,19 @@ class DoubleEdgeCrack(Load):
             Y ccordinates of all passive elements, empty for the parrent class.
         values : 1-D list
             Density values of all passive elements, empty for the parrent class.
+        fix_ele : 1-D list
+            List with all element numbers that are allowed to change.
         """
         elx = [self.crack_length-1, self.crack_length]
         ely = [self.nely-1, self.nely-1]
         values = [1 for x in elx]
-        return elx, ely, values
+
+        fixele = []
+        for i in range(len(elx)):
+            fixele.append(self.nelx*ely[i] + elx[i])
+        free_ele = list(set(range(self.nelx*self.nely)) - set(fixele))
+
+        return elx, ely, values, free_ele
 
 
 class CompactTension(Load):
@@ -746,8 +762,16 @@ class CompactTension(Load):
             Y ccordinates of all passive elements, empty for the parrent class.
         values : 1-D list
             Density values of all passive elements, empty for the parrent class.
+        fix_ele : 1-D list
+            List with all element numbers that are allowed to change.
         """
         elx = [self.crack_length-1, self.crack_length]
         ely = [self.nely-1, self.nely-1]
         values = [1 for x in elx]
-        return elx, ely, values
+
+        fixele = []
+        for i in range(len(elx)):
+            fixele.append(self.nelx*ely[i] + elx[i])
+        free_ele = list(set(range(self.nelx*self.nely)) - set(fixele))
+
+        return elx, ely, values, free_ele
