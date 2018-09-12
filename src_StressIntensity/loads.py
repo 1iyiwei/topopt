@@ -21,6 +21,12 @@ class Load(object):
     new load cases can be generated simply by adding a child and changing the
     function related to the geometry, loads and boundaries.
 
+    Parameters
+    ---------
+    hoe : dict
+        Dictionary with for every cracklength the x end y element locations
+        that need to be enriched.
+
     Atributes
     -------
     nelx : int
@@ -60,7 +66,7 @@ class Load(object):
         Returns the topleft node number of the element.
     nodes(elx, ely)
         Returns all nodes of the element.
-    edof()
+    edofcalc(hoe)
         Generats an array with the possitions af all degrees of freedom that
         belong to all elements.
     import_stiffness(elementtype, E, nu)
@@ -88,13 +94,26 @@ class Load(object):
         self.nelx = nelx
         self.nely = nely
         self.dim = 2
-        self.edof, self.x_list, self.y_list, self.num_dofs = self.edof(nelx, nely, hoe)
         self.young = young
         self.Emin = Emin
         self.poisson = poisson
-        self.k_list = self.lk(young, poisson)
-        self.kmin_list = self.lk(Emin, poisson)
         self.ext_stiff = ext_stiff
+        self.edof = {}
+        self.x_list = {}
+        self.y_list = {}
+        self.num_dofs ={}
+        self.k_list = {}
+        self.kmin_list = {}
+        for length in hoe:
+            edof, x_list, y_list, num_dofs = self.edofcalc(hoe[length])
+            self.edof[length] = edof
+            self.x_list[length] = x_list
+            self.y_list[length] = y_list
+            self.num_dofs[length] = num_dofs
+            k_list = self.lk(young, poisson, hoe[length])
+            kmin_list = self.lk(Emin, poisson, hoe[length])
+            self.k_list[length] = k_list
+            self.kmin_list[length] = kmin_list
 
     # compute 1D index from 2D position for node (boundary of element)
     def node(self, elx, ely):
@@ -147,11 +166,17 @@ class Load(object):
         return n0, n1, n2, n3
 
     # edof that returns an array
-    def edof(self, nelx, nely, hoe):
+    def edofcalc(self, hoe):
         """
         Generates an array with the position of the nodes of each element in
         the global stiffness matrix. This takes the Higher Order Elements in
         account.
+
+        Parameters
+        ----------
+        hoe : list
+            A list containing the x and y location of the higher order elemens
+            for this crack length.
 
         Results
         ------
@@ -167,8 +192,8 @@ class Load(object):
             The amount of degrees of freedom.
         """
         # Creating list with element numbers
-        elx = np.repeat(range(nelx), nely).reshape((nelx*nely, 1))  # x position of element
-        ely = np.tile(range(nely), nelx).reshape((nelx*nely, 1))  # y position of element
+        elx = np.repeat(range(self.nelx), self.nely).reshape((self.nelx*self.nely, 1))  # x position of element
+        ely = np.tile(range(self.nely), self.nelx).reshape((self.nelx*self.nely, 1))  # y position of element
 
         node_loc = np.array(self.nodes(elx, ely), dtype=np.int32)
         shape = list(np.shape(node_loc))
@@ -201,7 +226,7 @@ class Load(object):
         edof = edof.tolist()
         for i in range(len(hoe)):
             hoei = hoe[i]
-            element = nely*hoei[0] + hoei[1]
+            element = self.nely*hoei[0] + hoei[1]
             edof_ele = edof[element]  # old dofs of hoe
 
             n0 = edof_ele[0]
@@ -280,7 +305,7 @@ class Load(object):
         del Kij
 
     # list with all local stiffeness matrix of every element
-    def lk(self, E, nu):
+    def lk(self, E, nu, hoe):
         """
         Generates a list with all element stiffness matrices. It differenciates
         between the element types used.
@@ -299,8 +324,8 @@ class Load(object):
         k = []
         for elx in range(self.nelx):
             for ely in range(self.nely):
-                if [elx, ely] in self.hoe:
-                    index = [i for i, x in enumerate(self.hoe) if x == [elx, ely]][0]
+                if [elx, ely] in hoe:
+                    index = [i for i, x in enumerate(hoe) if x == [elx, ely]][0]
                     if self.hoe_type[index] == '-1,-1':
                         k.append(self.import_stiffness('Stiffness_Cubic_PlaneStress_Enriched(-1:-1)', E, nu))
                     elif self.hoe_type[index] == '-1,1':
@@ -350,9 +375,9 @@ class Load(object):
         l = np.zeros((self.num_dofs, 1))
 
         # higher order element
-        ele = self.hoe[0][0]*self.nely + self.hoe[0][1]
-        node = self.edof[ele][-2]  # node with K_I
-        l[node] = 1
+#        ele = self.hoe[0][0]*self.nely + self.hoe[0][1]
+#        node = self.edof[ele][-2]  # node with K_I
+        l[-2] = 1
         return l
 
     def alldofs(self):
@@ -366,9 +391,14 @@ class Load(object):
         """
         return [x for x in range(self.num_dofs)]
 
-    def fixdofs(self):
+    def fixdofs(self, length_i):
         """
         Returns a list with indices that are fixed by the boundary conditions.
+
+        Parameters
+        ----------
+        length_i : int
+            Length of the crack for the current mesh
 
         Returns
         -------
@@ -679,8 +709,6 @@ class CompactTension(Load):
         Number of y elements, this is now a function of nelx.
     crack_length : int
         Is the amount of elements that the crack is long.
-    hoe : list len(2)
-        List containing the x end y element locations that need to be enriched.
 
     Methods
     -------
@@ -700,10 +728,13 @@ class CompactTension(Load):
         nelx = nelx
         nely = int(np.round(nelx/1.25*1.2/2))
         self.crack_length = crack_length
-        self.hoe = [[self.crack_length-1, nely-1], [self.crack_length, nely-1]]
+        hoe = {}
+        for length in crack_length:
+            hoe_i = [[length-1, nely-1], [length, nely-1]]
+            hoe[str(length)] = hoe_i
         self.hoe_type = ['1,-1', '-1,-1']
 
-        super().__init__(nelx, nely, young, Emin, poisson, ext_stiff, self.hoe)
+        super().__init__(nelx, nely, young, Emin, poisson, ext_stiff, hoe)
 
     def force(self):
         """
@@ -720,11 +751,16 @@ class CompactTension(Load):
         f[forceloc] = 1
         return f
 
-    def fixdofs(self):
+    def fixdofs(self, length_i):
         """
         The bottom of the design space is fixed in y direction (due to symetry
         around the x axis). While at the location that the load is introduced
         x translations are constraint.
+
+        Parameters
+        ----------
+        length_i : int
+            Length of the crack for the current mesh
 
         Returns
         -------
@@ -732,12 +768,12 @@ class CompactTension(Load):
             List with all the numbers of fixed degrees of freedom.
         """
         # higher order element after crack
-        ele = self.nely*(self.crack_length+1)-1
+        ele = self.nely*(length_i+1)-1
         bottom = [1, 3, 5]
         fix = [self.edof[ele][i] for i in bottom]
 
         # bottom elements fixed in y direction after the crack elements
-        start_ele = self.nely*(self.crack_length+2)-1
+        start_ele = self.nely*(length_i+2)-1
         bot_ele = [x for x in range(start_ele, self.nelx*self.nely, self.nely)]
         # all bottem left y direction dof of all these elements
         fix1 = [self.edof[i][1] for i in bot_ele] + [self.edof[bot_ele[-1]][3]]
@@ -765,9 +801,9 @@ class CompactTension(Load):
         fix_ele : 1-D list
             List with all element numbers that are allowed to change.
         """
-        elx = [self.crack_length-1, self.crack_length]
-        ely = [self.nely-1, self.nely-1]
-        values = [1 for x in elx]
+        elx = range(np.min(self.crack_length)-1, np.max(self.crack_length))
+        ely = [self.nely-1]*len(elx)
+        values = [1]*len(elx)
 
         fixele = []
         for i in range(len(elx)):
