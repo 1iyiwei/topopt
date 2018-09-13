@@ -35,10 +35,10 @@ class CSCStiffnessMatrix(object):
 
     Methods
     -------
-    displace(load, x, ke, kmin, penal)
+    displace(load, x, penal, length)
         This function is not implemented, see child classes for implemetations
         of this function.
-    gk_freedogs(self, load, x, ke, kmin, penal)
+    gk_freedogs(self, load, x, penal, length)
         Generates the global stiffness matrix with deleted fixed degrees of
         freedom. This includes adding the external stiffness to the load
         introduction and displacement output.
@@ -46,10 +46,10 @@ class CSCStiffnessMatrix(object):
     def __init__(self, verbose=False):
         self.verbose = verbose
 
-    def displace(self, load, x, ke, kmin, penal):
+    def displace(self, load, x, penal, length):
         raise NotImplementedError
 
-    def gk_freedofs(self, load, x, ke, kmin, penal):
+    def gk_freedofs(self, load, x, penal, length):
         """
         Generates the global stiffness matrix with deleted fixed degrees of
         freedom. It generates a list with stiffness values and their x and y
@@ -65,19 +65,23 @@ class CSCStiffnessMatrix(object):
             The loadcase(s) considerd for this optimisation problem.
         x : 2-D array size(nely, nelx)
             Current density distribution.
-        ke : list len(nelx*nely)
-            List with all element stiffness matrixes for full dense material.
-        kmin : list len(nelx*nely)
-            List with all element stiffness matrixes for empty material.
         penal : float
             Material model penalisation (SIMP).
+        length : int
+            Length of the current crack conciderd.
 
         Returns
         -------
         k : 2-D sparse csc matrix
             Global stiffness matrix without fixed degrees of freedom.
         """
-        freedofs = np.array(load.freedofs())
+        # select propper stiffness lists from dictionary
+        ke = load.k_list[str(length)]
+        kmin = load.kmin_list[str(length)]
+        x_list = load.x_list[str(length)]
+        y_list = load.y_list[str(length)]
+
+        freedofs = np.array(load.freedofs(length))
         nelx = load.nelx
         nely = load.nely
 
@@ -89,10 +93,10 @@ class CSCStiffnessMatrix(object):
 
         # coo_matrix sums duplicated entries and sipmlyies slicing
         dof = load.num_dofs
-        k = coo_matrix((value_list, (load.y_list, load.x_list)), shape=(dof, dof)).tocsc()
+        k = coo_matrix((value_list, (y_list, x_list)), shape=(dof, dof)).tocsc()
 
         # adding external spring stiffness to load and actuator locations
-        loc_force = np.where(load.force() != 0)[0]
+        loc_force = np.where(load.force(length) != 0)[0]
         loc_actuator = np.where(load.kiloc() != 0)[0]
         loc = np.hstack((loc_force, loc_actuator))
         k[loc, loc] += load.ext_stiff*np.ones(len(loc))
@@ -116,9 +120,9 @@ class CvxFEA(CSCStiffnessMatrix):
 
     Methods
     -------
-    displace(load, x, ke, kmin, penal)
+    displace(load, x, penal, length)
         FE solver based upon a Supernodal Sparse Cholesky Factorization.
-    gk_freedogs(self, load, x, ke, kmin, penal)
+    gk_freedogs(self, load, x, penal, length)
         Generates the global stiffness matrix with deleted fixed degrees of
         freedom. Function inherented from parent.
     """
@@ -126,7 +130,7 @@ class CvxFEA(CSCStiffnessMatrix):
         super().__init__(verbose)
 
     # finite element computation for displacement
-    def displace(self, load, x, ke, kmin, penal):
+    def displace(self, load, x, penal, length):
         """
         FE solver based upon a Supernodal Sparse Cholesky Factorization. It
         requires the instalation of the cvx module. It solves both the FEA
@@ -143,12 +147,11 @@ class CvxFEA(CSCStiffnessMatrix):
             The loadcase(s) considerd for this optimisation problem.
         x : 2-D array size(nely, nelx)
             Current density distribution.
-        ke : 2-D array size(8, 8)
-            Local fully dense stiffnes matrix.
-        kmin : 2-D array size(8, 8)
-            Local stiffness matrix for an empty element.
         penal : float
             Material model penalisation (SIMP).
+        length : int
+            Length of the current crack conciderd.
+
 
         Returns
         -------
@@ -157,14 +160,14 @@ class CvxFEA(CSCStiffnessMatrix):
         lamba : 1-D column array shape(max(edof), 1)
             Adjoint equation solution.
         """
-        freedofs = np.array(load.freedofs())
+        freedofs = np.array(load.freedofs(length))
         nely, nelx = x.shape
 
-        f = load.force()
+        f = load.force(length)
         l = load.kiloc()
         B_free = cvxopt.matrix(np.hstack((f[freedofs], l[freedofs])))
 
-        k_free = self.gk_freedofs(load, x, ke, kmin, penal).tocoo()
+        k_free = self.gk_freedofs(load, x, penal, length).tocoo()
         k_free = cvxopt.spmatrix(k_free.data, k_free.row, k_free.col)
 
         num_dof = load.num_dofs
@@ -193,9 +196,9 @@ class SciPyFEA(CSCStiffnessMatrix):
 
     Methods
     -------
-    displace(load, x, ke, kmin, penal)
+    displace(load, x, penal, length)
         FE solver based upon a SciPy sparse sysems solver that uses umfpack.
-    gk_freedogs(self, load, x, ke, kmin, penal)
+    gk_freedogs(self, load, x, penal, length)
         Generates the global stiffness matrix with deleted fixed degrees of
         freedom. Function inherented from parent.
     """
@@ -203,7 +206,7 @@ class SciPyFEA(CSCStiffnessMatrix):
         super().__init__(verbose)
 
     # finite element computation for displacement
-    def displace(self, load, x, ke, kmin, penal):
+    def displace(self, load, x, penal, length):
         """
         FE solver based upon the sparse SciPy solver that uses umfpack.
 
@@ -213,12 +216,11 @@ class SciPyFEA(CSCStiffnessMatrix):
             The loadcase(s) considerd for this optimisation problem.
         x : 2-D array size(nely, nelx)
             Current density distribution.
-        ke : 2-D array size(8, 8)
-            Local fully dense stiffnes matrix.
-        kmin : 2-D array size(8, 8)
-            Local stiffness matrix for an empty element.
         penal : float
             Material model penalisation (SIMP).
+        length : int
+            Length of the current crack conciderd.
+
 
         Returns
         -------
@@ -227,14 +229,14 @@ class SciPyFEA(CSCStiffnessMatrix):
         lamba : 1-D column array shape(max(edof), 1)
             Adjoint equation solution.
         """
-        freedofs = np.array(load.freedofs())
+        freedofs = np.array(load.freedofs(length))
         nely, nelx = x.shape
 
-        f = load.force()
+        f = load.force(length)
         l = load.kiloc()
 
         f_free = np.hstack((f[freedofs], l[freedofs]))
-        k_free = self.gk_freedofs(load, x, ke, kmin, penal)
+        k_free = self.gk_freedofs(load, x, penal, length)
 
         # solving the system f = Ku with scipy
         num_dof = load.num_dofs
