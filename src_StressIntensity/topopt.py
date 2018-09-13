@@ -261,6 +261,8 @@ class Topopt(object):
             Element stiffness matrix with full density.
         penal : float
             Material model penalisation (SIMP).
+        length: int
+            Length of the crack conciderd.
 
         Returns
         -------
@@ -340,7 +342,7 @@ class Topopt(object):
         return xf
 
     # sensitivity filter
-    def sensitivityfilt(self, x, rmin, dki, filt):
+    def sensitivityfilt(self, x, dki, rmin, filt):
         """
         Filters with a normalized convolution on the sensitivity with a
         radius of rmin if:
