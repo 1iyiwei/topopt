@@ -214,7 +214,7 @@ class Topopt(object):
         dki = np.sum(dki, axis=0)
 
         # applying the sensitvity filter if required
-        dkif = self.sensitivityfilt(xf, rmin, dki, filt)
+        dkif = self.sensitivityfilt(xf, dki, rmin, filt)
 
         # Prepairing MMA update scheme, only for free elements
         m = 1  # amount of constraint functions
