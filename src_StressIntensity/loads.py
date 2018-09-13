@@ -23,6 +23,20 @@ class Load(object):
 
     Parameters
     ---------
+    nelx : int
+        Number of elements in x direction.
+    nely : int
+        Number of elements in y direction.
+    young : float
+        Youngs modulus of the materias.
+    Emin : float
+        Artifical Youngs modulus of the material to ensure a stable FEA.
+        It is used in the SIMP based material model.
+    poisson : float
+        Poisson ration of the material.    
+    ext_stiff : float
+        Extra stiffness to be added to global stiffness matrix. Due to
+        interactions with meganisms outside design domain.
     hoe : dict
         Dictionary with for every cracklength the x end y element locations
         that need to be enriched.
@@ -35,14 +49,15 @@ class Load(object):
         Number of elements in y direction.
     dim : int
         Amount of dimensions conciderd in the problem, set at 2.
-    edof : 2-D list size(nelx*nely, # degrees of freedom per element)
-        The list with all elements and their degree of freedom numbers.
-    x_list : 1-D array
-        The list with the x indices of all ellements to be inserted into
-        the global stiffniss matrix.
-    y_list : 1-D array
-        The list with the y indices of all ellements to be inserted into
-        the global stiffniss matrix.
+    edof : dict
+        Dictionary containing list with all elements and their degree of
+        freedom numbers for all crack_lengtgs, str(length) is the key.
+    x_list : dict
+        Dictionary with a 1D list that contains the x indices of all degrees of
+        freedom for all cracklengths, str(length) is the key.
+    y_list : dict
+        Dictionary with a 1D list that contains the y indices of all degrees of
+        freedom for all cracklengths, str(length) is the key.
     num_dofs : int
         Amount of degrees of freedom.
     young : float
@@ -52,10 +67,14 @@ class Load(object):
         It is used in the SIMP based material model.
     poisson : float
         Poisson ration of the material.
-    k_list : list len(nelx*nely)
-        List with element stiffness matrices of full density.
+    k_list : dict
+        Dictionary containing a list for every crack length, these lists
+        contain the element stiffness matrices of full density for all
+        elements, str(length) is the key.
     kmin_list : list len(nelx*nely)
-        List with element stifness matrices at 0 density.
+        Dictionary containing a list for every crack length, these lists
+        contain the epmy element stiffness matrices for all elements,
+        str(length) is the key.
     ext_stiff : float
         Extra stiffness to be added to global stiffness matrix. Due to
         interactions with meganisms outside design domain.
@@ -101,7 +120,6 @@ class Load(object):
         self.edof = {}
         self.x_list = {}
         self.y_list = {}
-        self.num_dofs ={}
         self.k_list = {}
         self.kmin_list = {}
         for length in hoe:
@@ -109,7 +127,7 @@ class Load(object):
             self.edof[length] = edof
             self.x_list[length] = x_list
             self.y_list[length] = y_list
-            self.num_dofs[length] = num_dofs
+            self.num_dofs = num_dofs
             k_list = self.lk(young, poisson, hoe[length])
             kmin_list = self.lk(Emin, poisson, hoe[length])
             self.k_list[length] = k_list
@@ -408,9 +426,14 @@ class Load(object):
         """
         return []
 
-    def freedofs(self):
+    def freedofs(self, length_i):
         """
         Returns a list of arr indices that are not fixed
+
+        Parameters
+        ----------
+        length_i : int
+            Length of the crack for the current mesh
 
         Returns
         -------
@@ -418,7 +441,7 @@ class Load(object):
             List containing all elemens of alldogs except those that appear in
             the freedofs list.
         """
-        return list(set(self.alldofs()) - set(self.fixdofs()))
+        return list(set(self.alldofs()) - set(self.fixdofs(length_i)))
 
     def passive(self):
         """
@@ -455,6 +478,25 @@ class EdgeCrack(Load):
 
         Kreal = sigma_real * sqrt(real_crack_length) * Ksim/sqrt(2*crack_length)
 
+    Parameters
+    ---------
+    nelx : int
+        Number of elements in x direction.
+    nely : int
+        Number of elements in y direction.
+    crack_length : array
+        All crack lengs conciderd.
+    young : float
+        Youngs modulus of the materias.
+    Emin : float
+        Artifical Youngs modulus of the material to ensure a stable FEA.
+        It is used in the SIMP based material model.
+    poisson : float
+        Poisson ration of the material.
+    ext_stiff : float
+        Extra stiffness to be added to global stiffness matrix. Due to
+        interactions with meganisms outside design domain.
+
     Atributes
     ---------
     Two attributes are added with respect to the parrent class.
@@ -478,55 +520,74 @@ class EdgeCrack(Load):
     """
     def __init__(self, nelx, nely, crack_length, young, Emin, poisson, ext_stiff):
         self.crack_length = crack_length
-        self.hoe = [[crack_length-1, nely-1], [crack_length, nely-1]]
+        hoe = {}
+        for length in crack_length:
+            hoe_i = [[length-1, nely-1], [length, nely-1]]
+            hoe[str(length)] = hoe_i
         self.hoe_type = ['1,-1', '-1,-1']
 
-        super().__init__(nelx, nely, young, Emin, poisson, ext_stiff, self.hoe)
+        super().__init__(nelx, nely, young, Emin, poisson, ext_stiff, hoe)
 
-    def force(self):
+    def force(self, length_i):
         """
         The top of the design space is pulled upwards by 1MPa. This means that
         the nodal forces are 2 upwards, except for the top corners they have a
         load of 1 only.
+
+        Parameters
+        ----------
+        length_i : int
+            Length of the crack for the current mesh
 
         Returns
         -------
         f : 1-D column array length covering all degrees of freedom
             Force vector.
         """
+        # select proper element from dictionary
+        edof = self.edof[str(length_i)]
+
         f = super().force()
         top_ele = [x for x in range(0, self.nelx*self.nely, self.nely)]
-        forceloc = [self.edof[i][5] for i in top_ele][:-1]
+        forceloc = [edof[i][5] for i in top_ele][:-1]
         f[forceloc] = 2
         f[1] = 1
-        f[[self.edof[i][5] for i in top_ele][-1]] = 1
+        f[[edof[i][5] for i in top_ele][-1]] = 1
         return f
 
-    def fixdofs(self):
+    def fixdofs(self, length_i):
         """
         The boundary conditions limmit y-translation at the bottom of the design
         space (due to symetry) and x-translations at the top (due to the clamps)
+
+        Parameters
+        ----------
+        length_i : int
+            Length of the crack for the current mesh
 
         Returns
         ------
         fix : 1-D list
             List with all the numbers of fixed degrees of freedom.
         """
+        # select proper element from dictionary
+        edof = self.edof[str(length_i)]
+
         # higher order element after crack
-        ele = self.nely*(self.crack_length+1)-1
+        ele = self.nely*(length_i+1)-1
         bottom = [1, 3, 5]
-        fix = [self.edof[ele][i] for i in bottom]
+        fix = [edof[ele][i] for i in bottom]
 
         # bottom elements fixed in y direction after the crack elements
-        start_ele = self.nely*(self.crack_length+2)-1
+        start_ele = self.nely*(length_i+2)-1
         bot_ele = [x for x in range(start_ele, self.nelx*self.nely, self.nely)]
         # all bottem left y direction dof of all these elements
-        fix1 = [self.edof[i][1] for i in bot_ele] + [self.edof[bot_ele[-1]][3]]
+        fix1 = [edof[i][1] for i in bot_ele] + [edof[bot_ele[-1]][3]]
 
         # top elements
         top_ele = [x for x in range(0, self.nelx*self.nely, self.nely)]
         # all elements in x direction fixed
-        fix2 = [0] + [self.edof[i][4] for i in top_ele]
+        fix2 = [0] + [edof[i][4] for i in top_ele]
 
         return (np.hstack((fix, fix1, fix2))).tolist()
 
@@ -547,9 +608,9 @@ class EdgeCrack(Load):
         fix_ele : 1-D list
             List with all element numbers that are allowed to change.
         """
-        elx = [self.crack_length-1, self.crack_length]
-        ely = [self.nely-1, self.nely-1]
-        values = [1 for x in elx]
+        elx = [x for x in range(np.min(self.crack_length)-1, np.max(self.crack_length)+1)]
+        ely = [self.nely-1]*len(elx)
+        values = [1]*len(elx)
 
         fixele = []
         for i in range(len(elx)):
@@ -574,6 +635,21 @@ class DoubleEdgeCrack(Load):
     2. With schaling, comparison to reality should be based upon. ::
 
         Kreal = sigma_real * sqrt(real_crack_length) * Ksim/sqrt(2*crack_length)
+
+    Parameters
+    ---------
+    nelx : int
+        Number of elements in x direction.
+    young : float
+        Youngs modulus of the materias.
+    Emin : float
+        Artifical Youngs modulus of the material to ensure a stable FEA.
+        It is used in the SIMP based material model.
+    poisson : float
+        Poisson ration of the material.
+    ext_stiff : float
+        Extra stiffness to be added to global stiffness matrix. Due to
+        interactions with meganisms outside design domain.
 
     Atributes
     ---------
@@ -604,56 +680,75 @@ class DoubleEdgeCrack(Load):
     def __init__(self, nelx, young, Emin, poisson, ext_stiff):
         nelx = nelx
         nely = 4*nelx
-        self.crack_length = int(nelx/5*2)
-        self.hoe = [[self.crack_length-1, nely-1], [self.crack_length, nely-1]]
+        self.crack_length = [int(nelx/5*2)]
+        hoe = {}
+        for length in self.crack_length:
+            hoe_i = [[length-1, nely-1], [length, nely-1]]
+            hoe[str(length)] = hoe_i
         self.hoe_type = ['1,-1', '-1,-1']
 
-        super().__init__(nelx, nely, young, Emin, poisson, ext_stiff, self.hoe)
+        super().__init__(nelx, nely, young, Emin, poisson, ext_stiff, hoe)
 
-    def force(self):
+    def force(self, length_i):
         """
         The top of the design space is pulled upwards by 1MPa. This means that
         the nodal forces are 2 upwards, except for the top left corner has
         a load of 1 only.
+
+        Parameters
+        ----------
+        length_i : int
+            Length of the crack for the current mesh
 
         Returns
         -------
         f : 1-D column array length covering all degrees of freedom
             Force vector
         """
+        # select proper element from dictionary
+        edof = self.edof[str(length_i)]
+
         f = super().force()
         top_ele = [x for x in range(0, self.nelx*self.nely, self.nely)]
-        forceloc = [self.edof[i][5] for i in top_ele]
+        forceloc = [edof[i][5] for i in top_ele]
         f[forceloc] = 2
         f[1] = 1
         return f
 
-    def fixdofs(self):
+    def fixdofs(self, length_i):
         """
         The right side is fixed in x direction (symetry around the y axis) while
         the bottom side is fixed in y direction (symetry around the x axis).
+
+        Parameters
+        ----------
+        length_i : int
+            Length of the crack for the current mesh
 
         Returns
         -------
         fix : 1-D list
             List with all the numbers of fixed degrees of freedom.
         """
+        # select proper element from dictionary
+        edof = self.edof[str(length_i)]
+        
         # higher order element after crack
-        ele = self.nely*(self.crack_length+1)-1
+        ele = self.nely*(length_i+1)-1
         bottom = [1, 3, 5]
-        fix = [self.edof[ele][i] for i in bottom]
+        fix = [edof[ele][i] for i in bottom]
 
         # bottom elements fixed in y direction after the crack elements
-        start_ele = self.nely*(self.crack_length+2)-1
+        start_ele = self.nely*(length_i+2)-1
         bot_ele = [x for x in range(start_ele, self.nelx*self.nely, self.nely)]
         # all bottem left y direction dof of all these elements
-        fix1 = [self.edof[i][1] for i in bot_ele] + [self.edof[bot_ele[-1]][3]]
+        fix1 = [edof[i][1] for i in bot_ele] + [edof[bot_ele[-1]][3]]
 
         # right side elements
         start_ele = (self.nelx-1)*self.nely
         right_ele = [x for x in range(start_ele, self.nelx*self.nely, 1)]
         # all elements in x direction fixed
-        fix2 = [self.edof[i][4] for i in right_ele] + [self.edof[bot_ele[-1]][2]]
+        fix2 = [edof[i][4] for i in right_ele] + [edof[bot_ele[-1]][2]]
 
         return (np.hstack((fix, fix1, fix2))).tolist()
 
@@ -674,9 +769,9 @@ class DoubleEdgeCrack(Load):
         fix_ele : 1-D list
             List with all element numbers that are allowed to change.
         """
-        elx = [self.crack_length-1, self.crack_length]
-        ely = [self.nely-1, self.nely-1]
-        values = [1 for x in elx]
+        elx = [x for x in range(np.min(self.crack_length)-1, np.max(self.crack_length)+1)]
+        ely = [self.nely-1]*len(elx)
+        values = [1]*len(elx)
 
         fixele = []
         for i in range(len(elx)):
@@ -699,6 +794,23 @@ class CompactTension(Load):
 
     The stress intensity factors calculated is for the case where the element
     size is the real dimensions times two and a load of 1.
+
+    Parameters
+    ---------
+    nelx : int
+        Number of elements in x direction.
+    crack_length : array
+        An array containing all crack lengths conciderd.
+    young : float
+        Youngs modulus of the materias.
+    Emin : float
+        Artifical Youngs modulus of the material to ensure a stable FEA.
+        It is used in the SIMP based material model.
+    poisson : float
+        Poisson ration of the material.
+    ext_stiff : float
+        Extra stiffness to be added to global stiffness matrix. Due to
+        interactions with meganisms outside design domain.
 
     Atributes
     ---------
@@ -736,18 +848,26 @@ class CompactTension(Load):
 
         super().__init__(nelx, nely, young, Emin, poisson, ext_stiff, hoe)
 
-    def force(self):
+    def force(self, length_i):
         """
         The ASTM standard requires the force to be located approx. 1/5 of nelx
         and at 0.195 * nely from the top.
+
+        Parameters
+        ----------
+        length_i : int
+            Length of the crack for the current mesh
 
         Returns
         f : 1-D column array length covering all degrees of freedom
             Force vector
         """
+        # select correct edof list from dictionary
+        edof = self.edof[str(length_i)]
+
         f = super().force()
         load_ele = int(self.nely/0.6*0.325)+int(self.nelx/5)*self.nely
-        forceloc = self.edof[load_ele][3]
+        forceloc = edof[load_ele][3]
         f[forceloc] = 1
         return f
 
@@ -767,20 +887,23 @@ class CompactTension(Load):
         fix : 1-D list
             List with all the numbers of fixed degrees of freedom.
         """
+        # select correct edof list from dictionary
+        edof = self.edof[str(length_i)]
+
         # higher order element after crack
         ele = self.nely*(length_i+1)-1
         bottom = [1, 3, 5]
-        fix = [self.edof[ele][i] for i in bottom]
+        fix = [edof[ele][i] for i in bottom]
 
         # bottom elements fixed in y direction after the crack elements
         start_ele = self.nely*(length_i+2)-1
         bot_ele = [x for x in range(start_ele, self.nelx*self.nely, self.nely)]
         # all bottem left y direction dof of all these elements
-        fix1 = [self.edof[i][1] for i in bot_ele] + [self.edof[bot_ele[-1]][3]]
+        fix1 = [edof[i][1] for i in bot_ele] + [edof[bot_ele[-1]][3]]
 
         # load introduction in y direction rigid
         load_ele = int(self.nely/0.6*0.325)+int(self.nelx/5)*self.nely
-        fix2 = self.edof[load_ele][2]
+        fix2 = edof[load_ele][2]
 
         return (np.hstack((fix, fix1, fix2))).tolist()
 
@@ -801,7 +924,7 @@ class CompactTension(Load):
         fix_ele : 1-D list
             List with all element numbers that are allowed to change.
         """
-        elx = range(np.min(self.crack_length)-1, np.max(self.crack_length))
+        elx = [x for x in range(np.min(self.crack_length)-1, np.max(self.crack_length)+1)]
         ely = [self.nely-1]*len(elx)
         values = [1]*len(elx)
 
