@@ -22,7 +22,7 @@ if __name__ == "__main__":
     young = 1
     Emin = 1e-9
     poisson = 0.3
-    ext_stiff = 0.1
+    ext_stiff = 0.01
 
     # constraints
     volfrac = 0.3

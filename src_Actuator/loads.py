@@ -19,6 +19,20 @@ class Load(object):
     new load cases can be generated simply by adding a child and changing the
     function related to the geometry, loads and boundaries.
 
+    Parameters
+    ----------
+    nelx : int
+        Number of elements in x direction.
+    nely : int
+        Number of elements in y direction.
+    young : float
+        Youngs modulus of the materias.
+    Emin : float
+        Artifical Youngs modulus of the material to ensure a stable FEA.
+        It is used in the SIMP based material model.
+    poisson : float
+        Poisson ration of the material.    
+
     Atributes
     -------
     nelx : int
@@ -256,8 +270,10 @@ class Load(object):
             Y ccordinates of all passive elements, empty for the parrent class.
         values : 1-D list
             Density values of all passive elements, empty for the parrent class.
+        fix_ele : 1-D list
+            List with all element numbers that are allowed to change.
         """
-        return [], [], []
+        return [], [], [], [x for x in range(self.nelx*self.nely)]
 
 
 # example loading scenario, inverter with horizontal mirror axis

@@ -20,6 +20,17 @@ class Topopt(object):
     This is the optimisation object itself. It contains the initialisation of
     the density distribution.
 
+    Parameters
+    ----------
+    constraint : object of DensityConstraint class
+        The constraints for this optimization problem.
+    load : object, child of the Loads class
+        The loadcase(s) considerd for this optimisation problem.
+    fesolver : object, child of the CSCStiffnessMatrix class
+        The finite element solver.
+    verbose : bool
+        Printing itteration results.
+
     Atributes
     -------
     constraint : object of DensityConstraint class
@@ -44,6 +55,24 @@ class Topopt(object):
     upp : 1D array len(nelx*nely)
         Column vector with the lower asymptotes, calculated and used in the
         MMA subproblem of the previous itteration.
+
+    Methods
+    ------
+    layout(penal, rmin, delta, loopy, filt, history):
+        Calulates the optimal density distribution, with topology optimization.
+    iter(penal, rmin, filt):
+        Performs one iteration of topology optimization.
+    kicalc(x, u, lamba, penal, length):
+        Calculates the stress intensity factor and its density derivatives.
+    densityfilt(rmin, filt):
+        Blurs the density distribution to counteract checkerboard patterns.
+    sensitivityfilt(x, rmin, dki, filt):
+        Blurs the stress intensity to density sensitivity to counteract
+        checkepboard patterns.
+    mma(m, n, itr, xval, xmin, xmax, xold1, xold2, f0val, df0dx, fval, dfdx, low, upp, a0, a, c, d):
+        Performs one itteration of the MMA update scheme.
+    solvemma(m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d):
+        Primal-Dual Newton solver used by the MMA update scheme
     """
     def __init__(self, constraint, load, fesolver, verbose=False):
         self.constraint = constraint
@@ -53,14 +82,14 @@ class Topopt(object):
         self.itr = 0
 
         # setting up starting density array
-        x = np.ones((load.nely, load.nelx))*constraint.volume_frac
-        xlist, ylist, values = load.passive()
+        x = np.ones((load.nely, load.nelx))*constraint.density_min
+        xlist, ylist, values, self.ele_free = load.passive()
         x[ylist, xlist] = values
         self.x = x
-        self.xold1 = np.copy(x).flatten()
-        self.xold2 = np.copy(x).flatten()
-        self.low = 0*np.copy(x).flatten()
-        self.upp = 0*np.copy(x).flatten()
+        self.xold1 = np.copy(x).flatten()[self.ele_free]
+        self.xold2 = np.copy(x).flatten()[self.ele_free]
+        self.low = 0*np.copy(x).flatten()[self.ele_free]
+        self.upp = 0*np.copy(x).flatten()[self.ele_free]
 
     # topology optimization
     def layout(self, penal, rmin, delta, loopy, filt, history=False):
@@ -172,13 +201,13 @@ class Topopt(object):
 
         # Prepairing MMA update scheme
         m = 1  # amount of constraint functions
-        n = load.nelx*load.nely  # amount of elements
-        x = np.copy(self.x).flatten()
-        xmin = constraint.xmin(load, self.x).flatten()
-        xmax = constraint.xmax(load, self.x).flatten()
-        duoutf = duoutf.flatten()
+        n = len(self.ele_free)  # load.nelx*load.nely  # amount of elements
+        x = np.copy(self.x).flatten()[self.ele_free]
+        xmin = constraint.xmin(self.x).flatten()[self.ele_free]
+        xmax = constraint.xmax(self.x).flatten()[self.ele_free]
+        duoutf = duoutf.flatten()[self.ele_free]
         volcon = constraint.current_volconstrain(xf)  # value of constraint function
-        dvolcondx = constraint.volume_derivative # constraint derivative
+        dvolcondx = constraint.volume_derivative[:, self.ele_free] # constraint derivative
         a0 = 1
         a = np.zeros((m))
         c_ = 1000*np.ones((m))
