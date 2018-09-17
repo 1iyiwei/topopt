@@ -458,7 +458,7 @@ class Load(object):
         fix_ele : 1-D list
             List with all element numbers that are allowed to change.
         """
-        return [], [], []
+        return [], [], [], [x for x in range(self.nelx*self.nely)]
 
 
 # example loading scenario, inverter with horizontal mirror axis
