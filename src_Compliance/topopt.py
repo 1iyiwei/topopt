@@ -20,6 +20,17 @@ class Topopt(object):
     This is the optimisation object itself. It contains the initialisation of
     the density distribution.
 
+    Parameters
+    ----------
+    constraint : object of DensityConstraint class
+        The constraints for this optimization problem.
+    load : object, child of the Loads class
+        The loadcase(s) considerd for this optimisation problem.
+    fesolver : object, child of the CSCStiffnessMatrix class
+        The finite element solver.
+    verbose : bool
+        Printing itteration results.
+
     Atributes
     -------
     constraint : object of DensityConstraint class
@@ -71,13 +82,13 @@ class Topopt(object):
 
         # setting up starting density array
         x = np.ones((load.nely, load.nelx))*constraint.volume_frac
-        xlist, ylist, values = load.passive()
+        xlist, ylist, values, self.ele_free = load.passive()
         x[ylist, xlist] = values
         self.x = x
-        self.xold1 = np.copy(x).flatten()
-        self.xold2 = np.copy(x).flatten()
-        self.low = 0*np.copy(x).flatten()
-        self.upp = 0*np.copy(x).flatten()
+        self.xold1 = np.copy(x).flatten()[self.ele_free]
+        self.xold2 = np.copy(x).flatten()[self.ele_free]
+        self.low = 0*np.copy(x).flatten()[self.ele_free]
+        self.upp = 0*np.copy(x).flatten()[self.ele_free]
 
     # topology optimization
     def layout(self, penal, rmin, delta, loopy, filt, history=False):
@@ -187,15 +198,15 @@ class Topopt(object):
         # applying the sensitvity filter if required
         dcf = self.sensitivityfilt(xf, rmin, dc, filt)
 
-        # Prepairing MMA update scheme
+        # Prepairing MMA update scheme, only for free elements
         m = 1  # amount of constraint functions
-        n = load.nelx*load.nely  # amount of elements
-        x = np.copy(self.x).flatten()
-        xmin = constraint.xmin(load, self.x).flatten()
-        xmax = constraint.xmax(load, self.x).flatten()
-        dcf = dcf.flatten()
+        n = len(self.ele_free)  # load.nelx*load.nely  # amount of elements
+        x = np.copy(self.x).flatten()[self.ele_free]
+        xmin = constraint.xmin(self.x).flatten()[self.ele_free]
+        xmax = constraint.xmax(self.x).flatten()[self.ele_free]
+        dcf = dcf.flatten()[self.ele_free]
         volcon = constraint.current_volconstrain(xf)  # value of constraint function
-        dvolcondx = constraint.volume_derivative  # constraint derivative
+        dvolcondx = constraint.volume_derivative[:, self.ele_free] # constraint derivative
         a0 = 1
         a = np.zeros((m))
         c_ = 1000*np.ones((m))
