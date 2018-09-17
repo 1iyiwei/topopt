@@ -393,8 +393,6 @@ class Load(object):
         l = np.zeros((self.num_dofs, 1))
 
         # higher order element
-#        ele = self.hoe[0][0]*self.nely + self.hoe[0][1]
-#        node = self.edof[ele][-2]  # node with K_I
         l[-2] = 1
         return l
 
@@ -457,6 +455,8 @@ class Load(object):
             Y ccordinates of all passive elements, empty for the parrent class.
         values : 1-D list
             Density values of all passive elements, empty for the parrent class.
+        fix_ele : 1-D list
+            List with all element numbers that are allowed to change.
         """
         return [], [], []
 
