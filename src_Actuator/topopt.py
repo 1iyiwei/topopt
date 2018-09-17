@@ -82,7 +82,7 @@ class Topopt(object):
         self.itr = 0
 
         # setting up starting density array
-        x = np.ones((load.nely, load.nelx))*constraint.density_min
+        x = np.ones((load.nely, load.nelx))*constraint.volume_frac
         xlist, ylist, values, self.ele_free = load.passive()
         x[ylist, xlist] = values
         self.x = x
