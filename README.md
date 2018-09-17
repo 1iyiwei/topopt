@@ -47,6 +47,8 @@ The same steps need to be taken to create a new actuator load case, but copy the
  
 Using the StressIntensity load class works similar to the Compliance minimization one. Copy the [Compact Tension](https://github.com/AJJLagerweij/topopt/blob/2641a28770d6f0f6ed1ae9930a8e156444244b01/src_StressIntensity/loads.py#L784-L936) case and fix the loads and fixed degrees of freedom. Extra attention should be provided to the location of the Higher Order Elements (defined as `hoe`) and the passive elements. All elements that are used in the crack tip analysis must have a density value of 1 exactly as shown in the CompactTension example.
 
+![CompactTension](https://rawgit.com/AJJLagerweij/topopt/master/img/CompactTension.svg)
+
 ## To be implemented ##
 Four improvements are proposed:
  1. Adding a faster algebraic multigrid preconditioner with Conjugate Gradient itterative solver.
