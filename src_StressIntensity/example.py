@@ -32,9 +32,9 @@ if __name__ == "__main__":
     move = 0.5
 
     # mesh dimensions
-    nelx = 100
+    nelx = 200
     nely = 100
-    crack_length = np.arange(52, 55, 1)
+    crack_length = np.arange(80, 81, 1)
 
     # optimization parameters
     penal = 1.0
@@ -46,12 +46,12 @@ if __name__ == "__main__":
     # plotting and printing options
     verbose = True
     plotting = True
-    save_plot = True
-    history = True
-    save_pointcloud = True
+    save_plot = False
+    history = False
+    save_pointcloud = False
 
     # loading case object, other classes can be selected and created
-    load = EdgeCrack(nelx, nely, crack_length, young, Emin, poisson, ext_stiff)
+    load = CompactTension(nelx, crack_length, young, Emin, poisson, ext_stiff)
 
     # constraints object created
     den_con = DensityConstraint(load, move, volume_frac=volfrac, density_min=1, density_max=2)
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     x = np.vstack((x, np.flip(x, 0)))
 
     # plotting
-    directory = 'CT0002/'
+    directory = 'CT0001/'
     pl = Plot(load, directory)
 #    pl.loading(load)
 #    pl.boundary(load)

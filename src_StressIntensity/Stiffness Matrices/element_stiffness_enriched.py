@@ -13,7 +13,7 @@ from sympy.integrals.quadrature import gauss_legendre
 from IPython.display import display
 
 # setting up printing options
-#sym.init_printing(use_latex=True)
+sym.init_printing(use_latex=True)
 
 # setting up the variables
 xi, eta = sym.symbols("xi eta")
@@ -124,8 +124,8 @@ B = zeros(3, 2*len(N)+2)
 xt, yt = 1, -1  # sym.symbols('x_tip y_tip')
 loc = [xt, yt] #location of the crack tip
 K1, K2, r, th, gm, G = sym.symbols('K_1 K_2 r theta gamma, G')
-G = E/(2*(1+nu))
-gm = (3 -  nu)/(1 + nu)
+#G = E/(2*(1+nu))
+#gm = (3 -  nu)/(1 + nu)
 sinth = sym.sin(th/2)
 costh = sym.cos(th/2)
 
@@ -133,80 +133,80 @@ f1 = 1/(2*G)*sym.sqrt(r/(2*sym.pi))*( gm - 1 + 2*sinth**2)*costh
 g1 = 1/(2*G)*sym.sqrt(r/(2*sym.pi))*( gm + 1 + 2*costh**2)*sinth
 f2 = 1/(2*G)*sym.sqrt(r/(2*sym.pi))*( gm + 1 + 2*costh**2)*sinth
 g2 = 1/(2*G)*sym.sqrt(r/(2*sym.pi))*(-gm + 1 + 2*sinth**2)*costh
-f1 = (f1.subs([(r, sym.sqrt((xi-loc[0])**2 + (eta-loc[1])**2)), (th, sym.atan2((eta-loc[1]), (xi-loc[0])))])).simplify()
-g1 = (g1.subs([(r, sym.sqrt((xi-loc[0])**2 + (eta-loc[1])**2)), (th, sym.atan2((eta-loc[1]), (xi-loc[0])))])).simplify()
-f2 = (f2.subs([(r, sym.sqrt((xi-loc[0])**2 + (eta-loc[1])**2)), (th, sym.atan2((eta-loc[1]), (xi-loc[0])))])).simplify()
-g2 = (g2.subs([(r, sym.sqrt((xi-loc[0])**2 + (eta-loc[1])**2)), (th, sym.atan2((eta-loc[1]), (xi-loc[0])))])).simplify()
-
-df1di = sym.Matrix([[sym.diff(f1, xi)], [sym.diff(f1, eta)]])
-dg1di = sym.Matrix([[sym.diff(g1, xi)], [sym.diff(g1, eta)]])
-df2di = sym.Matrix([[sym.diff(f2, xi)], [sym.diff(f2, eta)]])
-dg2di = sym.Matrix([[sym.diff(g2, xi)], [sym.diff(g2, eta)]])
-
-df1dI = invJ*df1di
-dg1dI = invJ*dg1di
-df2dI = invJ*df2di
-dg2dI = invJ*dg2di
-
-B[0:3, -2:] = sym.Matrix([[df1dI[0],         dg1dI[0]],
-                         [df2dI[1],          dg2dI[1]],
-                         [df1dI[1]+df2dI[0], dg1dI[1]+dg2dI[0]]])
-
-# Generation of the normal part of the B matrix    
-for i in range(len(N)):
-    Ni = N[i]
-    dNidxi = sym.diff(Ni, xi)
-    dNideta = sym.diff(Ni, eta)
-
-    dNidi = sym.Matrix([[dNidxi], [dNideta]])
-    dNidI = invJ*dNidi  # Exequte equation 8.17 Zienkiewicz
-    B[0:3, 2*i:2*i+2] = sym.Matrix([[dNidI[0], 0], [0, dNidI[1]], [dNidI[1], dNidI[0]]])
-
-
-"""
-Here the material stiffness matrix is defined. Currently the plane stress state
-is implemented
-"""
-D = sym.Matrix([[1, nu, 0], [nu, 1, 0], [0, 0, (1-nu)/2]]) * E/(1-nu**2)
-
-
-"""
-Now the final steps are taken. First B^T * D * B * detJ is calculated.
-1  1         
-⌠  ⌠         
-⎮  ⎮  BDBdetJ dξ dη
-⌡  ⌡         
--1 -1
-Then the integration is done term by term in the resulting matrix. This is done
-so that the printing becomes more clear, every element is printed seperatly.
-The integration is now done with a gausian quadrature method as adviced by:
-"Basic Finite Element Method as Applied to Injury Biomechanics" from K. Yang
-"""
-BDBdetJ = B.T * D * B * detJ
-
-
-def gaussquad2D(f, var1, var2, n=3, n_digits=15):
-    X, W = gauss_legendre(n, n_digits)
-    res = 0    
-    for i in range(len(X)):
-        for j in range(len(X)):
-            res += W[i]*W[j]*f.subs([(var2, X[i]), (var1, X[j])])
-    res = sym.simplify(res)
-    return res
-
-k = []
-
-for i in range(2*len(N)+2):
-    ki = []
-    for j in range(2*len(N)+2):
-        print("(", i ,", ", j, ")")
-        BDBij = BDBdetJ[i, j]
-        Kij = gaussquad2D(BDBij, xi, eta)
-#        Kij = sym.integrate(sym.integrate(BDBij, (xi, -1, 1)), (eta, -1, 1))
-        ki.append(str(Kij))
-    k.append(ki)
-
-f = open("Stiffness_Cubic_PlaneStress_Enriched(1:-1).csv", "w+")
-writer = csv.writer(f)
-writer.writerows(k)
-f.close()
+#f1 = (f1.subs([(r, sym.sqrt((xi-loc[0])**2 + (eta-loc[1])**2)), (th, sym.atan2((eta-loc[1]), (xi-loc[0])))])).simplify()
+#g1 = (g1.subs([(r, sym.sqrt((xi-loc[0])**2 + (eta-loc[1])**2)), (th, sym.atan2((eta-loc[1]), (xi-loc[0])))])).simplify()
+#f2 = (f2.subs([(r, sym.sqrt((xi-loc[0])**2 + (eta-loc[1])**2)), (th, sym.atan2((eta-loc[1]), (xi-loc[0])))])).simplify()
+#g2 = (g2.subs([(r, sym.sqrt((xi-loc[0])**2 + (eta-loc[1])**2)), (th, sym.atan2((eta-loc[1]), (xi-loc[0])))])).simplify()
+#
+#df1di = sym.Matrix([[sym.diff(f1, xi)], [sym.diff(f1, eta)]])
+#dg1di = sym.Matrix([[sym.diff(g1, xi)], [sym.diff(g1, eta)]])
+#df2di = sym.Matrix([[sym.diff(f2, xi)], [sym.diff(f2, eta)]])
+#dg2di = sym.Matrix([[sym.diff(g2, xi)], [sym.diff(g2, eta)]])
+#
+#df1dI = invJ*df1di
+#dg1dI = invJ*dg1di
+#df2dI = invJ*df2di
+#dg2dI = invJ*dg2di
+#
+#B[0:3, -2:] = sym.Matrix([[df1dI[0],         dg1dI[0]],
+#                         [df2dI[1],          dg2dI[1]],
+#                         [df1dI[1]+df2dI[0], dg1dI[1]+dg2dI[0]]])
+#
+## Generation of the normal part of the B matrix    
+#for i in range(len(N)):
+#    Ni = N[i]
+#    dNidxi = sym.diff(Ni, xi)
+#    dNideta = sym.diff(Ni, eta)
+#
+#    dNidi = sym.Matrix([[dNidxi], [dNideta]])
+#    dNidI = invJ*dNidi  # Exequte equation 8.17 Zienkiewicz
+#    B[0:3, 2*i:2*i+2] = sym.Matrix([[dNidI[0], 0], [0, dNidI[1]], [dNidI[1], dNidI[0]]])
+#
+#
+#"""
+#Here the material stiffness matrix is defined. Currently the plane stress state
+#is implemented
+#"""
+#D = sym.Matrix([[1, nu, 0], [nu, 1, 0], [0, 0, (1-nu)/2]]) * E/(1-nu**2)
+#
+#
+#"""
+#Now the final steps are taken. First B^T * D * B * detJ is calculated.
+#1  1         
+#⌠  ⌠         
+#⎮  ⎮  BDBdetJ dξ dη
+#⌡  ⌡         
+#-1 -1
+#Then the integration is done term by term in the resulting matrix. This is done
+#so that the printing becomes more clear, every element is printed seperatly.
+#The integration is now done with a gausian quadrature method as adviced by:
+#"Basic Finite Element Method as Applied to Injury Biomechanics" from K. Yang
+#"""
+#BDBdetJ = B.T * D * B * detJ
+#
+#
+#def gaussquad2D(f, var1, var2, n=3, n_digits=15):
+#    X, W = gauss_legendre(n, n_digits)
+#    res = 0    
+#    for i in range(len(X)):
+#        for j in range(len(X)):
+#            res += W[i]*W[j]*f.subs([(var2, X[i]), (var1, X[j])])
+#    res = sym.simplify(res)
+#    return res
+#
+#k = []
+#
+#for i in range(2*len(N)+2):
+#    ki = []
+#    for j in range(2*len(N)+2):
+#        print("(", i ,", ", j, ")")
+#        BDBij = BDBdetJ[i, j]
+#        Kij = gaussquad2D(BDBij, xi, eta)
+##        Kij = sym.integrate(sym.integrate(BDBij, (xi, -1, 1)), (eta, -1, 1))
+#        ki.append(str(Kij))
+#    k.append(ki)
+#
+#f = open("Stiffness_Cubic_PlaneStress_Enriched(1:-1).csv", "w+")
+#writer = csv.writer(f)
+#writer.writerows(k)
+#f.close()
