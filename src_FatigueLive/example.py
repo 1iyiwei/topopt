@@ -24,22 +24,25 @@ if __name__ == "__main__":
     young = 1
     poisson = 0.3
     ext_stiff = 0.0
+    C = 1
+    m = 2
 
     # constraints
     Emin = 1e-9
     volfrac = 1.1
-    move = 0.5
+    move = 1
 
     # mesh dimensions
     nelx = 200
-    nely = 100
-    crack_length = np.arange(80, 82, 1)
+#    nely = 100
+    crack_length = np.arange(80, 85, 1)
+    weights = np.ones(np.shape(crack_length[:-1]))
 
     # optimization parameters
     penal = 1.0
     rmin = 1.5
     filt = 'density'
-    loopy = 1  # math.inf
+    loopy = 10  # math.inf
     delta = 0.001
 
     # plotting and printing options
@@ -59,11 +62,11 @@ if __name__ == "__main__":
     fesolver = SciPyFEA(verbose=verbose)
 
     # create optimizer object and initialise the problem
-    optimizer = Topopt(den_con, load, fesolver, verbose=verbose)
+    optimizer = Topopt(den_con, load, fesolver, weights, C, m, verbose=verbose)
 
     # compute
     t = time.time()
-    x, x_history, ki = optimizer.layout(penal, rmin, delta, loopy, filt, history)
+    x, x_history = optimizer.layout(penal, rmin, delta, loopy, filt, history)
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
     # fixing symetry, only when required
@@ -76,7 +79,7 @@ if __name__ == "__main__":
     if history:
         for i in x_history:
             pl.add(i, animated=True)
-        pl.save('video')
+#        pl.save('video')
 
     pl.add(x, animated=False)
 

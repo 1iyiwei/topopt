@@ -819,8 +819,8 @@ class CompactTension(Load):
 
     nely : int
         Number of y elements, this is now a function of nelx.
-    crack_length : int
-        Is the amount of elements that the crack is long.
+    crack_length : array
+        Is for all cracks conciderd the crack_length.
 
     Methods
     -------

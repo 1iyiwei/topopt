@@ -28,8 +28,14 @@ class Topopt(object):
         The loadcase(s) considerd for this optimisation problem.
     fesolver : object, child of the CSCStiffnessMatrix class
         The finite element solver.
+    weights : array length load cases
+        The weight given to each of the load cases.
     verbose : bool
         Printing itteration results.
+    C : float
+        Multiplication part of Paris-Erdogan law.
+    m : float
+        Power part of Paris-Erdogan law.
 
     Atributes
     -------
@@ -43,6 +49,12 @@ class Topopt(object):
         Printing itteration results.
     itr : int
         Number of iterations performed
+    weights : array length load cases
+        The weight given to each of the load cases.
+    C : float
+        Multiplication part of Paris-Erdogan law.
+    m : float
+        Power part of Paris-Erdogan law.
     free_ele : 1-D list
         All element nubers that ar allowed to change.
     x : 2-D array size(nely, nelx)
@@ -76,12 +88,15 @@ class Topopt(object):
     solvemma(m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d):
         Primal-Dual Newton solver used by the MMA update scheme
     """
-    def __init__(self, constraint, load, fesolver, verbose=False):
+    def __init__(self, constraint, load, fesolver, weights, C, m, verbose=False):
         self.constraint = constraint
         self.load = load
         self.fesolver = fesolver
         self.verbose = verbose
         self.itr = 0
+        self.weights = weights
+        self.C = C
+        self.m = m
 
         # setting up starting density array
         x = np.ones((load.nely, load.nelx))*constraint.density_min
@@ -121,8 +136,6 @@ class Topopt(object):
         xf_history : list of arrays len(itterations size(nely, nelx))
             List with the density distributions of all itterations, None when
             history != True.
-        ki : float
-            Stress intensity factor final design.
         """
         # check if an existing filter was selected
         if filt != 'sensitivity' and filt != 'density':
@@ -135,15 +148,11 @@ class Topopt(object):
 
         while (change >= delta) and (self.itr < loopy):
             self.itr += 1
-            change, ki, volcon = self.iter(penal, rmin, filt)
+            change, N, Obj = self.iter(penal, rmin, filt)
 
             objective = ''
             if self.verbose:
-                for length, ki_i in ki.items():
-                    sub_obj = length + ': {0:.4f}, '.format(ki_i)
-                    objective = objective + sub_obj
-
-                string = 'It.: {0:4d}, ch.: {2:0.3f}, K_I.:'.format(self.itr, ki, change)
+                string = 'It.: {0:4d}, ch.: {1:0.3f}, N: {2:9.4f}, Obj: {3:9.4f}'.format(self.itr, change, N, Obj)
                 print(string, objective, flush=True)
 
             if history:
@@ -154,9 +163,9 @@ class Topopt(object):
         xf = self.densityfilt(rmin, filt)
 
         if history:
-            return xf, xf_history, ki
+            return xf, xf_history
         else:
-            return xf, None, ki
+            return xf, None
 
     # iteration
     def iter(self, penal, rmin, filt):
@@ -186,8 +195,10 @@ class Topopt(object):
         -------
         change : float
             Largest difference between the new and old density distribution.
-        ki : float
-            Stress intensity factor for the current design.
+        N : float
+            Fatigue live in cycles of the crack.
+        Obj : float
+            Objective in weigted cycles.
         """
         # element stiffness matrix
         constraint = self.constraint
@@ -196,10 +207,10 @@ class Topopt(object):
         # applying the density filter if required
         xf = self.densityfilt(rmin, filt)
 
+        # calculaing stress intensity factor and its derivatives for all cracks
         num_length = len(load.crack_length)
-        ki = {}
+        ki = np.array([])
         dki = np.zeros((num_length, load.nely, load.nelx))
-        weight = [1/num_length]*num_length
         for i in range(num_length):
             length = load.crack_length[i]
 
@@ -208,13 +219,22 @@ class Topopt(object):
 
             # stress intensity and its derivative
             ki_i, dki_i = self.kicalc(xf, u, lamba, penal, length)
-            ki[str(length)] = ki_i
-            dki[i] = weight[i]*dki_i
-        
-        dki = np.sum(dki, axis=0)
+            ki = np.append(ki, ki_i)
+            dki[i, :, :] = dki_i
+
+        # computing global objective as a function of all KI values
+        da = 2*(load.crack_length[1:] - load.crack_length[:-1])
+        sumki = (ki[1:] + ki[:-1])
+        N = 1/self.C * np.sum(da/((1/2*sumki)**self.m))  # fatigue live
+        Obj = 1/self.C * np.sum(self.weights*da/((1/2*sumki)**self.m))  # objective function
+
+        # derivative of the objective function
+        sumdki = (dki[1:, :, :] + dki[:-1, :, :])
+        cycles = (da/(sumki**(self.m-1)))[:, None, None]*sumdki
+        dObj = -(self.m*2**self.m)/self.C * np.sum(cycles, axis=0)
 
         # applying the sensitvity filter if required
-        dkif = self.sensitivityfilt(xf, dki, rmin, filt)
+        dObj = self.sensitivityfilt(xf, dObj, rmin, filt)
 
         # Prepairing MMA update scheme, only for free elements
         m = 1  # amount of constraint functions
@@ -222,7 +242,7 @@ class Topopt(object):
         x = np.copy(self.x).flatten()[self.ele_free]
         xmin = constraint.xmin(self.x).flatten()[self.ele_free]
         xmax = constraint.xmax(self.x).flatten()[self.ele_free]
-        dkif = dkif.flatten()[self.ele_free]
+        dObj = dObj.flatten()[self.ele_free]
         volcon = constraint.current_volconstrain(xf)  # value of constraint function
         dvolcondx = constraint.volume_derivative[:, self.ele_free] # constraint derivative
         a0 = 1
@@ -232,7 +252,7 @@ class Topopt(object):
 
         # Execute MMA update scheme
         xnew = np.copy(self.x).flatten()
-        xnew[self.ele_free], self.low, self.upp = self.mma(m, n, self.itr, x, xmin, xmax, self.xold1, self.xold2, ki, dkif, volcon, dvolcondx, self.low, self.upp, a0, a, c_, d)
+        xnew[self.ele_free], self.low, self.upp = self.mma(m, n, self.itr, x, xmin, xmax, self.xold1, self.xold2, Obj, -dObj, volcon, dvolcondx, self.low, self.upp, a0, a, c_, d)
 
         # Update variables
         self.xold2 = self.xold1
@@ -242,7 +262,7 @@ class Topopt(object):
         # What is the maximum change
         change = np.amax(abs(xnew[self.ele_free] - self.xold1))
 
-        return change, ki, volcon
+        return change, N, Obj
 
     # updated compliance algorithm
     def kicalc(self, x, u, lamba, penal, length):
@@ -342,7 +362,7 @@ class Topopt(object):
         return xf
 
     # sensitivity filter
-    def sensitivityfilt(self, x, dki, rmin, filt):
+    def sensitivityfilt(self, x, dOi, rmin, filt):
         """
         Filters with a normalized convolution on the sensitivity with a
         radius of rmin if:
@@ -353,8 +373,8 @@ class Topopt(object):
         ----------
         x : 2-D array size(nely, nelx)
             Current density ditribution.
-        dki : 2-D array size(nely, nelx
-            Stress intensity sensitivity to density changes.
+        dOi : 2-D array size(nely, nelx
+            Objective sensitivity to density changes.
         rmin : float
             Filter size.
         filt : str
@@ -362,7 +382,7 @@ class Topopt(object):
 
         Returns
         ------
-        dkif : 2-D array size(nely, nelx)
+        dOif : 2-D array size(nely, nelx)
             Filterd sensitivity distribution.
         """
         if filt == 'sensitivity':
@@ -378,14 +398,14 @@ class Topopt(object):
             kernel = kernel/np.sum(kernel)  # normalisation
 
             # elementwise multiplication of x and dc
-            xdki = dki*x
+            xdki = dOi*x
             xdkif = convolve(xdki, kernel, mode='reflect')
-            dkif = np.divide(xdkif, x, out=np.zeros_like(xdkif), where=x!=0)
+            dOif = np.divide(xdkif, x, out=np.zeros_like(xdkif), where=x!=0)
 
         else:
-            dkif = dki
+            dOif = dOi
 
-        return dkif
+        return dOif
 
     # MMA problem linearisation
     def mma(self, m, n, itr, xval, xmin, xmax, xold1, xold2, f0val, df0dx, fval, dfdx, low, upp, a0, a, c, d):
