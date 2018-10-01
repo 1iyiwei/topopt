@@ -21,6 +21,26 @@ class Load(object):
     new load cases can be generated simply by adding a child and changing the
     function related to the geometry, loads and boundaries.
 
+    Parameters
+    ---------
+    nelx : int
+        Number of elements in x direction.
+    nely : int
+        Number of elements in y direction.
+    young : float
+        Youngs modulus of the materias.
+    Emin : float
+        Artifical Youngs modulus of the material to ensure a stable FEA.
+        It is used in the SIMP based material model.
+    poisson : float
+        Poisson ration of the material.    
+    ext_stiff : float
+        Extra stiffness to be added to global stiffness matrix. Due to
+        interactions with meganisms outside design domain.
+    hoe : list
+        List of lists with for every cracklength the x end y element locations
+        that need to be enriched.
+
     Atributes
     -------
     nelx : int
@@ -60,7 +80,7 @@ class Load(object):
         Returns the topleft node number of the element.
     nodes(elx, ely)
         Returns all nodes of the element.
-    edof()
+    edof(hoe)
         Generats an array with the possitions af all degrees of freedom that
         belong to all elements.
     import_stiffness(elementtype, E, nu)
@@ -88,7 +108,7 @@ class Load(object):
         self.nelx = nelx
         self.nely = nely
         self.dim = 2
-        self.edof, self.x_list, self.y_list, self.num_dofs = self.edof(nelx, nely, hoe)
+        self.edof, self.x_list, self.y_list, self.num_dofs = self.edof(hoe)
         self.young = young
         self.Emin = Emin
         self.poisson = poisson
@@ -147,7 +167,7 @@ class Load(object):
         return n0, n1, n2, n3
 
     # edof that returns an array
-    def edof(self, nelx, nely, hoe):
+    def edof(self, hoe):
         """
         Generates an array with the position of the nodes of each element in
         the global stiffness matrix. This takes the Higher Order Elements in
@@ -167,8 +187,8 @@ class Load(object):
             The amount of degrees of freedom.
         """
         # Creating list with element numbers
-        elx = np.repeat(range(nelx), nely).reshape((nelx*nely, 1))  # x position of element
-        ely = np.tile(range(nely), nelx).reshape((nelx*nely, 1))  # y position of element
+        elx = np.repeat(range(self.nelx), self.nely).reshape((self.nelx*self.nely, 1))  # x position of element
+        ely = np.tile(range(self.nely), self.nelx).reshape((self.nelx*self.nely, 1))  # y position of element
 
         node_loc = np.array(self.nodes(elx, ely), dtype=np.int32)
         shape = list(np.shape(node_loc))
@@ -201,7 +221,7 @@ class Load(object):
         edof = edof.tolist()
         for i in range(len(hoe)):
             hoei = hoe[i]
-            element = nely*hoei[0] + hoei[1]
+            element = self.nely*hoei[0] + hoei[1]
             edof_ele = edof[element]  # old dofs of hoe
 
             n0 = edof_ele[0]
@@ -395,7 +415,6 @@ class Load(object):
         Retuns three lists containing the location and magnitude of fixed
         density values
 
-
         Returns
         ------
         elx : 1-D list
@@ -404,6 +423,8 @@ class Load(object):
             Y ccordinates of all passive elements, empty for the parrent class.
         values : 1-D list
             Density values of all passive elements, empty for the parrent class.
+        fix_ele : 1-D list
+            List with all element numbers that are allowed to change.
         """
         return [], [], []
 
@@ -425,6 +446,25 @@ class EdgeCrack(Load):
 
         Kreal = sigma_real * sqrt(real_crack_length) * Ksim/sqrt(2*crack_length)
 
+    Parameters
+    ---------
+    nelx : int
+        Number of elements in x direction.
+    nely : int
+        Number of elements in y direction.
+    crack_length : int
+        Crack lengs conciderd.
+    young : float
+        Youngs modulus of the materias.
+    Emin : float
+        Artifical Youngs modulus of the material to ensure a stable FEA.
+        It is used in the SIMP based material model.
+    poisson : float
+        Poisson ration of the material.
+    ext_stiff : float
+        Extra stiffness to be added to global stiffness matrix. Due to
+        interactions with meganisms outside design domain.
+
     Atributes
     ---------
     Two attributes are added with respect to the parrent class.
@@ -433,6 +473,8 @@ class EdgeCrack(Load):
         Is the amount of elements that the crack is long.
     hoe : list len(2)
         List containing the x end y element locations that need to be enriched.
+    hoe_type : list len(2)
+        List containing element type for each enriched element.
 
     Methods
     -------
@@ -443,8 +485,8 @@ class EdgeCrack(Load):
     References
     ----------
     .. [1] Tada, H., Paris, P., & Irwin, G. (2000). "Part II 2.10-2.12 The
-        Single Edge Notch Test Specimen", The stress analysis of cracks handbook
-        (3rd ed.). New York: ASME Press, pp:52-54.
+        Single Edge Notch Test Specimen", The stress analysis of cracks
+        handbook (3rd ed.). New York: ASME Press, pp:52-54.
     """
     def __init__(self, nelx, nely, crack_length, young, Emin, poisson, ext_stiff):
         self.crack_length = crack_length
@@ -545,6 +587,21 @@ class DoubleEdgeCrack(Load):
 
         Kreal = sigma_real * sqrt(real_crack_length) * Ksim/sqrt(2*crack_length)
 
+    Parameters
+    ---------
+    nelx : int
+        Number of elements in x direction.
+    young : float
+        Youngs modulus of the materias.
+    Emin : float
+        Artifical Youngs modulus of the material to ensure a stable FEA.
+        It is used in the SIMP based material model.
+    poisson : float
+        Poisson ration of the material.
+    ext_stiff : float
+        Extra stiffness to be added to global stiffness matrix. Due to
+        interactions with meganisms outside design domain.
+
     Atributes
     ---------
     Two attributes are added and one was changed with respect to the parrent
@@ -557,6 +614,8 @@ class DoubleEdgeCrack(Load):
         nelx.
     hoe : list len(2)
         List containing the x end y element locations that need to be enriched.
+    hoe_type : list len(2)
+        List containging the type of enriched element.
 
     Methods
     -------
@@ -670,6 +729,23 @@ class CompactTension(Load):
     The stress intensity factors calculated is for the case where the element
     size is the real dimensions times two and a load of 1.
 
+    Parameters
+    ---------
+    nelx : int
+        Number of elements in x direction.
+    crack_length : int
+        Crack length conciderd
+    young : float
+        Youngs modulus of the materias.
+    Emin : float
+        Artifical Youngs modulus of the material to ensure a stable FEA.
+        It is used in the SIMP based material model.
+    poisson : float
+        Poisson ration of the material.
+    ext_stiff : float
+        Extra stiffness to be added to global stiffness matrix. Due to
+        interactions with meganisms outside design domain.
+
     Atributes
     ---------
     Two attributes are added and one was changed with respect to the parrent
@@ -681,6 +757,8 @@ class CompactTension(Load):
         Is the amount of elements that the crack is long.
     hoe : list len(2)
         List containing the x end y element locations that need to be enriched.
+    hoe_type : list len(2)
+        List containging the type of enriched element.
 
     Methods
     -------

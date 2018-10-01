@@ -313,19 +313,19 @@ class Plot(object):
 
 
 class FasterFFMpegWriter(anim.FFMpegWriter):
-    """FFMpeg-pipe writer bypassing figure.savefig. To improof saving speed"""
+    '''FFMpeg-pipe writer bypassing figure.savefig. To improof saving speed'''
 
     def __init__(self, **kwargs):
-        """Initialize the Writer object and sets the default frame_format."""
+        '''Initialize the Writer object and sets the default frame_format.'''
         super().__init__(**kwargs)
         self.frame_format = 'argb'
 
     def grab_frame(self, **savefig_kwargs):
-        """
+        '''
         Grab the image information from the figure and save as a movie frame.
 
         Doesn't use savefig to be faster: savefig_kwargs will be ignored.
-        """
+        '''
         try:
             # re-adjust the figure size and dpi in case it has been changed by
             # the user. We must ensure that every frame is the same size or

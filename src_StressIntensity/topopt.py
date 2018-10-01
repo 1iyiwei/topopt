@@ -20,6 +20,17 @@ class Topopt(object):
     This is the optimisation object itself. It contains the initialisation of
     the density distribution.
 
+    Parameters
+    ----------
+    constraint : object of DensityConstraint class
+        The constraints for this optimization problem.
+    load : object, child of the Loads class
+        The loadcase(s) considerd for this optimisation problem.
+    fesolver : object, child of the CSCStiffnessMatrix class
+        The finite element solver.
+    verbose : bool
+        Printing itteration results.
+
     Atributes
     -------
     constraint : object of DensityConstraint class

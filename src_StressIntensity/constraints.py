@@ -20,6 +20,19 @@ class DensityConstraint(object):
     element densities that are allowed to change at every itteration.
     The class itself is not changed by the itterations.
 
+    Parameters
+    ----------
+    load : object, child of the Loads class
+        The loadcase(s) considerd for this optimisation problem
+    move : float
+        Maximum change in density of an element over 1 itteration
+    valume_frac : float
+        Maximum relative volume that can be filled with material.
+    density_min : float (optional)
+        Minumum density, set at 0.0 if not specified.
+    density_max : float (optional)
+        Maximum density, set at 0.0 if not specified.
+
     Attributes
     -------
     nelx : int
@@ -31,7 +44,7 @@ class DensityConstraint(object):
     move : float
         Maximum change in density of an element over 1 itteration.
     volume_frac : float
-        Maximum volume that can be filled with material.
+        Maximum relative volume that can be filled with material.
     volume_derivative : 2D array size(1, nelx*nely)
         Sensityvity of the density constraint to the density in each element.
     density_min : float (optional)
