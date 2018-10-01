@@ -1,6 +1,6 @@
 """
 Finite element solvers for the displacement from stiffness matrix and force
-vector. This version of the code is meant for local compliant maximization.
+vector. This version of the code is meant for the fatigue live maximization.
 
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft

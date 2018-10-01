@@ -1,7 +1,7 @@
 """
 This file containts the Load class that allows the generation of an object that
 contains geometric, mesh, loads and boundary conditions that belong to the
-load case. This version of the code is meant for stress intensity minimization.
+load case. This version of the code is meant for the fatigue live maximization.
 
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft

@@ -1,8 +1,8 @@
 """
 Topology Optimization class that handles the itterations, objective functions,
 filters and update scheme. It requires to call upon a constraint, load case and
-FE solver classes. This version of the code is meant for stress intensity
-factor minimization.
+FE solver classes. This version of the code is meant for the fatigue live
+maximization.
 
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft

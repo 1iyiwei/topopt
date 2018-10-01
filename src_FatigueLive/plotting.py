@@ -1,7 +1,7 @@
 """
 Plotting the simulated TopOpt geometry with boundery conditions and loads.
-This version of the code is meant for mixed element types problems. Such as
-the stress intensity minimization.
+This version of the code is meant for mixed element types problems for the
+fatigue live maximization.
 
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft

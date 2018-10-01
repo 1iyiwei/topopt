@@ -1,8 +1,7 @@
 """
 This is the main progam code that sets up the topology optimisation problem.
-This optimisation tries to minimize the stress intensity factor. Which should
-maximise the fatigue crack propegation life and thus the increase damage
-tolerance.
+This optimisation tries to maximize the fatigue live of a crack and thus
+increase damage tolerance.
 
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft
@@ -34,7 +33,7 @@ if __name__ == "__main__":
     # mesh dimensions
     nelx = 200
     nely = 100
-    crack_length = np.arange(80, 81, 1)
+    crack_length = np.arange(80, 82, 1)
 
     # optimization parameters
     penal = 1.0
