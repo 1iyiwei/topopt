@@ -32,9 +32,9 @@ if __name__ == "__main__":
     move = 0.5
     
     # mesh dimensions
-    nelx = 100
-    nely = 100
-    crack_length = 40
+    nelx = 200
+#    nely = 100
+    crack_length = 80
     
     # optimization parameters
     penal = 1.0
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     save_pointcloud = True
 
     # loading case object, other classes can be selected and created
-    load = DoubleEdgeCrack(nelx, young, Emin, poisson, ext_stiff)
+    load = CompactTension(nelx, crack_length, young, Emin, poisson, ext_stiff)
 
     # constraints object created
     den_con = DensityConstraint(load, move, volume_frac=volfrac, density_min=1, density_max=2)
