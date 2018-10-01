@@ -20,17 +20,6 @@ class Topopt(object):
     This is the optimisation object itself. It contains the initialisation of
     the density distribution.
 
-    Parameters
-    ----------
-    constraint : object of DensityConstraint class
-        The constraints for this optimization problem.
-    load : object, child of the Loads class
-        The loadcase(s) considerd for this optimisation problem.
-    fesolver : object, child of the CSCStiffnessMatrix class
-        The finite element solver.
-    verbose : bool
-        Printing itteration results.
-
     Atributes
     -------
     constraint : object of DensityConstraint class
@@ -57,24 +46,6 @@ class Topopt(object):
     upp : 1D array len(nelx*nely)
         Column vector with the lower asymptotes, calculated and used in the
         MMA subproblem of the previous itteration.
-
-    Methods
-    ------
-    layout(penal, rmin, delta, loopy, filt, history):
-        Calulates the optimal density distribution, with topology optimization.
-    iter(penal, rmin, filt):
-        Performs one iteration of topology optimization.
-    kicalc(x, u, lamba, penal, length):
-        Calculates the stress intensity factor and its density derivatives.
-    densityfilt(rmin, filt):
-        Blurs the density distribution to counteract checkerboard patterns.
-    sensitivityfilt(x, rmin, dki, filt):
-        Blurs the stress intensity to density sensitivity to counteract
-        checkepboard patterns.
-    mma(m, n, itr, xval, xmin, xmax, xold1, xold2, f0val, df0dx, fval, dfdx, low, upp, a0, a, c, d):
-        Performs one itteration of the MMA update scheme.
-    solvemma(m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d):
-        Primal-Dual Newton solver used by the MMA update scheme
     """
     def __init__(self, constraint, load, fesolver, verbose=False):
         self.constraint = constraint
@@ -137,14 +108,8 @@ class Topopt(object):
             self.itr += 1
             change, ki, volcon = self.iter(penal, rmin, filt)
 
-            objective = ''
             if self.verbose:
-                for length, ki_i in ki.items():
-                    sub_obj = length + ': {0:.4f}, '.format(ki_i)
-                    objective = objective + sub_obj
-
-                string = 'It.: {0:4d}, ch.: {2:0.3f}, K_I.:'.format(self.itr, ki, change)
-                print(string, objective, flush=True)
+                print('It.: {0:4d},  K_I.: {1:8.4f},  ch.: {2:0.3f}'.format(self.itr, ki, change), flush=True)
 
             if history:
                 xf = self.densityfilt(rmin, filt)
@@ -196,25 +161,14 @@ class Topopt(object):
         # applying the density filter if required
         xf = self.densityfilt(rmin, filt)
 
-        num_length = len(load.crack_length)
-        ki = {}
-        dki = np.zeros((num_length, load.nely, load.nelx))
-        weight = [1/num_length]*num_length
-        for i in range(num_length):
-            length = load.crack_length[i]
+        # displacement via FEA
+        u, lamba = self.fesolver.displace(load, xf, load.k_list, load.kmin_list, penal)
 
-            # displacement via FEA
-            u, lamba = self.fesolver.displace(load, xf, penal, length)
-
-            # stress intensity and its derivative
-            ki_i, dki_i = self.kicalc(xf, u, lamba, penal, length)
-            ki[str(length)] = ki_i
-            dki[i] = weight[i]*dki_i
-        
-        dki = np.sum(dki, axis=0)
+        # stress intensity and its derivative
+        ki, dki = self.ki(xf, u, lamba, load.k_list, penal)
 
         # applying the sensitvity filter if required
-        dkif = self.sensitivityfilt(xf, dki, rmin, filt)
+        dkif = self.sensitivityfilt(xf, rmin, dki, filt)
 
         # Prepairing MMA update scheme, only for free elements
         m = 1  # amount of constraint functions
@@ -245,7 +199,7 @@ class Topopt(object):
         return change, ki, volcon
 
     # updated compliance algorithm
-    def kicalc(self, x, u, lamba, penal, length):
+    def ki(self, x, u, lamba, ke, penal):
         """
         This fuction calculates displacement of the objective node and its
         sensitivity to the densities.
@@ -261,8 +215,6 @@ class Topopt(object):
             Element stiffness matrix with full density.
         penal : float
             Material model penalisation (SIMP).
-        length: int
-            Length of the crack conciderd.
 
         Returns
         -------
@@ -271,10 +223,6 @@ class Topopt(object):
         dki : 2-D array size(nely, nelx)
             Displacement objective sensitivity to density changes.
         """
-        # select propper dictionary entries
-        edof = self.load.edof[str(length)]
-        ke = self.load.k_list[str(length)]
-
         # calculate stress intensity
         l = self.load.kiloc()
         ki = -np.dot(l.T, u)[0, 0]
@@ -286,8 +234,8 @@ class Topopt(object):
         num = 0
         for elx in range(nelx):
             for ely in range(nely):
-                ue = u[edof[num]]
-                lambae = lamba[edof[num]]
+                ue = u[self.load.edof[num]]
+                lambae = lamba[self.load.edof[num]]
                 length = len(ue)
                 unum = ue.reshape(length, 1)
                 lambanum = lambae.reshape(length, 1)
@@ -342,7 +290,7 @@ class Topopt(object):
         return xf
 
     # sensitivity filter
-    def sensitivityfilt(self, x, dki, rmin, filt):
+    def sensitivityfilt(self, x, rmin, dki, filt):
         """
         Filters with a normalized convolution on the sensitivity with a
         radius of rmin if:
