@@ -393,6 +393,8 @@ class Load(object):
         l = np.zeros((self.num_dofs, 1))
 
         # higher order element
+#        ele = self.hoe[0][0]*self.nely + self.hoe[0][1]
+#        node = self.edof[ele][-2]  # node with K_I
         l[-2] = 1
         return l
 
@@ -455,10 +457,8 @@ class Load(object):
             Y ccordinates of all passive elements, empty for the parrent class.
         values : 1-D list
             Density values of all passive elements, empty for the parrent class.
-        fix_ele : 1-D list
-            List with all element numbers that are allowed to change.
         """
-        return [], [], [], [x for x in range(self.nelx*self.nely)]
+        return [], [], []
 
 
 # example loading scenario, inverter with horizontal mirror axis
@@ -924,21 +924,8 @@ class CompactTension(Load):
         fix_ele : 1-D list
             List with all element numbers that are allowed to change.
         """
-        # passive crack tip elements
         elx = [x for x in range(np.min(self.crack_length)-1, np.max(self.crack_length)+1)]
         ely = [self.nely-1]*len(elx)
-
-        # passive elements at load introduction
-        r = self.nely/30
-        center_y = self.nelx/5
-        center_x = self.nely/0.6*0.325
-        x = np.vstack([np.arange(self.nelx)]*self.nely)
-        y = np.hstack([np.arange(self.nely).reshape((self.nely, 1))]*self.nelx)
-        distance2 = (x-center_x)**2 + (y-center_y)**2
-        loc_x, loc_y = np.where(distance2 <= r**2)
-        elx += loc_x.tolist()
-        ely += loc_y.tolist()
-
         values = [1]*len(elx)
 
         fixele = []
