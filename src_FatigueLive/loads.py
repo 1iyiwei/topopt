@@ -345,13 +345,13 @@ class Load(object):
                 if [elx, ely] in hoe:
                     index = [i for i, x in enumerate(hoe) if x == [elx, ely]][0]
                     if self.hoe_type[index] == '-1,-1':
-                        k.append(self.import_stiffness('Stiffness_Cubic_PlaneStress_Enriched(-1:-1)', E, nu))
+                        k.append(self.import_stiffness('Stiffness_Cubic_PlaneStress_Enriched(-1,-1)', E, nu))
                     elif self.hoe_type[index] == '-1,1':
-                        k.append(self.import_stiffness('Stiffness_Cubic_PlaneStress_Enriched(-1:1)', E, nu))
+                        k.append(self.import_stiffness('Stiffness_Cubic_PlaneStress_Enriched(-1,1)', E, nu))
                     elif self.hoe_type[index] == '1,-1':
-                        k.append(self.import_stiffness('Stiffness_Cubic_PlaneStress_Enriched(1:-1)', E, nu))
+                        k.append(self.import_stiffness('Stiffness_Cubic_PlaneStress_Enriched(1,-1)', E, nu))
                     elif self.hoe_type[index] == '1,1':
-                        k.append(self.import_stiffness('Stiffness_Cubic_PlaneStress_Enriched(1:1)', E, nu))
+                        k.append(self.import_stiffness('Stiffness_Cubic_PlaneStress_Enriched(1,1)', E, nu))
                     else:
                         raise Exception('The element type requested does not exist')
                 else:
