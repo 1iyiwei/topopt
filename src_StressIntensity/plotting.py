@@ -36,7 +36,7 @@ class Plot(object):
     nely : int
         Number of elements in y direction.
     fig : matplotlib.pyplot figure
-        An empty figure of size nelx/10 and nely/10*1.2 inch.
+        An empty figure of size nelx/10 and nely/10 inch.
     ax : matplotlib.pyplot axis
         The axis system that belongs to fig.
     images : 1-D list with imshow objects
@@ -71,14 +71,14 @@ class Plot(object):
         self.load = load
         self.fig = plt.figure()
         xsize = 100*load.nelx/1920
-        ysize = 100*load.nely/1080*1.2
+        ysize = 100*load.nely/1080
         schale = max(xsize, ysize)
-        self.fig.set_size_inches(load.nelx/schale, 1.2*load.nely/schale)
+        self.fig.set_size_inches(load.nelx/schale, load.nely/schale)
         self.ax = self.fig.add_axes([0.05, 0.05, 0.9, 0.8], frameon=False, aspect=1)
         self.ax.set_xticks([])
         self.ax.set_yticks([])
         if title is not None:
-            self.fig.title(title)
+            self.fig.suptitle(title)
         self.images = []
         self.directory = directory
 
@@ -210,7 +210,7 @@ class Plot(object):
         if len(self.images) == 1:
             self.fig.savefig(self.directory+filename+'.svg')
         else:
-            writer = FasterFFMpegWriter(fps=fps, codec='libx264')
+            writer = FasterFFMpegWriter(fps=fps, codec='libx265')
             animation = anim.ArtistAnimation(self.fig, self.images, interval=1, blit=True, repeat=False)
             animation.save(self.directory+filename+'.mp4', writer=writer)
 

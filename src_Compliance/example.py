@@ -30,14 +30,14 @@ if __name__ == "__main__":
     move = 1
 
     # input parameters
-    nelx = 200*8
-    nely = 50*6
+    nelx = 200
+    nely = 50
 
     # optimizer parameters
     penal = 3.0
     rmin = 3
     filt = 'sensitivity'
-    loopy = 150  # math.inf
+    loopy = 100  # math.inf
     delta = 0.005
 
     # plotting and printing options
@@ -64,18 +64,19 @@ if __name__ == "__main__":
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
     # plotting
-    pl = Plot(nelx, nely)
-    pl.loading(load)
+    pl = Plot(load)
     pl.boundary(load)
-    pl.add(x)
-
-    if save_plot:
-        pl.save('Cantilever')
+    pl.loading(load)
 
     if history:
         for i in x_history:
             pl.add(i, animated=True)
-        pl.save('Canti')
+        pl.save('video')
+
+    pl.add(x, animated=False)
+
+    if save_plot:
+        pl.save('figure')
 
     if plotting:
         pl.show()

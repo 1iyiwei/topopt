@@ -18,10 +18,10 @@ class Plot(object):
 
     Parameters
     ----------
-    nelx : int
-        Number of elements in x direction.
-    nely : int
-        Number of elements in y direction.
+    Parameters
+    ----------
+    load : object, child of the Loads class
+        The loadcase(s) considerd for this optimisation problem.
     title : str
         Title of the plot if required.
 
@@ -51,21 +51,21 @@ class Plot(object):
     show()
         Displaying the generated figure.
     """
-    def __init__(self, nelx, nely, title=None):
+    def __init__(self, load, title=None):
         # turning off the interactive plotting of matplotlib.pyplot
         plt.ioff()
-        self.nelx = nelx
-        self.nely = nely
+        self.nelx = load.nelx
+        self.nely = load.nely
         self.fig = plt.figure()
-        xsize = 100*nelx/1920
-        ysize = 100*nely/1080*1.2
+        xsize = 100*load.nelx/1920
+        ysize = 100*load.nely/1080
         schale = max(xsize, ysize)
-        self.fig.set_size_inches(nelx/schale, 1.2*nely/schale)
+        self.fig.set_size_inches(load.nelx/schale, load.nely/schale)
         self.ax = self.fig.add_axes([0.05, 0.05, 0.9, 0.8], frameon=False, aspect=1)
         self.ax.set_xticks([])
         self.ax.set_yticks([])
         if title is not None:
-            self.fig.title(title)
+            self.fig.suptitle(title)
         self.images = []
 
     def add(self, x, animated=False):
@@ -79,6 +79,8 @@ class Plot(object):
         animated : bool
             An animated figure is genereted when history = True.
         """
+        if animated is False:
+            self.images = []
         plt_im = plt.imshow(1-x, vmin=0, vmax=1, cmap=plt.cm.gray, animated=animated)
         self.images.append([plt_im])
 
@@ -159,7 +161,7 @@ class Plot(object):
         if len(self.images) == 1:
             self.fig.savefig(filename+'.svg')
         else:
-            writer = FasterFFMpegWriter(fps=fps, codec='libx264')
+            writer = FasterFFMpegWriter(fps=fps, codec='libx265')
             animation = anim.ArtistAnimation(self.fig, self.images, interval=1, blit=True, repeat=False)
             animation.save(filename+'.mp4', writer=writer)
 

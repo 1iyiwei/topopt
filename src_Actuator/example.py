@@ -63,18 +63,23 @@ if __name__ == "__main__":
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
     # plotting
-    pl = Plot(nelx, nely)
-    pl.loading(load)
+    directory = 'CT0001/'
+    pl = Plot(load, directory)
     pl.boundary(load)
-    pl.add(x)
-
-    if save_plot:
-        pl.save('topopt')
+    pl.loading(load)
 
     if history:
         for i in x_history:
             pl.add(i, animated=True)
-        pl.save('topopt')
+        pl.save('video')
+
+    pl.add(x, animated=False)
+
+    if save_plot:
+        pl.save('figure')
 
     if plotting:
         pl.show()
+
+    if save_pointcloud:
+        pl.saveXYZ(x, x_size=60, thickness=1)
