@@ -136,6 +136,9 @@ class Topopt(object):
         xf_history : list of arrays len(itterations size(nely, nelx))
             List with the density distributions of all itterations, None when
             history != True.
+        N : array
+            Array containing the amount of cycles required to reach the crack
+            lengt.
         """
         # check if an existing filter was selected
         if filt != 'sensitivity' and filt != 'density':
@@ -148,24 +151,42 @@ class Topopt(object):
 
         while (change >= delta) and (self.itr < loopy):
             self.itr += 1
-            change, N, Obj = self.iter(penal, rmin, filt)
+            change, volcon, N, Obj = self.iter(penal, rmin, filt)
 
             objective = ''
             if self.verbose:
-                string = 'It.: {0:4d}, ch.: {1:0.3f}, N: {2:9.4f}, Obj: {3:9.4f}'.format(self.itr, change, N, Obj)
+                string = 'It.: {0:4d}, N: {2:15.0f}, Obj: {3:15.0f}, VolCons.: {4: 4.2f}, ch.: {1:0.3f}'.format(self.itr, change, N, Obj, volcon)
                 print(string, objective, flush=True)
 
             if history:
                 xf = self.densityfilt(rmin, filt)
                 xf_history.append(xf)
-
-        # the filtered density is the physical desity
+        
+        # calculating performance of the last desing
         xf = self.densityfilt(rmin, filt)
 
+        num_length = len(self.load.crack_length)
+        ki = np.array([])
+        for i in range(num_length):
+            length = self.load.crack_length[i]
+            u, lamba = self.fesolver.displace(self.load, xf, penal, length)
+
+            # stress intensity
+            ki_i, dki_i = self.kicalc(xf, u, lamba, penal, length)
+            ki = np.append(ki, ki_i)
+
+        # computing global objective as a function of all KI values
+        da = 2*(self.load.crack_length[1:] - self.load.crack_length[:-1])
+        sumki = (ki[1:] + ki[:-1])
+        N = 1/self.C * np.cumsum(da/((1/2*sumki)**self.m))  # fatigue live
+        N = np.insert(N, 0, 0)
+        Obj = 1/self.C * np.sum(self.weights*da/((1/2*sumki)**self.m))  # objective function
+        print('Final design, N: {0:15.1f}, Obj: {1:15.1f}'.format(N[-1], Obj))
+
         if history:
-            return xf, xf_history
+            return xf, xf_history, N
         else:
-            return xf, None
+            return xf, None, N
 
     # iteration
     def iter(self, penal, rmin, filt):
@@ -195,6 +216,8 @@ class Topopt(object):
         -------
         change : float
             Largest difference between the new and old density distribution.
+        volcon : float
+            Amount of volume of this itteration.
         N : float
             Fatigue live in cycles of the crack.
         Obj : float
@@ -209,7 +232,7 @@ class Topopt(object):
 
         # calculaing stress intensity factor and its derivatives for all cracks
         num_length = len(load.crack_length)
-        ki = np.array([])
+        ki = np.array([], dtype=np.float32)
         dki = np.zeros((num_length, load.nely, load.nelx))
         for i in range(num_length):
             length = load.crack_length[i]
@@ -226,12 +249,12 @@ class Topopt(object):
         da = 2*(load.crack_length[1:] - load.crack_length[:-1])
         sumki = (ki[1:] + ki[:-1])
         N = 1/self.C * np.sum(da/((1/2*sumki)**self.m))  # fatigue live
-        Obj = 1/self.C * np.sum(self.weights*da/((1/2*sumki)**self.m))  # objective function
+        Obj = np.sum(self.weights*da/((1/2*sumki)**self.m))  # objective function
 
         # derivative of the objective function
         sumdki = (dki[1:, :, :] + dki[:-1, :, :])
-        cycles = (da/(sumki**(self.m-1)))[:, None, None]*sumdki
-        dObj = -(self.m*2**self.m)/self.C * np.sum(cycles, axis=0)
+        cycles = (self.weights*da/(sumki**(self.m-1)))[:, None, None]*sumdki
+        dObj = -np.sum(cycles, axis=0)
 
         # applying the sensitvity filter if required
         dObj = self.sensitivityfilt(xf, dObj, rmin, filt)
@@ -247,12 +270,12 @@ class Topopt(object):
         dvolcondx = constraint.volume_derivative[:, self.ele_free] # constraint derivative
         a0 = 1
         a = np.zeros((m))
-        c_ = 1000*np.ones((m))
+        c = 1000*np.ones((m))
         d = a
 
         # Execute MMA update scheme
         xnew = np.copy(self.x).flatten()
-        xnew[self.ele_free], self.low, self.upp = self.mma(m, n, self.itr, x, xmin, xmax, self.xold1, self.xold2, Obj, -dObj, volcon, dvolcondx, self.low, self.upp, a0, a, c_, d)
+        xnew[self.ele_free], self.low, self.upp = self.mma(m, n, self.itr, x, xmin, xmax, self.xold1, self.xold2, Obj, -dObj, volcon, dvolcondx, self.low, self.upp, a0, a, c, d)
 
         # Update variables
         self.xold2 = self.xold1
@@ -262,7 +285,7 @@ class Topopt(object):
         # What is the maximum change
         change = np.amax(abs(xnew[self.ele_free] - self.xold1))
 
-        return change, N, Obj
+        return change, volcon, N, Obj
 
     # updated compliance algorithm
     def kicalc(self, x, u, lamba, penal, length):

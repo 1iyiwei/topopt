@@ -21,11 +21,11 @@ from plotting import Plot
 
 if __name__ == "__main__":
     # material properties
-    young = 1
-    poisson = 0.3
+    young = 1  # 116e9
+    poisson = 0.31
     ext_stiff = 0.0
-    C = 1
-    m = 2
+    C = 1.69e-10
+    m = 4.12
 
     # constraints
     Emin = 1e-9
@@ -35,14 +35,14 @@ if __name__ == "__main__":
     # mesh dimensions
     nelx = 200
 #    nely = 100
-    crack_length = np.arange(80, 85, 1)
+    crack_length = np.arange(60, 120, 1)
     weights = np.ones(np.shape(crack_length[:-1]))
 
     # optimization parameters
     penal = 1.0
     rmin = 1.5
     filt = 'density'
-    loopy = 10  # math.inf
+    loopy = 500  # math.inf
     delta = 0.001
 
     # plotting and printing options
@@ -66,7 +66,7 @@ if __name__ == "__main__":
 
     # compute
     t = time.time()
-    x, x_history = optimizer.layout(penal, rmin, delta, loopy, filt, history)
+    x, x_history, N = optimizer.layout(penal, rmin, delta, loopy, filt, history)
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
     # fixing symetry, only when required
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     if history:
         for i in x_history:
             pl.add(i, animated=True)
-#        pl.save('video')
+        pl.save('video')
 
     pl.add(x, animated=False)
 
@@ -88,6 +88,12 @@ if __name__ == "__main__":
 
     if plotting:
         pl.show()
+
+        import matplotlib.pyplot as plt     
+        # figure with N vs a
+        fig = plt.figure()
+        plt.plot(crack_length, N)
+        plt.show()
 
     if save_pointcloud:
         pl.saveXYZ(x, x_size=60, thickness=1)

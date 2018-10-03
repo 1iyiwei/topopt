@@ -79,7 +79,7 @@ if __name__ == "__main__":
     if history:
         for i in x_history:
             pl.add(i, animated=True)
-#        pl.save('video')
+        pl.save('video')
 
     pl.add(x, animated=False)
 

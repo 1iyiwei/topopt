@@ -26,23 +26,23 @@ if __name__ == "__main__":
 
     # constraints
     volfrac = 0.3
-    move = 1
+    move = 0.5
 
     # mesh dimensions
-    nelx = 40*3
-    nely = 20*3
+    nelx = 80*2
+    nely = 40*2
 
     # optimizer parameters
     penal = 3.0
     rmin = 1.5
-    filt = 'density'
-    loopy = 200  # math.inf
+    filt = 'sensitivity'
+    loopy = 100  # math.inf
     delta = 0.005
 
     # plotting and printing options
     verbose = True
     plotting = True
-    save_plot = True
+    save_plot = False
     history = True
 
     # constraints object created
@@ -63,8 +63,7 @@ if __name__ == "__main__":
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
     # plotting
-    directory = 'CT0001/'
-    pl = Plot(load, directory)
+    pl = Plot(load, title='Inverter example')
     pl.boundary(load)
     pl.loading(load)
 
@@ -80,6 +79,3 @@ if __name__ == "__main__":
 
     if plotting:
         pl.show()
-
-    if save_pointcloud:
-        pl.saveXYZ(x, x_size=60, thickness=1)

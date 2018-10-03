@@ -29,21 +29,21 @@ if __name__ == "__main__":
     volfrac = 0.4
     move = 1
 
-    # input parameters
+    # mesh dimensions
     nelx = 200
     nely = 50
 
     # optimizer parameters
     penal = 3.0
     rmin = 3
-    filt = 'sensitivity'
+    filt = 'density'
     loopy = 100  # math.inf
     delta = 0.005
 
     # plotting and printing options
     verbose = True
     plotting = True
-    save_plot = True
+    save_plot = False
     history = True
 
     # constraints object created
@@ -64,14 +64,14 @@ if __name__ == "__main__":
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
     # plotting
-    pl = Plot(load)
+    pl = Plot(load, title='Cantilever beam example')
     pl.boundary(load)
     pl.loading(load)
 
     if history:
         for i in x_history:
             pl.add(i, animated=True)
-        pl.save('video')
+        pl.save('video')  # , path='/usr/bin/ffmpeg')
 
     pl.add(x, animated=False)
 

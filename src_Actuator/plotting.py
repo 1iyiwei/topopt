@@ -146,10 +146,13 @@ class Plot(object):
                 self.ax.annotate('', xy=(nodex, nodey), xytext=(0, -60*force),
                                   textcoords='offset points', arrowprops=arrowprops)
 
-    def save(self, filename, fps=30):
+    def save(self, filename, fps=10):
         """
         Saving an plot in svg or mp4 format, depending on the length of the
         images list. The FasterFFMpegWriter is used when videos are generated.
+        These videos are encoded with a hardware accelerated h264 codec with
+        the .mp4 file format. Other codecs and encoders can be set within the
+        function itself.
 
         Parameters
         ---------
@@ -161,7 +164,7 @@ class Plot(object):
         if len(self.images) == 1:
             self.fig.savefig(filename+'.svg')
         else:
-            writer = FasterFFMpegWriter(fps=fps, codec='libx265')
+            writer = anim.FFMpegWriter(fps=30, extra_args=['-c:v', 'h264_nvenc'])
             animation = anim.ArtistAnimation(self.fig, self.images, interval=1, blit=True, repeat=False)
             animation.save(filename+'.mp4', writer=writer)
 
