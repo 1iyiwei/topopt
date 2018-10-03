@@ -206,7 +206,7 @@ for i in range(2*len(N)+2):
         ki.append(str(Kij))
     k.append(ki)
 
-f = open("Stiffness_Cubic_PlaneStress_Enriched(1:-1).csv", "w+")
+f = open("Stiffness_Cubic_PlaneStress_Enriched(1,-1).csv", "w+")
 writer = csv.writer(f)
 writer.writerows(k)
 f.close()
