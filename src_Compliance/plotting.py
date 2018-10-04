@@ -81,6 +81,7 @@ class Plot(object):
         """
         if animated is False:
             self.images = []
+        x = x.astype(np.float32)
         plt_im = plt.imshow(1-x, vmin=0, vmax=1, cmap=plt.cm.gray, animated=animated)
         self.images.append([plt_im])
 

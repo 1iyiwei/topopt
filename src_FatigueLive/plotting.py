@@ -95,6 +95,7 @@ class Plot(object):
         """
         if animated is False:
             self.images = []
+        x = x.astype(np.float32)
         plt_im = plt.imshow(1-x, vmin=-1, vmax=1, cmap=plt.cm.gray, animated=animated)
         self.images.append([plt_im])
 
@@ -211,11 +212,11 @@ class Plot(object):
             Amount of frames per second if the plots are animations.
         """
         if len(self.images) == 1:
-            self.fig.savefig(filename+'.svg')
+            self.fig.savefig(self.directory+filename+'.svg')
         else:
             writer = anim.FFMpegWriter(fps=30, extra_args=['-c:v', 'h264_nvenc'])
             animation = anim.ArtistAnimation(self.fig, self.images, interval=1, blit=True, repeat=False)
-            animation.save(filename+'.mp4', writer=writer)
+            animation.save(self.directory+filename+'.mp4', writer=writer)
 
     def show(self):
         """Showing the plot in a window."""

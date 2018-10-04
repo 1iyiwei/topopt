@@ -115,7 +115,7 @@ class Topopt(object):
         -------
         xf : array size(nely, nelx)
             Density distribution resulting from the optimisation.
-        xf_history : list of arrays len(itterations size(nely, nelx))
+        xf_history : list of arrays len(itterations size(nely, nelx), float16)
             List with the density distributions of all itterations, None when
             history != True.
         """
@@ -126,7 +126,7 @@ class Topopt(object):
         change = 1.0  # maximum density change from prior iteration
 
         if history:
-            xf_history = [self.x]
+            xf_history = [self.x.astype(np.float16)]
 
         while (change > delta) and (self.itr < loopy):
             self.itr += 1
@@ -136,7 +136,7 @@ class Topopt(object):
                 print('It.: {0:4d},  Obj.: {1:8.2f},  ch.: {2:0.3f}'.format(self.itr, c, change), flush=True)
 
             if history:
-                xf = self.densityfilt(rmin, filt)
+                xf = self.densityfilt(rmin, filt).astype(np.float16)
                 xf_history.append(xf)
 
         # the filtered density is the physical desity

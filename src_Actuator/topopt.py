@@ -127,7 +127,7 @@ class Topopt(object):
         change = 1.0  # maximum density change from prior iteration
 
         if history:
-            xf_history = [self.x]
+            xf_history = [self.x.astype(np.float16)]
 
         while (change > delta) and (self.itr < loopy):
             self.itr += 1
@@ -138,7 +138,7 @@ class Topopt(object):
 
             if history:
                 xf = self.densityfilt(rmin, filt)
-                xf_history.append(xf)
+                xf_history.append(xf.astype(np.float16))
 
         # the filtered density is the physical desity
         xf = self.densityfilt(rmin, filt)
