@@ -30,6 +30,8 @@ class Topopt(object):
         The finite element solver.
     verbose : bool
         Printing itteration results.
+    x0_loc : str
+        Set initial design with numpy '.npy' file location.
 
     Atributes
     -------
@@ -58,7 +60,7 @@ class Topopt(object):
         Column vector with the lower asymptotes, calculated and used in the
         MMA subproblem of the previous itteration.
     """
-    def __init__(self, constraint, load, fesolver, verbose=False):
+    def __init__(self, constraint, load, fesolver, verbose=False, x0_loc=None):
         self.constraint = constraint
         self.load = load
         self.fesolver = fesolver
@@ -66,14 +68,30 @@ class Topopt(object):
         self.itr = 0
 
         # setting up starting density array
-        x = np.ones((load.nely, load.nelx))*constraint.density_min
+        if x0_loc is None:
+            x = np.ones((load.nely, load.nelx))*constraint.density_min
+        else:
+            try:
+                x = np.load(x0_loc)
+            except FileNotFoundError:
+                raise FileNotFoundError('No such numpy .npy file availible at'
+                                        ': '+x0_loc)
+            # check if the dimensions mach
+            nely, nelx = np.shape(x)
+            if nely != load.nely or nelx != load.nelx:
+                error = ('Shape of imported density distribution ('+x0_loc+')'
+                         'does not match loadcase. Loadcase ({0}, {1}) vs'
+                         'imported ({2}, {3})'.format(load.nelx, load.nely, nelx, nely))
+                raise ValueError(error)
+
         xlist, ylist, values, self.ele_free = load.passive()
         x[ylist, xlist] = values
+
         self.x = x
         self.xold1 = np.copy(x).flatten()[self.ele_free]
         self.xold2 = np.copy(x).flatten()[self.ele_free]
-        self.low = 0*np.copy(x).flatten()[self.ele_free]
-        self.upp = 0*np.copy(x).flatten()[self.ele_free]
+        self.low = np.zeros_like(self.xold1)
+        self.upp = np.zeros_like(self.xold1)
 
     # topology optimization
     def layout(self, penal, rmin, delta, loopy, filt, history=False):
@@ -113,7 +131,7 @@ class Topopt(object):
         change = 1.0  # maximum density change from prior iteration
 
         if history:
-            xf_history = [self.x]
+            xf_history = [self.x.astype(np.float16)]
 
         while (change >= delta) and (self.itr < loopy):
             self.itr += 1
@@ -124,7 +142,7 @@ class Topopt(object):
 
             if history:
                 xf = self.densityfilt(rmin, filt)
-                xf_history.append(xf)
+                xf_history.append(xf.astype(np.float16))
 
         # the filtered density is the physical desity
         xf = self.densityfilt(rmin, filt)

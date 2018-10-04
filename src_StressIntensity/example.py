@@ -44,11 +44,13 @@ if __name__ == "__main__":
     delta = 0.001
 
     # plotting and printing options
+    directory = 'CT0002/'
     verbose = True
     plotting = True
     save_plot = True
     history = True
     save_pointcloud = True
+    save_array = True
 
     # loading case object, other classes can be selected and created
     load = CompactTension(nelx, crack_length, young, Emin, poisson, ext_stiff)
@@ -60,18 +62,14 @@ if __name__ == "__main__":
     fesolver = CvxFEA(verbose=verbose)
 
     # create optimizer object and initialise the problem
-    optimizer = Topopt(den_con, load, fesolver, verbose=verbose)
+    optimizer = Topopt(den_con, load, fesolver, verbose=verbose, x0_loc=directory+'x.npy')
 
     # compute
     t = time.time()
     x, x_history, ki = optimizer.layout(penal, rmin, delta, loopy, filt, history)
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
-    # fixing symetry, only when required
-    x = np.vstack((x, np.flip(x, 0)))
-
     # plotting
-    directory = 'CT0002/'
     pl = Plot(load, directory)
     pl.loading(load)
     pl.boundary(load)
@@ -90,4 +88,9 @@ if __name__ == "__main__":
         pl.show()
 
     if save_pointcloud:
-        pl.saveXYZ(x, x_size=60, thickness=1)
+        xm = np.vstack((x, np.flip(x, 0)))
+        pl.saveXYZ(xm, x_size=60, thickness=1)
+
+    if save_array:
+        from numpy import save
+        save(directory+'x', x)

@@ -30,12 +30,14 @@ class Topopt(object):
         The finite element solver.
     weights : array length load cases
         The weight given to each of the load cases.
-    verbose : bool
-        Printing itteration results.
     C : float
         Multiplication part of Paris-Erdogan law.
     m : float
         Power part of Paris-Erdogan law.
+    verbose : bool
+        Printing itteration results.
+    x0_loc : str
+        Set initial design with numpy '.npy' file location.
 
     Atributes
     -------
@@ -88,7 +90,7 @@ class Topopt(object):
     solvemma(m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d):
         Primal-Dual Newton solver used by the MMA update scheme
     """
-    def __init__(self, constraint, load, fesolver, weights, C, m, verbose=False):
+    def __init__(self, constraint, load, fesolver, weights, C, m, verbose=False, x0_loc=None):
         self.constraint = constraint
         self.load = load
         self.fesolver = fesolver
@@ -99,9 +101,25 @@ class Topopt(object):
         self.m = m
 
         # setting up starting density array
-        x = np.ones((load.nely, load.nelx))*constraint.density_min
+        if x0_loc is None:
+            x = np.ones((load.nely, load.nelx))*constraint.density_min
+        else:
+            try:
+                x = np.load(x0_loc)
+            except FileNotFoundError:
+                raise FileNotFoundError('No such numpy .npy file availible at'
+                                        ': '+x0_loc)
+            # check if the dimensions mach
+            nely, nelx = np.shape(x)
+            if nely != load.nely or nelx != load.nelx:
+                error = ('Shape of imported density distribution ('+x0_loc+')'
+                         'does not match loadcase. Loadcase ({0}, {1}) vs'
+                         'imported ({2}, {3})'.format(load.nelx, load.nely, nelx, nely))
+                raise ValueError(error)
+
         xlist, ylist, values, self.ele_free = load.passive()
         x[ylist, xlist] = values
+
         self.x = x
         self.xold1 = np.copy(x).flatten()[self.ele_free]
         self.xold2 = np.copy(x).flatten()[self.ele_free]
@@ -147,7 +165,7 @@ class Topopt(object):
         change = 1.0  # maximum density change from prior iteration
 
         if history:
-            xf_history = [self.x]
+            xf_history = [self.x.asdtype(np.float16)]
 
         while (change >= delta) and (self.itr < loopy):
             self.itr += 1
@@ -160,7 +178,7 @@ class Topopt(object):
 
             if history:
                 xf = self.densityfilt(rmin, filt)
-                xf_history.append(xf)
+                xf_history.append(xf.astype(np.float16))
         
         # calculating performance of the last desing
         xf = self.densityfilt(rmin, filt)

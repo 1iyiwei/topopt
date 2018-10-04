@@ -35,22 +35,24 @@ if __name__ == "__main__":
     # mesh dimensions
     nelx = 200
 #    nely = 100
-    crack_length = np.arange(60, 120, 1)
+    crack_length = np.arange(80, 82, 1)
     weights = np.ones(np.shape(crack_length[:-1]))
 
     # optimization parameters
     penal = 1.0
     rmin = 1.5
     filt = 'density'
-    loopy = 500  # math.inf
+    loopy = 0  # math.inf
     delta = 0.001
 
     # plotting and printing options
+    directory = 'CT0001/'
     verbose = True
     plotting = True
     save_plot = False
     history = False
     save_pointcloud = False
+    save_array = True
 
     # loading case object, other classes can be selected and created
     load = CompactTension(nelx, crack_length, young, Emin, poisson, ext_stiff)
@@ -62,18 +64,14 @@ if __name__ == "__main__":
     fesolver = SciPyFEA(verbose=verbose)
 
     # create optimizer object and initialise the problem
-    optimizer = Topopt(den_con, load, fesolver, weights, C, m, verbose=verbose)
+    optimizer = Topopt(den_con, load, fesolver, weights, C, m, verbose=verbose, x0_loc=directory+'x.npy')
 
     # compute
     t = time.time()
     x, x_history, N = optimizer.layout(penal, rmin, delta, loopy, filt, history)
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
-    # fixing symetry, only when required
-    x = np.vstack((x, np.flip(x, 0)))
-
     # plotting
-    directory = 'CT0001/'
     pl = Plot(load, directory)
 
     if history:
@@ -96,4 +94,9 @@ if __name__ == "__main__":
         plt.show()
 
     if save_pointcloud:
-        pl.saveXYZ(x, x_size=60, thickness=1)
+        xm = np.vstack((x, np.flip(x, 0)))
+        pl.saveXYZ(xm, x_size=60, thickness=1)
+
+    if save_array:
+        from numpy import save
+        save(directory+'x', x)
