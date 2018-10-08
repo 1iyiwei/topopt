@@ -35,14 +35,14 @@ if __name__ == "__main__":
     # mesh dimensions
     nelx = 200
 #    nely = 100
-    crack_length = np.arange(80, 82, 1)
+    crack_length = np.arange(150, 152, 1)
     weights = np.ones(np.shape(crack_length[:-1]))
 
     # optimization parameters
     penal = 1.0
     rmin = 1.5
     filt = 'density'
-    loopy = 0  # math.inf
+    loopy = 10  # math.inf
     delta = 0.001
 
     # plotting and printing options
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     fesolver = SciPyFEA(verbose=verbose)
 
     # create optimizer object and initialise the problem
-    optimizer = Topopt(den_con, load, fesolver, weights, C, m, verbose=verbose, x0_loc=directory+'x.npy')
+    optimizer = Topopt(den_con, load, fesolver, weights, C, m, verbose=verbose)
 
     # compute
     t = time.time()

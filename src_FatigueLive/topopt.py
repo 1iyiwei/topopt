@@ -156,7 +156,7 @@ class Topopt(object):
             history != True.
         N : array
             Array containing the amount of cycles required to reach the crack
-            lengt.
+            lengts.
         """
         # check if an existing filter was selected
         if filt != 'sensitivity' and filt != 'density':
@@ -165,7 +165,7 @@ class Topopt(object):
         change = 1.0  # maximum density change from prior iteration
 
         if history:
-            xf_history = [self.x.asdtype(np.float16)]
+            xf_history = [self.x.astype(np.float16)]
 
         while (change >= delta) and (self.itr < loopy):
             self.itr += 1
@@ -173,7 +173,7 @@ class Topopt(object):
 
             objective = ''
             if self.verbose:
-                string = 'It.: {0:4d}, N: {2:15.0f}, Obj: {3:15.0f}, VolCons.: {4: 4.2f}, ch.: {1:0.3f}'.format(self.itr, change, N, Obj, volcon)
+                string = 'It.: {0:4d}, N: {2:15.0f}, Obj: {3:8.1f}, VolCons.: {4: 6.2%}, ch.: {1:0.3f}'.format(self.itr, change, N, Obj, volcon)
                 print(string, objective, flush=True)
 
             if history:
@@ -198,7 +198,7 @@ class Topopt(object):
         sumki = (ki[1:] + ki[:-1])
         N = 1/self.C * np.cumsum(da/((1/2*sumki)**self.m))  # fatigue live
         N = np.insert(N, 0, 0)
-        Obj = 1/self.C * np.sum(self.weights*da/((1/2*sumki)**self.m))  # objective function
+        Obj = 1/(self.m*2**self.m) * np.sum(self.weights*da/((1/2*sumki)**self.m))  # objective function
         print('Final design, N: {0:15.1f}, Obj: {1:15.1f}'.format(N[-1], Obj))
 
         if history:
@@ -267,7 +267,7 @@ class Topopt(object):
         da = 2*(load.crack_length[1:] - load.crack_length[:-1])
         sumki = (ki[1:] + ki[:-1])
         N = 1/self.C * np.sum(da/((1/2*sumki)**self.m))  # fatigue live
-        Obj = np.sum(self.weights*da/((1/2*sumki)**self.m))  # objective function
+        Obj = 1/(self.m*2**self.m) * np.sum(self.weights*da/((1/2*sumki)**self.m))  # objective function
 
         # derivative of the objective function
         sumdki = (dki[1:, :, :] + dki[:-1, :, :])
