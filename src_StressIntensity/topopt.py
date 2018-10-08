@@ -138,7 +138,7 @@ class Topopt(object):
             change, ki, volcon = self.iter(penal, rmin, filt)
 
             if self.verbose:
-                print('It.: {0:4d},  K_I.: {1:8.4f},  ch.: {2:0.3f}'.format(self.itr, ki, change), flush=True)
+                print('It., {0:4d},  K_I., {1:8.4f},  ch., {2:0.3f}'.format(self.itr, ki, change), flush=True)
 
             if history:
                 xf = self.densityfilt(rmin, filt)
@@ -309,7 +309,7 @@ class Topopt(object):
             kernel = kernel/np.sum(kernel)  # normalisation
 
             # apply convolution filter
-            xf = convolve(self.x, kernel, mode='reflect')
+            xf = convolve(self.x, kernel, mode='constant', cval=1)
             elx, ely, values, free_ele = self.load.passive()
             xf[ely, elx] = values
 

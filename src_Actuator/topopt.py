@@ -134,7 +134,7 @@ class Topopt(object):
             change, uout = self.iter(penal, rmin, filt)
 
             if self.verbose:
-                print('It.: {0:4d},  U_out.: {1:8.4f},  ch.: {2:0.3f}'.format(self.itr, uout, change), flush=True)
+                print('It., {0:4d},  U_out., {1:8.4f},  ch., {2:0.3f}'.format(self.itr, uout, change), flush=True)
 
             if history:
                 xf = self.densityfilt(rmin, filt)

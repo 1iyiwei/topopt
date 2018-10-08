@@ -173,7 +173,7 @@ class Topopt(object):
 
             objective = ''
             if self.verbose:
-                string = 'It.: {0:4d}, N: {2:15.0f}, Obj: {3:8.1f}, VolCons.: {4: 6.2%}, ch.: {1:0.3f}'.format(self.itr, change, N, Obj, volcon)
+                string = 'It., {0:4d}, N, {2:15.0f}, Obj., {3:8.1f}, VolCons., {4: 6.2%}, ch., {1:0.3f}'.format(self.itr, change, N, Obj, volcon)
                 print(string, objective, flush=True)
 
             if history:
@@ -199,7 +199,7 @@ class Topopt(object):
         N = 1/self.C * np.cumsum(da/((1/2*sumki)**self.m))  # fatigue live
         N = np.insert(N, 0, 0)
         Obj = 1/(self.m*2**self.m) * np.sum(self.weights*da/((1/2*sumki)**self.m))  # objective function
-        print('Final design, N: {0:15.1f}, Obj: {1:15.1f}'.format(N[-1], Obj))
+        print('Final design, N, {0:15.1f}, Obj., {1:15.1f}'.format(N[-1], Obj))
 
         if history:
             return xf, xf_history, N
