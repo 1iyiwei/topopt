@@ -15,7 +15,7 @@ import math
 # importing custom modules
 from loads import HalfBeam, Beam, Canti, Michell, BiAxial
 from constraints import DensityConstraint
-from fesolvers import CvxFEA, SciPyFEA
+from fesolvers import CvxFEA, SciPyFEA, CGFEA
 from topopt import Topopt
 from plotting import Plot
 

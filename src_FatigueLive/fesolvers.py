@@ -18,6 +18,10 @@ import cvxopt.cholmod
 # Importing linear algabra solver for the SciPyFEA class
 from scipy.sparse.linalg import spsolve
 
+# Imporning linear algabla conjugate gradient solver
+from scipy.sparse.linalg import cg
+from scipy.sparse import diags
+
 
 # coo_matrix should be faster
 class CSCStiffnessMatrix(object):
@@ -221,7 +225,6 @@ class SciPyFEA(CSCStiffnessMatrix):
         length : int
             Length of the current crack conciderd.
 
-
         Returns
         -------
         u : 1-D column array shape(max(edof), 1)
@@ -246,5 +249,113 @@ class SciPyFEA(CSCStiffnessMatrix):
         res = spsolve(k_free, f_free)
         u[freedofs] = res[:, 0].reshape(len(freedofs), 1)
         lamba[freedofs] = res[:, 1].reshape(len(freedofs), 1)
+
+        return u, lamba
+
+
+class CGFEA(CSCStiffnessMatrix):
+    """
+    This parent FEA class can assemble the global stiffness matrix and solve
+    the FE problem with a sparse solver based upon a preconditioned conjugate
+    gradient solver. The preconditioning is based upon the inverse of the
+    diagonal of the stiffness matrix.
+
+    Atributes
+    --------
+    verbose : bool
+        False if the FEA should not print updates.
+    ufree_old : dict
+        Displacement field of previous iteration for every crack length,
+        the keys are the related cracklengths.
+    lambafree_old : array len(freedofs)
+        Ajoint equation result of previos iteration for every crack length,
+        the keys are the related cracklengths.
+
+    Methods
+    -------
+    displace(load, x, penal, length)
+        FE solver based upon a SciPy sparse sysems solver that uses umfpack.
+    gk_freedogs(self, load, x, penal, length)
+        Generates the global stiffness matrix with deleted fixed degrees of
+        freedom. Function inherented from parent.
+
+    Recomendations
+    --------------
+    - Make the tolerance change over the iterations, low accuracy is
+      required for first itteration, more accuracy for the later ones.
+    - Add more advanced preconditioner.
+    - Add gpu accerelation.
+    """
+    def __init__(self, verbose=False):
+        super().__init__(verbose)
+        self.keys = []
+        self.ufree_old = {}
+        self.lambafree_old = {}
+
+    # finite element computation for displacement
+    def displace(self, load, x, penal, length):
+        """
+        FE solver based upon the sparse SciPy solver that uses a preconditioned
+        conjugate gradient solver, preconditioning is based upon the inverse
+        of the diagonal of the stiffness matrix. Currently the relative
+        tolerance is hardcoded as 1e-3.
+
+        Parameters
+        -------
+        load : object, child of the Loads class
+            The loadcase(s) considerd for this optimisation problem.
+        x : 2-D array size(nely, nelx)
+            Current density distribution.
+        penal : float
+            Material model penalisation (SIMP).
+        length : int
+            Length of the current crack conciderd.
+
+        Returns
+        -------
+        u : 1-D array len(max(edof)+1)
+            Displacement of all degrees of freedom
+        lamba : 1-D column array shape(max(edof), 1)
+            Adjoint equation solution.
+        """
+        freedofs = np.array(load.freedofs(length))
+        nely, nelx = x.shape
+        num_dof = load.num_dofs
+
+        f_free = load.force(length)[freedofs]
+        l_free = load.kiloc()[freedofs]
+        k_free = self.gk_freedofs(load, x, penal, length)
+
+        # Preconditioning
+        L = diags(1/k_free.diagonal())
+
+        if str(length) in self.ufree_old:
+            u0 = self.ufree_old[str(length)]
+            lamba0 = self.lambafree_old[str(length)]
+        else:
+            u0 = None
+            lamba0 = None
+
+        # solving the system f = Ku with a cg implementation
+        u = np.zeros((num_dof, 1))
+        u[freedofs, 0], info1 = cg(k_free, f_free, x0=u0, tol=1e-3, M=L)
+
+        # solving adjoint problem l = Klamba with cg
+        lamba = np.zeros((num_dof, 1))
+        lamba[freedofs, 0], info2 = cg(k_free, l_free, x0=lamba0, tol=1e-3, M=L)
+
+        # update uold and lamdaold
+        self.ufree_old[str(length)] = u[freedofs]
+        self.lambafree_old[str(length)] = lamba[freedofs]
+
+        if self.verbose is True:
+            if info1 > 0:
+                print('Convergence tolerance FEA not achieved after ', info1, ' itrations')
+            if info1 < 0:
+                print('Illegal input or breakdown FEA', info1)
+            if info2 > 0:
+                print('Convergence tolerance adjoint problem not achieved after ', info2, ' itrations')
+            if info2 < 0:
+                print('Illegal input or breakdown adjoint problem', info2)
 
         return u, lamba

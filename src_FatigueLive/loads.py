@@ -101,9 +101,9 @@ class Load(object):
         node, such that u·l = KI
     alldofs()
         Returns a list with all degrees of freedom.
-    fixdofs()
+    fixdofs(length_i)
         Returns a list with indices that are fixed by the boundary conditions.
-    freedofs()
+    freedofs(length_i)
         Returns a list of arr indices that are not fixede
     passive()
         Retuns three lists containing the location and magnitude of fixed

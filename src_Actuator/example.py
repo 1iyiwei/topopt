@@ -13,7 +13,7 @@ import math
 
 from loads import Inverter
 from constraints import DensityConstraint
-from fesolvers import CvxFEA, SciPyFEA
+from fesolvers import CvxFEA, SciPyFEA, CGFEA
 from topopt import Topopt
 from plotting import Plot
 

@@ -14,7 +14,7 @@ import numpy as np
 
 from loads import EdgeCrack, DoubleEdgeCrack, CompactTension
 from constraints import DensityConstraint
-from fesolvers import CvxFEA, SciPyFEA
+from fesolvers import CvxFEA, SciPyFEA, CGFEA
 from topopt import Topopt
 from plotting import Plot
 
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     den_con = DensityConstraint(load, move, volume_frac=volfrac, density_min=1, density_max=2)
 
     # FEA object is generated, other solvers can be selected and created
-    fesolver = SciPyFEA(verbose=verbose)
+    fesolver = CvxFEA(verbose=verbose)
 
     # create optimizer object and initialise the problem
     optimizer = Topopt(den_con, load, fesolver, weights, C, m, verbose=verbose)

@@ -15,7 +15,7 @@ import numpy as np
 
 from loads import EdgeCrack, DoubleEdgeCrack, CompactTension
 from constraints import DensityConstraint
-from fesolvers import CvxFEA, SciPyFEA
+from fesolvers import CvxFEA, SciPyFEA, CGFEA
 from topopt import Topopt
 from plotting import Plot
 
