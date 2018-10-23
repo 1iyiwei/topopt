@@ -349,6 +349,8 @@ class Load(object):
     def force(self):
         """
         Returns an 1D array, the force vector of the loading condition.
+        Note that the possitive y direction is downwards, thus a negative force
+        in y direction is required for a upward load.
 
         Returns
         -------
@@ -509,9 +511,9 @@ class EdgeCrack(Load):
         f = super().force()
         top_ele = [x for x in range(0, self.nelx*self.nely, self.nely)]
         forceloc = [self.edof[i][5] for i in top_ele][:-1]
-        f[forceloc] = 2
-        f[1] = 1
-        f[[self.edof[i][5] for i in top_ele][-1]] = 1
+        f[forceloc] = -2
+        f[1] = -1
+        f[[self.edof[i][5] for i in top_ele][-1]] = -1
         return f
 
     def fixdofs(self):
@@ -653,8 +655,8 @@ class DoubleEdgeCrack(Load):
         f = super().force()
         top_ele = [x for x in range(0, self.nelx*self.nely, self.nely)]
         forceloc = [self.edof[i][5] for i in top_ele]
-        f[forceloc] = 2
-        f[1] = 1
+        f[forceloc] = -2
+        f[1] = -1
         return f
 
     def fixdofs(self):
@@ -795,7 +797,7 @@ class CompactTension(Load):
         f = super().force()
         load_ele = int(self.nely/0.6*0.325)+int(self.nelx/5)*self.nely
         forceloc = self.edof[load_ele][3]
-        f[forceloc] = 1
+        f[forceloc] = -1
         return f
 
     def fixdofs(self):
@@ -844,7 +846,7 @@ class CompactTension(Load):
             List with all element numbers that are allowed to change.
         """
         # passive crack tip elements
-        elx = [x for x in range(np.min(self.crack_length)-1, np.max(self.crack_length)+1)]
+        elx = [x for x in range(np.max(self.crack_length)+1)]
         ely = [self.nely-1]*len(elx)
 
         # passive elements at load introduction
@@ -864,7 +866,5 @@ class CompactTension(Load):
         for i in range(len(elx)):
             fixele.append(self.nelx*ely[i] + elx[i])
         free_ele = list(set(range(self.nelx*self.nely)) - set(fixele))
-
-        return elx, ely, values, free_ele
 
         return elx, ely, values, free_ele

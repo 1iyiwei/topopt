@@ -254,7 +254,7 @@ class Topopt(object):
         """
         # calculate stress intensity
         l = self.load.kiloc()
-        ki = -np.dot(l.T, u)[0, 0]
+        ki = np.dot(l.T, u)[0, 0]
 
         # calculating derivative
         nely, nelx = x.shape
@@ -269,7 +269,7 @@ class Topopt(object):
                 unum = ue.reshape(length, 1)
                 lambanum = lambae.reshape(length, 1)
                 kie = np.dot(lambanum.T, np.dot(ke[num], unum))
-                dki[ely, elx] = penal * (x[ely, elx] ** (penal - 1)) * kie
+                dki[ely, elx] = -penal * (x[ely, elx] ** (penal - 1)) * kie
                 num += 1
 
         return ki, dki

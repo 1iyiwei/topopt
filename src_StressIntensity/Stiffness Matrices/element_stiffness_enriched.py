@@ -121,7 +121,7 @@ B-1 =  ⎢0        dNi/dy⎥
 B = zeros(3, 2*len(N)+2)
 
 # Setting up the enrichment
-xt, yt = 1, -1  # sym.symbols('x_tip y_tip')
+xt, yt = 1, 1  # sym.symbols('x_tip y_tip')
 loc = [xt, yt] #location of the crack tip
 K1, K2, r, th, gm, G = sym.symbols('K_1 K_2 r theta gamma, G')
 G = E/(2*(1+nu))
@@ -185,7 +185,7 @@ The integration is now done with a gausian quadrature method as adviced by:
 BDBdetJ = B.T * D * B * detJ
 
 
-def gaussquad2D(f, var1, var2, n=3, n_digits=15):
+def gaussquad2D(f, var1, var2, n=3, n_digits=8):
     X, W = gauss_legendre(n, n_digits)
     res = 0    
     for i in range(len(X)):
@@ -201,12 +201,11 @@ for i in range(2*len(N)+2):
     for j in range(2*len(N)+2):
         print("(", i ,", ", j, ")")
         BDBij = BDBdetJ[i, j]
-        Kij = gaussquad2D(BDBij, xi, eta)
-#        Kij = sym.integrate(sym.integrate(BDBij, (xi, -1, 1)), (eta, -1, 1))
+        Kij = gaussquad2D(BDBij, xi, eta).simplify()
         ki.append(str(Kij))
     k.append(ki)
 
-f = open("Stiffness_Cubic_PlaneStress_Enriched(1,-1).csv", "w+")
+f = open("Stiffness_Cubic_PlaneStress_Enriched(1,1).csv", "w+")
 writer = csv.writer(f)
 writer.writerows(k)
 f.close()

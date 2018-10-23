@@ -75,8 +75,8 @@ class Plot(object):
         schale = max(xsize, ysize)
         self.fig.set_size_inches(load.nelx/schale, load.nely/schale)
         self.ax = self.fig.add_axes([0.05, 0.05, 0.9, 0.8], frameon=False, aspect=1)
-        self.ax.set_xticks([])
-        self.ax.set_yticks([])
+#        self.ax.set_xticks([])
+#        self.ax.set_yticks([])
         if title is not None:
             self.fig.suptitle(title)
         self.images = []
@@ -183,7 +183,7 @@ class Plot(object):
         load : object, child of the Loads class
             The loadcase(s) considerd for this optimisation problem.
         """
-        arrowprops = dict(arrowstyle="<-",fc="r", ec="r", mutation_scale=20)
+        arrowprops = dict(arrowstyle="->",fc="r", ec="r", mutation_scale=20)
         forceloc = np.nonzero(load.force())[0]
 
         for i in forceloc:
