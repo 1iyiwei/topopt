@@ -53,7 +53,7 @@ if __name__ == "__main__":
     save_array = True
 
     # loading case object, other classes can be selected and created
-    load = CompactTension(nelx, crack_length, young, Emin, poisson, ext_stiff, pas_loc='name.npy')
+    load = CompactTension(nelx, crack_length, young, Emin, poisson, ext_stiff, pas_loc='Hex size 8 den 0.3.npy')
 
     # constraints object created
     den_con = DensityConstraint(load, move, volume_frac=volfrac, density_min=0, density_max=1)

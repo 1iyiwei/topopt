@@ -75,8 +75,8 @@ class Plot(object):
         schale = max(xsize, ysize)
         self.fig.set_size_inches(load.nelx/schale, load.nely/schale)
         self.ax = self.fig.add_axes([0.05, 0.05, 0.9, 0.8], frameon=False, aspect=1)
-#        self.ax.set_xticks([])
-#        self.ax.set_yticks([])
+        self.ax.set_xticks([])
+        self.ax.set_yticks([])
         if title is not None:
             self.fig.suptitle(title)
         self.images = []
@@ -96,7 +96,7 @@ class Plot(object):
         if animated is False:
             self.images = []
         x = x.astype(np.float32)
-        plt_im = plt.imshow(1-x, vmin=-1, vmax=1, cmap=plt.cm.gray, animated=animated)
+        plt_im = plt.imshow(1-x, vmin=0, vmax=1, cmap=plt.cm.gray, animated=animated)
         self.images.append([plt_im])
 
     def find(self, dof):
@@ -214,7 +214,7 @@ class Plot(object):
         if len(self.images) == 1:
             self.fig.savefig(self.directory+filename+'.svg')
         else:
-            writer = anim.FFMpegWriter(fps=30, extra_args=['-c:v', 'h264_nvenc'])
+            writer = anim.FFMpegWriter(fps=30, extra_args=['-c:v', 'h264'])
             animation = anim.ArtistAnimation(self.fig, self.images, interval=1, blit=True, repeat=False)
             animation.save(self.directory+filename+'.mp4', writer=writer)
 
