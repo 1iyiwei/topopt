@@ -32,6 +32,8 @@ class Topopt(object):
         Printing itteration results.
     x0_loc : str
         Set initial design with numpy '.npy' file location.
+    history : boolean
+        Saving a history array or not.
 
     Atributes
     -------
@@ -60,7 +62,7 @@ class Topopt(object):
         Column vector with the lower asymptotes, calculated and used in the
         MMA subproblem of the previous itteration.
     """
-    def __init__(self, constraint, load, fesolver, verbose=False, x0_loc=None):
+    def __init__(self, constraint, load, fesolver, verbose=False, history=False, x0_loc=None):
         self.constraint = constraint
         self.load = load
         self.fesolver = fesolver
@@ -93,8 +95,13 @@ class Topopt(object):
         self.low = np.zeros_like(self.xold1)
         self.upp = np.zeros_like(self.xold1)
 
+        if history:
+            self.xf_history = [self.x.astype(np.float16)]
+        else:
+            self.xf_history = None
+
     # topology optimization
-    def layout(self, penal, rmin, delta, loopy, filt, history=False):
+    def layout(self, penal, rmin, delta, loopy, filt):
         """
         Solves the topology optimisation problem by looping over the iter
         function.
@@ -130,9 +137,6 @@ class Topopt(object):
 
         change = 1.0  # maximum density change from prior iteration
 
-        if history:
-            xf_history = [self.x.astype(np.float16)]
-
         while (change >= delta) and (self.itr < loopy):
             self.itr += 1
             change, ki, volcon = self.iter(penal, rmin, filt)
@@ -140,17 +144,14 @@ class Topopt(object):
             if self.verbose:
                 print('It., {0:4d},  K_I., {1:8.4f},  ch., {2:0.3f}'.format(self.itr, ki, change), flush=True)
 
-            if history:
+            if self.xf_history is not None:
                 xf = self.densityfilt(rmin, filt)
-                xf_history.append(xf.astype(np.float16))
+                self.xf_history.append(xf.astype(np.float16))
 
         # the filtered density is the physical desity
         xf = self.densityfilt(rmin, filt)
 
-        if history:
-            return xf, xf_history, ki
-        else:
-            return xf, None, ki
+        return xf, self.xf_history, ki
 
     # iteration
     def iter(self, penal, rmin, filt):
@@ -309,7 +310,7 @@ class Topopt(object):
             kernel = kernel/np.sum(kernel)  # normalisation
 
             # apply convolution filter
-            xf = convolve(self.x, kernel, mode='constant', cval=1)
+            xf = convolve(self.x, kernel, mode='reflect', cval=1)
             elx, ely, values, free_ele = self.load.passive()
             xf[ely, elx] = values
 

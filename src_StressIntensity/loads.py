@@ -9,6 +9,7 @@ Aerospace Structures and Materials Department TU Delft
 """
 
 import numpy as np
+from scipy.sparse import coo_matrix
 from math import *
 import csv
 
@@ -747,6 +748,8 @@ class CompactTension(Load):
     ext_stiff : float
         Extra stiffness to be added to global stiffness matrix. Due to
         interactions with meganisms outside design domain.
+    pas_loc : string
+        Location/Name of the .npy file that contains passive background.
 
     Atributes
     ---------
@@ -776,12 +779,13 @@ class CompactTension(Load):
         Compact Tension Test Specimen", The stress analysis of cracks handbook
         (3rd ed.). New York: ASME Press, pp:61-63.
     """
-    def __init__(self, nelx, crack_length, young, Emin, poisson, ext_stiff):
+    def __init__(self, nelx, crack_length, young, Emin, poisson, ext_stiff, pas_loc=None):
         nelx = nelx
         nely = int(np.round(nelx/1.25*1.2/2))
         self.crack_length = crack_length
         self.hoe = [[self.crack_length-1, nely-1], [self.crack_length, nely-1]]
         self.hoe_type = ['1,-1', '-1,-1']
+        self.pas_loc = pas_loc
 
         super().__init__(nelx, nely, young, Emin, poisson, ext_stiff, self.hoe)
 
@@ -846,7 +850,7 @@ class CompactTension(Load):
             List with all element numbers that are allowed to change.
         """
         # passive crack tip elements
-        elx = [x for x in range(np.max(self.crack_length)+1)]
+        elx = [x[0] for x in self.hoe]  # range(np.max(self.crack_length)+1)]
         ely = [self.nely-1]*len(elx)
 
         # passive elements at load introduction
@@ -861,10 +865,18 @@ class CompactTension(Load):
         ely += loc_y.tolist()
 
         values = [1]*len(elx)
+        values[:2] = [1, 1]
 
         fixele = []
         for i in range(len(elx)):
             fixele.append(self.nelx*ely[i] + elx[i])
         free_ele = list(set(range(self.nelx*self.nely)) - set(fixele))
+        
+        if self.pas_loc is not None:
+            passive = np.load(self.pas_loc)
+            passive = coo_matrix(passive)
+            elx += passive.col.tolist()
+            ely += passive.row.tolist()
+            values += passive.data.tolist()
 
         return elx, ely, values, free_ele
