@@ -28,23 +28,23 @@ if __name__ == "__main__":
     
     # constraints
     Emin = 1e-9
-    volfrac = 0.335
-    move = 0.125
+    volfrac = 1.1
+    move = 0.25
     
     # mesh dimensions
     nelx = 500
 #    nely = 100
-    crack_length = 255
+    crack_length = 250
     
     # optimization parameters
-    penal = 3
-    rmin = 3
+    penal = 1
+    rmin = 1.5
     filt = 'density'
-    loopy = 985  # math.inf
+    loopy = 5000  # math.inf
     delta = 0.001
 
     # plotting and printing options
-    directory = 'CT Hex 1/'
+    directory = 'CT0053/'
     verbose = True
     plotting = True
     save_plot = True
@@ -53,10 +53,10 @@ if __name__ == "__main__":
     save_array = True
 
     # loading case object, other classes can be selected and created
-    load = CompactTension(nelx, crack_length, young, Emin, poisson, ext_stiff, pas_loc='Hex size 8 den 0.3.npy')
+    load = CompactTension(nelx, crack_length, young, Emin, poisson, ext_stiff)
 
     # constraints object created
-    den_con = DensityConstraint(load, move, volume_frac=volfrac, density_min=0, density_max=1)
+    den_con = DensityConstraint(load, move, volume_frac=volfrac, density_min=1, density_max=2)
 
     # FEA object is generated, other solvers can be selected and created
     fesolver = CvxFEA(verbose=verbose)
@@ -67,7 +67,6 @@ if __name__ == "__main__":
     # compute
     t = time.time()
     x, x_history, ki = optimizer.layout(penal, rmin, delta, loopy, filt)
-    x, x_history, ki = optimizer.layout(penal, 1, 0.0001, optimizer.itr+15, filt)
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
     # plotting
