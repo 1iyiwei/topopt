@@ -7,9 +7,10 @@ intro
 
 
 About
-------------
+-----
 .. toctree::
    :maxdepth: 2
+   :caption: About
 
    About
    TopOpt
@@ -20,6 +21,7 @@ Introduction and Examples
 --------------------------
 .. toctree::
    :maxdepth: 2
+   :caption: Intruduction and Examples
 
    Code
    Stiffness
@@ -31,6 +33,7 @@ Docstrings
 ----------
 .. toctree::
    :maxdepth: 2
+   :caption: Docstrings
 
    Stiffness_Docs
    Compliance_Docs
