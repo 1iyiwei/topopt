@@ -22,37 +22,37 @@ from plotting import Plot
 if __name__ == "__main__":
     # material properties
     young = 1  # 116e9
-    poisson = 0.31
+    poisson = 0.3
     ext_stiff = 0.0
-    C = 1.69e-10
-    m = 4.12
+    C = 5.05e-16
+    m = 4.41
 
     # constraints
     Emin = 1e-9
     volfrac = 1.1
-    move = 1
+    move = 0.25
 
     # mesh dimensions
-    nelx = 200
+    nelx = 500
 #    nely = 100
-    crack_length = np.arange(150, 152, 1)
+    crack_length = np.arange(220, 261, 2)
     weights = np.ones(np.shape(crack_length[:-1]))
 
     # optimization parameters
     penal = 1.0
     rmin = 1.5
     filt = 'density'
-    loopy = 10  # math.inf
+    loopy = 5000  # math.inf
     delta = 0.001
 
     # plotting and printing options
-    directory = 'CT0001/'
+    directory = 'FL001/'
     verbose = True
     plotting = True
     save_plot = False
-    history = False
+    history = True
     save_pointcloud = False
-    save_array = True
+    save_array = False
 
     # loading case object, other classes can be selected and created
     load = CompactTension(nelx, crack_length, young, Emin, poisson, ext_stiff)
