@@ -15,7 +15,7 @@ import math
 # importing custom modules
 from loads import HalfBeam, Beam, Canti, Michell, BiAxial
 from constraints import DensityConstraint
-from fesolvers import CvxFEA, SciPyFEA, CGFEA
+from fesolvers import FESolver, CvxFEA, CGFEA
 from topopt import Topopt
 from plotting import Plot
 
@@ -30,21 +30,21 @@ if __name__ == "__main__":
     move = 1
 
     # mesh dimensions
-    nelx = 200*8
-    nely = 50*6
+    nelx = 200
+    nely = 50
 
     # optimizer parameters
     penal = 3.0
     rmin = 3
     filt = 'sensitivity'
-    loopy = 10  # math.inf
+    loopy = 1000  # math.inf
     delta = 0.005
 
     # plotting and printing options
     verbose = True
-    plotting = False
+    plotting = True
     save_plot = False
-    history = True
+    history = False
 
     # constraints object created
     den_con = DensityConstraint(nelx, nely, move, volume_frac=volfrac)
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     load = Canti(nelx, nely, young, Emin, poisson)
 
     # FEA object is generated, other solvers can be selected and created
-    fesolver = CvxFEA(verbose=verbose)
+    fesolver = CGFEA(verbose=verbose)
 
     # create optimizer object and initialise the problem
     optimizer = Topopt(den_con, load, fesolver, verbose=verbose)

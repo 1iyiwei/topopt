@@ -21,7 +21,7 @@ class Load(object):
     function related to the geometry, loads and boundaries.
 
     Parameters
-    ---------
+    ----------
     nelx : int
         Number of elements in x direction.
     nely : int
@@ -34,8 +34,8 @@ class Load(object):
     poisson : float
         Poisson ration of the material.
 
-    Atributes
-    -------
+    Attributes
+    ----------
     nelx : int
         Number of elements in x direction.
     nely : int
@@ -49,29 +49,6 @@ class Load(object):
         Poisson ration of the material.
     dim : int
         Amount of dimensions conciderd in the problem, set at 2.
-
-    Methods
-    ------
-    node(elx, ely)
-        Returns the topleft node number of the element.
-    nodes(elx, ely)
-        Returns all nodes of the element.
-    edof()
-        Generats an array with the possitions af all degrees of freedom that
-        belong to all elements.
-    lk(E, nu)
-        Calculates the element stiffness matrix.
-    force()
-        Returns an 1-D array, the force vector of the loading condition.
-    alldofs()
-        Returns a list with all degrees of freedom.
-    fixdofs()
-        Returns a list with indices that are fixed by the boundary conditions.
-    freedofs()
-        Returns a list of arr indices that are not fixede
-    passive()
-        Retuns three lists containing the location and magnitude of fixed
-        density valuese
     """
     def __init__(self, nelx, nely, young, Emin, poisson):
         self.nelx = nelx
@@ -135,8 +112,8 @@ class Load(object):
         Generates an array with the position of the nodes of each element in
         the global stiffness matrix.
 
-        Results
-        ------
+        Returns
+        -------
         edof : 2-D array size(nelx*nely, 8)
             The list with all elements and their degree of freedom numbers.
         x_list : 1-D array len(nelx*nely*8*8)
@@ -165,7 +142,7 @@ class Load(object):
         Calculates the local siffness matrix depending on E and nu.
 
         Parameters
-        ---------
+        ----------
         E : float
             Youngs modulus of the material.
         nu : float
@@ -239,9 +216,8 @@ class Load(object):
         Retuns three lists containing the location and magnitude of fixed
         density values
 
-
         Returns
-        ------
+        -------
         elx : 1-D list
             X coordinates of all passive elements, empty for the parrent class.
         ely : 1-D list
@@ -260,8 +236,6 @@ class HalfBeam(Load):
     mbb-beam. Only half of the beam is considerd due to the symetry around the
     y axis.
 
-    Methods
-    ------------
     No methods are added compared to the parrent class. The force and fixdofs
     functions are changed to output the correct force vector and boundary
     condition used in this specific load case. See the functions themselfs
@@ -306,8 +280,6 @@ class Beam(Load):
     an axis of symetry. To enforce an node in the middle nelx needs to be an
     even number.
 
-    Methods
-    ------------
     No methods are added compared to the parrent class. The force and fixdofs
     functions are changed to output the correct force vector and boundary
     condition used in this specific load case. See the functions themselfs
@@ -358,8 +330,6 @@ class Canti(Load):
     the middel of the right side. To do this an even number for nely is
     required.
 
-    Methods
-    ------------
     No methods are added compared to the parrent class. The force and fixdofs
     functions are changed to output the correct force vector and boundary
     condition used in this specific load case. See the functions themselfs
@@ -408,8 +378,6 @@ class Michell(Load):
     middle right node. Due to symetry all nodes at the left side are constraint
     in x direction. This class requires nely to be even.
 
-    Methods
-    ------------
     No methods are added compared to the parrent class. The force and fixdofs
     functions are changed to output the correct force vector and boundary
     condition used in this specific load case. See the functions themselfs
@@ -459,8 +427,6 @@ class BiAxial(Load):
     outward. This class is made to show the checkerboard problem that generaly
     occeurs with topology optimisation.
 
-    Methods
-    ------------
     No methods are added compared to the parrent class. The force, fixdofs and
     passive functions are changed to output the correct force vector, boundary
     condition and passive elements used in this specific load case.
@@ -513,7 +479,7 @@ class BiAxial(Load):
         This is done to enforce propper load introduction.
 
         Returns
-        ------
+        -------
         elx : 1-D list
             X coordinates of all passive elements, empty for the parrent class.
         ely : 1-D list

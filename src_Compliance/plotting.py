@@ -5,6 +5,7 @@ Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft
 2018
 """
+
 import matplotlib.pyplot as plt
 import matplotlib.animation as anim
 import numpy as np
@@ -18,15 +19,13 @@ class Plot(object):
 
     Parameters
     ----------
-    Parameters
-    ----------
     load : object, child of the Loads class
         The loadcase(s) considerd for this optimisation problem.
-    title : str
+    title : str, optional
         Title of the plot if required.
 
-    Atributes
-    --------
+    Attributes
+    ---------
     nelx : int
         Number of elements in x direction.
     nely : int
@@ -37,19 +36,6 @@ class Plot(object):
         The axis system that belongs to fig.
     images : 1-D list with imshow objects
         This list contains all density distributions that need to be plotted.
-
-    Methods
-    -------
-    add(x, animate)
-        Adding a plot of the density distribution to the figure.
-    boundary()
-        Plotting the boundary conditions.
-    loading()
-        Plotting the forces acting on the problem.
-    save(filename, fps)
-        Saving an plot in svg or mp4 format.
-    show()
-        Displaying the generated figure.
     """
     def __init__(self, load, title=None):
         # turning off the interactive plotting of matplotlib.pyplot
@@ -90,7 +76,7 @@ class Plot(object):
         Plotting the boundary conditions.
 
         Parameters
-        --------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considerd for this optimisation problem.
         """
@@ -119,7 +105,7 @@ class Plot(object):
         Plotting the loading conditions.
 
         Parameters
-        --------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considerd for this optimisation problem.
         """
@@ -155,10 +141,10 @@ class Plot(object):
         function itself.
 
         Parameters
-        ---------
+        ----------
         filename : str
             Name of the file, excluding the file exstension.
-        fps : int
+        fps : int, optional
             Amount of frames per second if the plots are animations.
         """
         if len(self.images) == 1:
@@ -176,7 +162,8 @@ class Plot(object):
 
 
 class FasterFFMpegWriter(anim.FFMpegWriter):
-    '''FFMpeg-pipe writer bypassing figure.savefig. To improof saving speed'''
+    '''FFMpeg-pipe writer bypassing figure.savefig. To improofs speed with
+    respect to the matplotlib.animation.FFMpegWriter'''
 
     def __init__(self, **kwargs):
         '''Initialize the Writer object and sets the default frame_format.'''

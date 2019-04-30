@@ -1,4 +1,4 @@
-'''
+"""
 Constraints class used to specify the density constraints of the topology
 optimisation problem. It contains functions for minimum and maximum element
 density in the upcomming iteration and the magnitude of the volume constraint
@@ -8,7 +8,8 @@ global compliance minimization.
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft
 2018
-'''
+"""
+
 import numpy as np
 
 
@@ -37,7 +38,7 @@ class DensityConstraint(object):
         Maximum density, set at 0.0 if not specified.
 
     Attributes
-    -------
+    ----------
     nelx : int
         Number of elements in x direction.
     nely : int
@@ -48,19 +49,10 @@ class DensityConstraint(object):
         Maximum volume that can be filled with material.
     volume_derivative : 2D array size(1, nelx*nely)
         Sensityvity of the density constraint to the density in each element.
-    density_min : float (optional)
+    density_min : float, optional
         Minumum density, set at 0.0 if not specified.
-    density_max : float (optional)
+    density_max : float, optional
         Maximum density, set at 0.0 if not specified.
-
-    Methods
-    -------
-    xmin(load, x)
-        Returns the minimum density value of all ellements of this itteration.
-    xmax(load, x)
-        Returns the maximum density value of all ellements of this itteration.
-    current_volconstrain(x)
-        Returns the current magnitude of the volume constraint funcion.
     """
     def __init__(self, nelx, nely, move, volume_frac, density_min=0.0, density_max=1.0):
         self.nelx = nelx
@@ -77,12 +69,12 @@ class DensityConstraint(object):
         this itteration.
 
         Parameters
-        _______
+        ----------
         x : 2D array size(nely, nelx)
             Density distribution of this itteration.
 
         Returns
-        _______
+        -------
         xmin : 2D array size(nely, nelx)
             Minimum density values of this itteration for the update scheme.
         """
@@ -96,12 +88,12 @@ class DensityConstraint(object):
         this itteration.
 
         Parameters
-        _______
+        ----------
         x : 2D array size(nely, nelx)
             Density distribution of this itteration.
 
         Returns
-        _______
+        -------
         xmax : 2D array size(nely, nelx)
             Maximum density values of this itteration after updating.
         """
@@ -112,19 +104,21 @@ class DensityConstraint(object):
     def current_volconstrain(self, x):
         """
         Calculates the current magnitude of the volume constraint funcion: ::
-
+        
                            ∑ x
           cur_vol = ────────────────── - 1
                     nelx*nelx*vol_frac
+
         Parameters
-        _______
+        ----------
         x : 2D array size(nely, nelx)
             Density distribution of this itteration.
 
         Returns
-        _______
+        -------
         curvol : float
             Curent value of the density constraint function.
         """
         cur_vol = np.sum(x)/(self.nelx*self.nely*self.volume_frac) - 1
         return cur_vol
+

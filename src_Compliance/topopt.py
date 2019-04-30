@@ -28,11 +28,11 @@ class Topopt(object):
         The loadcase(s) considerd for this optimisation problem.
     fesolver : object, child of the CSCStiffnessMatrix class
         The finite element solver.
-    verbose : bool
+    verbose : bool, optional
         Printing itteration results.
 
-    Atributes
-    -------
+    Attributes
+    ----------
     constraint : object of DensityConstraint class
         The constraints for this optimization problem.
     load : object, child of the Loads class
@@ -55,23 +55,6 @@ class Topopt(object):
     upp : 1D array len(nelx*nely)
         Column vector with the lower asymptotes, calculated and used in the
         MMA subproblem of the previous itteration.
-
-    Methods
-    -------
-    layout(self, penal, rmin, delta, loopy, filt, history=False)
-        Solves the topology optimisation problem.
-    iter(penal, rmin, filt, itr, xold1, xold2, low, upp)
-        Performs one itteration of the topology optimisation problem.
-    comp(load, x, u, ke, penal)
-        Calculates the compliance and compliance derivative of a itteration.
-    densityfilt(self, x, rmin, filt)
-        Filters the densities over a radius of rmin.
-    sensitivityfilt(self, x, rmin, dc, filt)
-        Filters sensitivity with a radius of rmin.
-    mma(self, m, n, itr, xval, xmin, xmax, xold1, xold2, f0val, df0dx, fval, dfdx, low, upp, a0, a, c, d)
-        Prepears a convex reprensentation of the local optimisation problem.
-    solvemma(m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d)
-        Solves the locally convex problem with a dual-primal Newton method
     """
     def __init__(self, constraint, load, fesolver, verbose=False):
         self.constraint = constraint
@@ -108,7 +91,7 @@ class Topopt(object):
             Amount of iteration allowed.
         filt : str
             The filter type that is selected, either 'sensitivity' or 'density'.
-        history : bool
+        history : bool, optional
             Do the intermediate results need to be stored.
 
         Returns
@@ -163,7 +146,7 @@ class Topopt(object):
         - and finaly updates density distribution (design).
 
         Parameters
-        -------
+        ----------
         penal : float
             Material model penalisation (SIMP).
         rmin : float
@@ -358,14 +341,17 @@ class Topopt(object):
         This function mmasub performs one MMA-iteration, aimed at solving the
         nonlinear programming problem:
 
-        Minimize  f_0(x) + a_0*z + sum( c_i*y_i + 0.5*d_i*(y_i)^2 )
-            subject to  f_i(x) - a_i*z - y_i <= 0,  i = 1,...,m
+        .. math::
 
-                    xmin_j <= x_j <= xmax_j,        j = 1,...,n
+            \\min & f_0(x) & +  a_0z + \\sum_{i=1}^m \\left(c_iy_i + \\frac{1}{2}d_iy_i^2\\right) \\\\
+            &\\text{s.t. }& f_i(x) - a_iz - y_i \\leq 0  \hspace{1cm} & i \in \{1,2,\dots,m \} \\\\
+            & & x_{\\min} \\geq x_j \geq x_{\\max} & j \in \{1,2,\dots,n \} \\\\
+            & & y_i \leq 0 & i \in \{1,2,\dots,m \} \\\\
+            & & z \\geq 0
+        
 
-                    z >= 0,   y_i >= 0,             i = 1,...,m
         Parameters
-        _______
+        ----------
         m : int
             The number of general constraints.
         n : int
@@ -409,7 +395,7 @@ class Topopt(object):
             Vector with the constants d_i in the terms 0.5*d_i*(y_i)^2.
 
         Returns
-        ------
+        -------
         xmma : 1-D array len(n)
             Column vector with the optimal values of the variables x_j in the
             current MMA subproblem.
@@ -503,12 +489,20 @@ class Topopt(object):
 
     def solvemma(self, m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d):
         '''
-        This function solves the MMA subproblem with a primal-dual Newton method:
+        This function solves the MMA subproblem with a primal-dual Newton method
 
-        minimize   SUM[ p0j/(uppj-xj) + q0j/(xj-lowj) ] + a0*z + SUM[ ci*yi + 0.5*di*(yi)^2 ],
+        .. math::
 
-        subject to SUM[ pij/(uppj-xj) + qij/(xj-lowj) ] - ai*z - yi <= bi,
-        alfaj <=  xj <=  betaj,  yi >= 0,  z >= 0.
+            \\min &\\sum_{j-1}^n& \\left( \\frac{p_{0j}^{(k)}}{U_j^{(k)} - x_j} + \\frac{q_{0j}^{(k)}}{x_j - L_j^{(k)}} \\right) +  a_0z + \\sum_{i=1}^m \\left(c_iy_i + \\frac{1}{2}d_iy_i^2\\right) \\\\
+            &\\text{s.t. }& \\sum_{j-1}^n \\left(\\frac{p_{ij}^{(k)}}{U_j^{(k)} - x_j} + \\frac{q_{ij}^{(k)}}{x_j - L_j^{(k)}} \\right) - a_iz - y_i \\leq b_i \\\\
+            & & \\alpha_j \\geq x_j \geq \\beta_j\\\\
+            & & z \\geq 0
+        
+        Returns
+        -------
+        x : 1-D array len(n)
+            Column vector with the optimal values of the variables x_j in the
+            current MMA subproblem.
         '''
         epsi = 1
         een = np.ones((n))
