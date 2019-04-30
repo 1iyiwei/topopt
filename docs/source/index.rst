@@ -2,11 +2,11 @@ Documentation for TopOpt in Python
 ==================================
 
 Intruduction
-============
+------------
 intro
 
 About
-=====
+---------
 .. toctree::
    :maxdepth: 2
 
@@ -16,7 +16,7 @@ About
    License_Link
 
 Introduction and Examples
-=========================
+-------------------------
 .. toctree::
    :maxdepth: 2
 
@@ -27,7 +27,7 @@ Introduction and Examples
    Fatigue_Life
 
 Docstrings
-==========
+----------
 .. toctree::
    :maxdepth: 2
 
@@ -38,7 +38,7 @@ Docstrings
    
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
