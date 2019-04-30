@@ -15,10 +15,8 @@ Introduction
    Objectives
    License_Link
 
-Introduction and Examples
-=========================
-
 .. toctree::
+   :caption: Introduction and Examples
    :maxdepth: 2
 
    Code
@@ -27,10 +25,8 @@ Introduction and Examples
    Stress_Intensity
    Fatigue_Life
 
-Docstrings
-==========
-
 .. toctree::
+   :caption: Docstrings
    :maxdepth: 2
 
    Stiffness_Docs
@@ -39,8 +35,7 @@ Docstrings
    Fatigue_Life_Docs
    
 
-Indices and tables
-==================
+:caption: Indices and Tables
 
 * :ref:`genindex`
 * :ref:`modindex`
