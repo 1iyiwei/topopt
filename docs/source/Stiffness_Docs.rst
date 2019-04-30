@@ -1,24 +1,29 @@
 Compliance Minimization
 =======================
+
 intro 1
 
 
 Density Constraints
 -------------------
+
 .. automodule:: src_Compliance.constraints
     :members:
 
 Load Cases
 -------------------
+
 .. automodule:: src_Compliance.loads
 
 Parrent Load Case
 ^^^^^^^^^^^^^^^^^
+
 .. autoclass:: src_Compliance.loads.Load
     :members:
 
 Child Load Cases
 ^^^^^^^^^^^^^^^^
+
 .. autoclass:: src_Compliance.loads.HalfBeam
     :members:
     :show-inheritance:
@@ -37,6 +42,7 @@ Child Load Cases
 
 Finite Element Solvers
 ----------------------
+
 .. automodule:: src_Compliance.fesolvers
 
 Parrent Solver
@@ -46,6 +52,7 @@ Parrent Solver
 
 Child Solvers
 ^^^^^^^^^^^^^^
+
 .. autoclass:: src_Compliance.fesolvers.CvxFEA
     :members:
     :show-inheritance:
@@ -55,11 +62,13 @@ Child Solvers
 
 Optimization Module
 -------------------
+
 .. automodule:: src_Compliance.topopt
     :members:
 
 Plotting Module
 -------------------
+
 .. automodule:: src_Compliance.plotting
     :members:
     :show-inheritance:
