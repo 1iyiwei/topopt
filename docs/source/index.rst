@@ -3,12 +3,12 @@ Documentation for TopOpt in Python
 **********************************
 
 Introduction
----------------
+============
 
 
 .. toctree::
-   :maxdepth: 2
    :caption: About
+   :maxdepth: 2
    About
    TopOpt
    Objectives
