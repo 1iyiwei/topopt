@@ -22,5 +22,5 @@ python:
   install:
     - requirements: docs/requirements.txt
     - system_packages: true
-  conda:
-    environment: environment.yml
+conda:
+  environment: anaconda/TopOpt_Linux.yml
