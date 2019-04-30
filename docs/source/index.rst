@@ -2,6 +2,9 @@
 Documentation for TopOpt in Python
 **********************************
 
+Introduction
+---------------
+
 
 .. toctree::
    :maxdepth: 2
