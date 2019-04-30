@@ -7,6 +7,7 @@ Introduction
 
 
 .. raw:: latex
+
    \chapter{About}
 
 .. toctree::
@@ -19,6 +20,7 @@ Introduction
    License_Link
 
 .. raw:: latex
+
    \chapter{Introduction and Examples}
 
 .. toctree::
@@ -32,6 +34,7 @@ Introduction
    Fatigue_Life
 
 .. raw:: latex
+
    \chapter{Docstrings}
 
 .. toctree::
