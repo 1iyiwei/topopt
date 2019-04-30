@@ -9,6 +9,7 @@ Introduction
 .. toctree::
    :caption: About
    :maxdepth: 2
+
    About
    TopOpt
    Objectives
