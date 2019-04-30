@@ -18,9 +18,15 @@ formats: all
 
 # Optionally set the version of Python and requirements required to build your docs
 python:
-  version: 3.6
-  install:
-    - requirements: docs/requirements.txt
-    - system_packages: true
-conda:
-  environment: anaconda/TopOpt_Linux.yml
+   version: 3.6
+   install:
+      - requirements: docs/requirements.txt
+      - method: pip
+        path: .
+        extra_requirements:
+            - docs
+      - method: setuptools
+        path: another/package
+   system_packages: true
+   conda:
+       environment: anaconda/TopOpt_Linux.yml
