@@ -53,7 +53,7 @@ if __name__ == "__main__":
     load = Canti(nelx, nely, young, Emin, poisson)
 
     # FEA object is generated, other solvers can be selected and created
-    fesolver = CGFEA(verbose=verbose)
+    fesolver = CvxFEA(verbose=verbose)
 
     # create optimizer object and initialise the problem
     optimizer = Topopt(den_con, load, fesolver, verbose=verbose)
