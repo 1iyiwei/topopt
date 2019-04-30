@@ -6,6 +6,9 @@ Introduction
 ============
 
 
+.. raw:: latex
+   \chapter{About}
+
 .. toctree::
    :caption: About
    :maxdepth: 2
@@ -14,6 +17,9 @@ Introduction
    TopOpt
    Objectives
    License_Link
+
+.. raw:: latex
+   \chapter{Introduction and Examples}
 
 .. toctree::
    :caption: Introduction and Examples
@@ -25,6 +31,9 @@ Introduction
    Stress_Intensity
    Fatigue_Life
 
+.. raw:: latex
+   \chapter{Docstrings}
+
 .. toctree::
    :caption: Docstrings
    :maxdepth: 2
@@ -35,7 +44,8 @@ Introduction
    Fatigue_Life_Docs
    
 
-:caption: Indices and Tables
+Indices and Tables
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`
