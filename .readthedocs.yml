@@ -28,5 +28,3 @@ python:
       - method: setuptools
         path: another/package
    system_packages: true
-   conda:
-       environment: anaconda/TopOpt_Linux.yml
