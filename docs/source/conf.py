@@ -96,7 +96,7 @@ html_static_path = ['nstatic']
 # default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
 # 'searchbox.html']``.
 #
-html_sidebars = {'**': ['localtoc.html']}
+# html_sidebars = {}
 
 
 # -- Options for HTMLHelp output ---------------------------------------------
