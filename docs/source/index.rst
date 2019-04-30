@@ -7,7 +7,7 @@ intro
 
 About
 ---------
-:caption: About
+   :caption: About
 
 .. toctree::
    :maxdepth: 2
