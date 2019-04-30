@@ -5,9 +5,6 @@ Intruduction
 ------------
 intro
 
-
-About
------
 .. toctree::
    :maxdepth: 2
    :caption: About
@@ -17,8 +14,7 @@ About
    Objectives
    License_Link
 
-Introduction and Examples
---------------------------
+
 .. toctree::
    :maxdepth: 2
    :caption: Intruduction and Examples
@@ -29,8 +25,7 @@ Introduction and Examples
    Stress_Intensity
    Fatigue_Life
 
-Docstrings
-----------
+
 .. toctree::
    :maxdepth: 2
    :caption: Docstrings
