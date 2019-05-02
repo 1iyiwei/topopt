@@ -21,7 +21,7 @@ from plotting import Plot
 
 if __name__ == "__main__":
     # material properties
-    young = 1  # 116e9
+    young = 1
     poisson = 0.3
     ext_stiff = 0.0
     C = 5.05e-16
@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     # optimization parameters
     penal = 1.0
-    rmin = 1.5
+    rmin = 0.9
     filt = 'density'
     loopy = 5000  # math.inf
     delta = 0.001
@@ -64,11 +64,11 @@ if __name__ == "__main__":
     fesolver = CvxFEA(verbose=verbose)
 
     # create optimizer object and initialise the problem
-    optimizer = Topopt(den_con, load, fesolver, weights, C, m, verbose=verbose)
-
+    optimizer = Topopt(den_con, load, fesolver, weights, C, m, verbose=verbose, x0_loc='x.npy')
+    print('start')
     # compute
     t = time.time()
-    x, x_history, N = optimizer.layout(penal, rmin, delta, loopy, filt, history)
+    x, x_history, ki = optimizer.layout(penal, rmin, delta, loopy, filt, history)
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
     # plotting
@@ -83,15 +83,6 @@ if __name__ == "__main__":
 
     if save_plot:
         pl.save('figure')
-
-    if plotting:
-        pl.show()
-
-        import matplotlib.pyplot as plt     
-        # figure with N vs a
-        fig = plt.figure()
-        plt.plot(crack_length, N)
-        plt.show()
 
     if save_pointcloud:
         xm = np.vstack((x, np.flip(x, 0)))

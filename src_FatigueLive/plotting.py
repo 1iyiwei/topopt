@@ -214,7 +214,7 @@ class Plot(object):
         if len(self.images) == 1:
             self.fig.savefig(self.directory+filename+'.svg')
         else:
-            writer = anim.FFMpegWriter(fps=30, extra_args=['-c:v', 'h264_nvenc'])
+            writer = anim.FFMpegWriter(fps=30, extra_args=['-c:v', 'h264'])
             animation = anim.ArtistAnimation(self.fig, self.images, interval=1, blit=True, repeat=False)
             animation.save(self.directory+filename+'.mp4', writer=writer)
 

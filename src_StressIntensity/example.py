@@ -62,7 +62,7 @@ if __name__ == "__main__":
     fesolver = CvxFEA(verbose=verbose)
 
     # create optimizer object and initialise the problem
-    optimizer = Topopt(den_con, load, fesolver, verbose=verbose, history=True)
+    optimizer = Topopt(den_con, load, fesolver, verbose=verbose, history=history)
 
     # compute
     t = time.time()

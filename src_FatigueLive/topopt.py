@@ -154,9 +154,8 @@ class Topopt(object):
         xf_history : list of arrays len(itterations size(nely, nelx))
             List with the density distributions of all itterations, None when
             history != True.
-        N : array
-            Array containing the amount of cycles required to reach the crack
-            lengts.
+        ki : array
+            Stress intensity factor at each crack length increment.
         """
         # check if an existing filter was selected
         if filt != 'sensitivity' and filt != 'density':
@@ -173,7 +172,7 @@ class Topopt(object):
 
             objective = ''
             if self.verbose:
-                string = 'It., {0:4d}, N, {2:15.0f}, Obj., {3:8.1f}, VolCons., {4: 6.2%}, ch., {1:0.3f}'.format(self.itr, change, N, Obj, volcon)
+                string = 'It., {0:4d}, N, {2:20.0f}, Obj., {3:8.1f}, VolCons., {4: 6.2%}, ch., {1:0.3f}'.format(self.itr, change, N, Obj, volcon)
                 print(string, objective, flush=True)
 
             if history:
@@ -198,13 +197,13 @@ class Topopt(object):
         sumki = (ki[1:] + ki[:-1])
         N = 1/self.C * np.cumsum(da/((1/2*sumki)**self.m))  # fatigue live
         N = np.insert(N, 0, 0)
-        Obj = 1/(self.m*2**self.m) * np.sum(self.weights*da/((1/2*sumki)**self.m))  # objective function
-        print('Final design, N, {0:15.1f}, Obj., {1:15.1f}'.format(N[-1], Obj))
+        Obj = 1/(self.m*2**self.m*np.sum(da)) * np.sum(self.weights*da/((1/2*sumki)**self.m))  # objective function
+        print('Final design, N, {0:20.0f}, Obj., {1:15.1f}'.format(N[-1], Obj))
 
         if history:
-            return xf, xf_history, N
+            return xf, xf_history, ki
         else:
-            return xf, None, N
+            return xf, None, ki
 
     # iteration
     def iter(self, penal, rmin, filt):
@@ -267,12 +266,12 @@ class Topopt(object):
         da = 2*(load.crack_length[1:] - load.crack_length[:-1])
         sumki = (ki[1:] + ki[:-1])
         N = 1/self.C * np.sum(da/((1/2*sumki)**self.m))  # fatigue live
-        Obj = 1/(self.m*2**self.m) * np.sum(self.weights*da/((1/2*sumki)**self.m))  # objective function
+        Obj = 1/(self.m*2**self.m*np.sum(da)) * np.sum(self.weights*da/((1/2*sumki)**self.m))  # objective function
 
         # derivative of the objective function
         sumdki = (dki[1:, :, :] + dki[:-1, :, :])
-        cycles = (self.weights*da/(sumki**(self.m-1)))[:, None, None]*sumdki
-        dObj = -np.sum(cycles, axis=0)
+        cycles = (self.weights*da/(sumki**(self.m+1)))[:, None, None]*sumdki
+        dObj = -1/np.sum(da)*np.sum(cycles, axis=0)
 
         # applying the sensitvity filter if required
         dObj = self.sensitivityfilt(xf, dObj, rmin, filt)
