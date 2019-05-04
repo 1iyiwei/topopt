@@ -103,12 +103,12 @@ class DensityConstraint(object):
 
     def current_volconstrain(self, x):
         """
-        Calculates the current magnitude of the volume constraint funcion: ::
-        
-                           ∑ x
-          cur_vol = ────────────────── - 1
-                    nelx*nelx*vol_frac
+        Calculates the current magnitude of the volume constraint funcion:
 
+	.. math::
+
+	    V_{\\text{constraint}} = \\frac{\\sum v_e X_e}{ V_{\\max}}-1
+        
         Parameters
         ----------
         x : 2D array size(nely, nelx)
