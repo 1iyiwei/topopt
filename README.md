@@ -1,4 +1,7 @@
 [![Documentation Status](https://readthedocs.org/projects/topopt/badge/?version=latest)](https://topopt.readthedocs.io/en/latest/?badge=latest)
+[![DOI](https://zenodo.org/badge/124638372.svg)](https://zenodo.org/badge/latestdoi/124638372)
+
+
 # Topology optimization #
 [![](https://rawgit.com/AJJLagerweij/topopt/master/img/Cantilever_Beam.svg)](https://rawgit.com/AJJLagerweij/topopt/master/img/Canti.mp4)
 
