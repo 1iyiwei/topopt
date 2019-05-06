@@ -25,14 +25,14 @@ More detailed documentation can be found at [ReadTheDocs](https://topopt.readthe
 
 ## To be implemented ##
 Various improvements are proposed:
- 1. Adding a faster algebraic multigrid preconditioner with Conjugate Gradient itterative solver.
- 2. Creating a conform cubic element mesh for the StressIntensity minimization with a multiresolution implementation as shown in [Higher‐order multi‐resolution topology optimization using the finite cell method](https://doi.org/10.1002/nme.5432) by J.P. Groen, M. Langelaar, O. Sigmund, and M. Ruess 2017. This can both improof the performance of the optimization and acuracy of the stress intensity factors calculated.
+ 1. Adding a faster algebraic multigrid preconditioner with Conjugate Gradient iterative solver.
+ 2. Creating a conform cubic element mesh for the StressIntensity minimization with a multiresolution implementation as shown in [Higher‐order multi‐resolution topology optimization using the finite cell method](https://doi.org/10.1002/nme.5432) by J.P. Groen, M. Langelaar, O. Sigmund, and M. Ruess 2017. This can both improve the performance of the optimization and accuracy of the stress intensity factors calculated.
  3. Coordinate system transformation to convert the local element coordinate system to the global one.
- 4. Use more advanced elements that allow the crackpath to penetrate through elements and the cracktip to exist inside the element.
- 5. A variable thickness cracktip.
- 6. Add multiloadcase optimisation capebilities to Compliance and Actuator code.
- 7. Adding a compliance constraint to the sress intensity factor minimization.
- 8. Improved filtering stratigies to control minimum featuresize whithout the appearace sf artifacts.
+ 4. Use more advanced elements that allow the crack-path to penetrate through elements and the crack-tip to exist inside the element.
+ 5. A variable thickness crack-tip.
+ 6. Add multi-load-case optimisation capebilities to Compliance and Actuator code.
+ 7. Adding a compliance constraint to the stress intensity factor minimization.
+ 8. Improved filtering strategies to control minimum feature size without the appearace sf artifacts.
  
 ## Special Thanks To ##
  1. Ole Sigmund and Martin Bends&#248;e from the Technical University of Denmark for their contributions to the field of topology optimization
