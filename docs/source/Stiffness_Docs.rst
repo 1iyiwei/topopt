@@ -79,4 +79,4 @@ Plotting Module
     :members:
     :show-inheritance:
 
-.. _example.py: https://github.com/AJJLagerweij/topopt/src_Compliance/example.py
+.. _example.py: https://github.com/AJJLagerweij/topopt/blob/master/src_Compliance/example.py
