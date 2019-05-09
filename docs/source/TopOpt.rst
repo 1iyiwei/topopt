@@ -1,22 +1,14 @@
 Background in Topology Optimization
 ===================================
-+------------------------------------------------------------------+
-| .. image:: nstatic/Canti_1.svg                                   |
-|                                                                  |
-+------------------------------------------------------------------+
-| |beginfigref|                                                    |
-|                                                                  |
-| .. math::                                                        |
-|    :label: Example_canti                                         |
-|                                                                  |
-|    \text{TO example, a cantilever beam with maximum stiffness.}  |
-|                                                                  |
-| |endfigref|                                                      |
-+------------------------------------------------------------------+
+
+.. figure:: nstatic/Canti_1.svg
+   :name: Canti_1
+
+   Topology optimization example, a cantilever beam with maximum stiffness.
 
 
 This chapter will provide the reader with a basic insight into topology optimization (TO).
-TO can alter the layout of the structure. Within a design space it tries to distribute a limited amount of material such that a certain objective is maximized or minimized.
+can alter the layout of the structure. Within a design space it tries to distribute a limited amount of material such that a certain objective is maximized or minimized.
 This design space is limited by; the size of the design region, a material constrain, boundary conditions and others.
 
 Here the formulation of a basic algorithm and the problems that can be encountered are disucessed.
@@ -229,9 +221,22 @@ The value of the filtered compliance density gradient at element :math:`i` is de
 All nodes that fall within radius :math:`r_{min}` are contributing but the further the node is the lower its contribution. Note that the filter is normalized by dividing it by :math:`\sum\hat{H}_i`.
 There is limited understanding why this filter works, there is no physical or theoretical basis for it. From experience, it was simply observed that it works well.
 
-**Sensitivity filtering figure**
++--+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+|a)|.. figure:: nstatic/Canti_3.svg                                                                       |.. figure:: nstatic/Canti_3.svg                                                                       |
++--+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+|b)|.. figure:: nstatic/Canti_2.svg                                                                       |.. figure:: nstatic/Canti_5.svg                                                                       |
++--+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+|c)|.. figure:: nstatic/Canti_4.svg                                                                       |.. figure:: nstatic/Canti_6.svg                                                                       |
++--+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
+| .. figure:: nstatic/Canti_4.svg                                                                                                                                                                                |
+|    :name: Sensitivity_filt                                                                                                                                                                                     |
+|    :width: 1pt                                                                                                                                                                                                 |
+|                                                                                                                                                                                                                |
+|    Optimized cantilever beams at resolution, a) 250x50, b) 500x100 and c) 1000x200. A sensitivity filter of increasing filter radius is used to avoid checkerboard patterns for the figures at the rigth side. |
++----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
-**Ref to figure** show the same simulations. The only difference is that the simulations is that the are filtered.
+
+:numref:`Sensitivity_filt` show the same simulations. The only difference is that the simulations is that the are filtered.
 It was observed that scaling the filter size :math:`r_{min}` with the resolution results in similar designs.
 The main difference between the designs is that higher resolution simulations result in a smoother structure.
 But filtering this way leads to less discrete designs. Larger filters cause more pixels to have intermediate density values.
@@ -250,22 +255,38 @@ is applied directly on the densities.
 These filtered densities, :math:`\widehat{X_e}`, are used in the FEA and SA.
 This means that the design variables :math:`X_e` lose there physical meaning as the FEA gives it the relation to reality, therefore the final geometry should be based on the filtered densities [18]_.
 
-A comparison between **Ref to figure** shows that filtering the densities suppresses the finer features well.
+A comparison between :numref:`Density_filt` shows that filtering the densities suppresses the finer features well.
 Comparing the performance difference of the sensitivity and density filters is difficult.
 Many criteria can be used such as, computational effort, how discrete the final design is, the magnitude of the final compliance and whether the volume constrained is still maintained.
 A small comparison was made by O. Sigmund [18]_.
 The performance of the filters depends greatly on the design case used.
 The paper clearly shows that better filters exist then those presented in this communication however as the density and sensitivity filters are computational efficient and simple to implement they were chosen as the basic filters used in the code.
 
-**Density filtering figure***
++--+----------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------+
+|a)|.. figure:: nstatic/Canti_7.svg                                                                     |.. figure:: nstatic/Canti_7.svg                                                                     |
++--+----------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------+
+|b)|.. figure:: nstatic/Canti_8.svg                                                                     |.. figure:: nstatic/Canti_10.svg                                                                    |
++--+----------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------+
+|c)|.. figure:: nstatic/Canti_9.svg                                                                     |.. figure:: nstatic/Canti_11.svg                                                                    |
++--+----------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------+
+| .. figure:: nstatic/Canti_4.svg                                                                                                                                                                            |
+|    :name: Density_filt                                                                                                                                                                                     |
+|    :width: 1pt                                                                                                                                                                                             |
+|                                                                                                                                                                                                            |
+|    Optimized cantilever beams at resolution, a) 250x50, b) 500x100 and c) 1000x200. A density filter of increasing filter radius is used to avoid checkerboard patterns for the figures at the rigth side. |
++------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 Computational Implementation
 ----------------------------
 The iterative implementation of topology optimization as proposed by M. Beckers, [19]_ or M.P. Bendsøe and O. Sigmund [3]_ are similar.
 It exists out of three parts, initialization, optimization and post processing.
-The flowchart for the methods used in this communication can be found in **Ref to Flowchart**.
+The flowchart for the methods used in this communication can be found in :numref:`Flowchart`.
 
-**FLOWCHART!!!**
+.. figure:: nstatic/Flowchart.svg
+   :width: 50%
+   :name: Flowchart
+
+   Basic flowchart for compliance minimization [3]_.
 
 In the initialization phase the problem is set up.
 It defines the design domain, the loading conditions, the initial design and generates the finite element mesh that will be used in the optimization phase.
@@ -288,9 +309,13 @@ When changing the objective and/or problem one should start with a formulation o
 Sometimes optimization objectives are formulated in the form of several sub objectives resulting in multi objective optimization formulations.
 Optimizing for multiple objectives or load cases at once is common. For most structures several considerations, such as costs, weight and strength are taken in account. In addition do most structures experience multiple load-cases during their life. Several TO algorithms have been developed for this purpose. The most basic methods will be discussed here.
 
-**Flowchart 2**
+.. figure:: nstatic/FlowchartMulti.svg
+   :width: 50%
+   :name: Flowchart_Multi
 
-The method sets up multiple FEA as shown in **Ref to Flowchart 2**.
+   Flowchart of the multi loadcase compliance minimization algorithm [3]_.
+
+The method sets up multiple FEA as shown in :numref:`Flowchart_Multi`.
 Then the total objective will be linked to sub objectives.
 For instance the goal might be to minimize the compliance due to :math:`n` load cases.
 One could formulate the total objective (:math:`O`) as the weighted sum of the compliance of all load cases,

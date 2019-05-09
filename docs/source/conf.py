@@ -98,6 +98,11 @@ html_static_path = ['nstatic']
 #
 # html_sidebars = {}
 
+# Numbered figures
+numfig = True
+numfig = True
+numfig_secnum_depth = (2)
+
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
