@@ -262,6 +262,10 @@ A small comparison was made by O. Sigmund [18]_.
 The performance of the filters depends greatly on the design case used.
 The paper clearly shows that better filters exist then those presented in this communication however as the density and sensitivity filters are computational efficient and simple to implement they were chosen as the basic filters used in the code.
 
+
+.. table
+   :width: 100%
+
 +--+----------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------+
 |a)|.. figure:: nstatic/Canti_7.svg                                                                     |.. figure:: nstatic/Canti_7.svg                                                                     |
 +--+----------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------+
