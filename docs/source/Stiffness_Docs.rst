@@ -1,7 +1,13 @@
-Compliance Minimization
-=======================
+Global Compliance Minimization Docs
+===================================
 
-intro 1
+The total compliance minimization does design structures with maximum stiffness as is discussed at :ref:`Global Compliance Minimization`.
+It exists of five module.
+An example as how to use the optimization is shown in an example optimization example.py_
+
+.. contents::
+   :local:
+   :depth: 1
 
 
 Density Constraints
@@ -15,7 +21,7 @@ Load Cases
 
 .. automodule:: src_Compliance.loads
 
-Parrent Load Case
+Parent Load Case
 ^^^^^^^^^^^^^^^^^
 
 .. autoclass:: src_Compliance.loads.Load
@@ -45,7 +51,7 @@ Finite Element Solvers
 
 .. automodule:: src_Compliance.fesolvers
 
-Parrent Solver
+Parent Solver
 ^^^^^^^^^^^^^^
 .. autoclass:: src_Compliance.fesolvers.FESolver
     :members:
@@ -72,3 +78,5 @@ Plotting Module
 .. automodule:: src_Compliance.plotting
     :members:
     :show-inheritance:
+
+.. _example.py: ../../../src_Compliance/example.py

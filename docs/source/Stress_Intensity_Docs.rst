@@ -1,2 +1,2 @@
-Stress Intensity Factor Minimization
-====================================
+Stress Intensity Factor Minimization Docs
+=========================================

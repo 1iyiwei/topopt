@@ -1,2 +1,4 @@
-Stiffness Maximization
-======================
+Global Compliance Minimization
+==============================
+
+blablabla chackaumtsjakaoem
