@@ -284,6 +284,7 @@ The flowchart for the methods used in this communication can be found in :numref
 
 .. figure:: nstatic/Flowchart.svg
    :width: 50%
+   :align: center
    :name: Flowchart
 
    Basic flowchart for compliance minimization [3]_.
@@ -311,6 +312,7 @@ Optimizing for multiple objectives or load cases at once is common. For most str
 
 .. figure:: nstatic/FlowchartMulti.svg
    :width: 50%
+   :align: center
    :name: Flowchart_Multi
 
    Flowchart of the multi loadcase compliance minimization algorithm [3]_.
@@ -350,7 +352,7 @@ Where they optimize geometries for the most cricital crack in every iteration. T
    \end{cases}
    \end{align}
 
-These basic multiple load case algorithms can be summarized in the flowchart shown in **Ref to Flowchart 2**.
+These basic multiple load case algorithms can be summarized in the flowchart shown in :numref:`Flowchart_Multi`.
 In general the FEA requires most of the computational time therefore the method as shown here is computationally inefficient.
 More advanced algorithms have been developed but these are outside the scope of this communication [24]_, [25]_.
 
@@ -382,14 +384,4 @@ References
 .. [23]  Z. Kang, P. Liu, and M. Li, “`Topology optimization considering fracture mechanics behaviors at specified locations <https://www.doi.org/10.1007/s00158-016-1623-y>`_,” Struct. Multidiscip. Optim., vol. 55, no. 5, pp. 1847–1864, May 2017.
 .. [24]  K. A. James, J. S. Hansen, and J. R. R. A. Martins, “`Structural topology optimization for multiple load cases using a dynamic aggregation technique <https://www.doi.org/10.1080/03052150902926827>`_,” Eng. Optim., vol. 41, no. 12, pp. 1103–1118, 2009.
 .. [25]  E. Nutu, “Multiple load case topology optimization based on bone mechanical adaptation theory,” UPB Sci. Bull. Ser. D Mech. Eng., vol. 77, no. 4, pp. 131–140, 2015.
-
-
-.. |beginfigref| raw:: latex
-
-                     \begin{minipage}{\textwidth}
-
-
-.. |endfigref| raw:: latex
-
-                   \end{minipage}
 
