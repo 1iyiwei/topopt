@@ -88,6 +88,9 @@ html_theme = 'default'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['nstatic/stylesheet.css']
 
+def setup(app):
+   app.add_css_file("nstatic/stylesheet.css")
+
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
 #
