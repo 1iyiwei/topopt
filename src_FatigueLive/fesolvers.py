@@ -1,6 +1,7 @@
 """
-Finite element solvers for the displacement from stiffness matrix and force
-vector. This version of the code is meant for the fatigue live maximization.
+Finite element solvers for the displacement from stiffness matrix, force and
+adjoint vector. This version of the code is meant for the fatigue crack growth
+maximization.
 
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft
@@ -24,7 +25,7 @@ from scipy.sparse import diags
 
 
 # coo_matrix should be faster
-class CSCStiffnessMatrix(object):
+class FESolver(object):
     """
     This parent FEA class can only assemble the global stiffness matrix and
     exclude all fixed degrees of freedom from it. This function, gk_freedofs
@@ -32,26 +33,61 @@ class CSCStiffnessMatrix(object):
     implemented in this parrent class as it does not contain a solver for the
     linear problem.
 
-    Atributes
-    --------
+    Parameters
+    ----------
+    verbose : bool, optional
+        False if the FEA should not print updates
+
+    Attributes
+    ----------
     verbose : bool
         False if the FEA should not print updates.
-
-    Methods
-    -------
-    displace(load, x, penal, length)
-        This function is not implemented, see child classes for implemetations
-        of this function.
-    gk_freedogs(self, load, x, penal, length)
-        Generates the global stiffness matrix with deleted fixed degrees of
-        freedom. This includes adding the external stiffness to the load
-        introduction and displacement output.
     """
     def __init__(self, verbose=False):
         self.verbose = verbose
 
+    # finite element computation for displacement and adjoint
     def displace(self, load, x, penal, length):
-        raise NotImplementedError
+        """
+        FE solver based upon the sparse SciPy solver that uses umfpack.
+
+        Parameters
+        -------
+        load : object, child of the Loads class
+            The loadcase(s) considerd for this optimisation problem.
+        x : 2-D array size(nely, nelx)
+            Current density distribution.
+        penal : float
+            Material model penalisation (SIMP).
+        length : int
+            Length of the current crack conciderd.
+
+        Returns
+        -------
+        u : 1-D column array shape(max(edof), 1)
+            The displacement vector.
+        lamba : 1-D column array shape(max(edof), 1)
+            Adjoint equation solution.
+        """
+        freedofs = np.array(load.freedofs(length))
+        nely, nelx = x.shape
+
+        f = load.force(length)
+        l = load.kiloc()
+
+        f_free = np.hstack((f[freedofs], l[freedofs]))
+        k_free = self.gk_freedofs(load, x, penal, length)
+
+        # solving the system f = Ku with scipy
+        num_dof = load.num_dofs
+        u = np.zeros((num_dof, 1))
+        lamba = np.zeros((num_dof, 1))
+
+        res = spsolve(k_free, f_free)
+        u[freedofs] = res[:, 0].reshape(len(freedofs), 1)
+        lamba[freedofs] = res[:, 1].reshape(len(freedofs), 1)
+
+        return u, lamba
 
     def gk_freedofs(self, load, x, penal, length):
         """
@@ -111,24 +147,16 @@ class CSCStiffnessMatrix(object):
         return k
 
 
-class CvxFEA(CSCStiffnessMatrix):
+class CvxFEA(FESolver):
     """
     This parent FEA class can assemble the global stiffness matrix and solve
     the FE problem with a Supernodal Sparse Cholesky Factorization. It solves
     for both the equalibrium and adjoint problem.
 
-    Atributes
-    --------
+    Attributes
+    ----------
     verbose : bool
         False if the FEA should not print updates.
-
-    Methods
-    -------
-    displace(load, x, penal, length)
-        FE solver based upon a Supernodal Sparse Cholesky Factorization.
-    gk_freedogs(self, load, x, penal, length)
-        Generates the global stiffness matrix with deleted fixed degrees of
-        freedom. Function inherented from parent.
     """
     def __init__(self, verbose=False):
         super().__init__(verbose)
@@ -138,15 +166,10 @@ class CvxFEA(CSCStiffnessMatrix):
         """
         FE solver based upon a Supernodal Sparse Cholesky Factorization. It
         requires the instalation of the cvx module. It solves both the FEA
-        equalibrium and adjoint problems.
-
-        See: Y. Chen, T. A. Davis, W. W. Hager, S. Rajamanickam, "Algorithm
-        887: CHOLMOD, Supernodal Sparse Cholesky Factorization and
-        Update/Downdate", ACM Transactions on Mathematical Software, 35(3),
-        22:1-22:14, 2008.
+        equalibrium and adjoint problems. [1]_
 
         Parameters
-        -------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considerd for this optimisation problem.
         x : 2-D array size(nely, nelx)
@@ -163,6 +186,13 @@ class CvxFEA(CSCStiffnessMatrix):
             The displacement vector.
         lamba : 1-D column array shape(max(edof), 1)
             Adjoint equation solution.
+
+        References
+        ----------
+        .. [1] Y. Chen, T. A. Davis, W. W. Hager, S. Rajamanickam, "Algorithm
+            887: CHOLMOD, Supernodal Sparse Cholesky Factorization and
+            Update/Downdate", ACM Transactions on Mathematical Software, 35(3),
+            22:1-22:14, 2008.
         """
         freedofs = np.array(load.freedofs(length))
         nely, nelx = x.shape
@@ -186,82 +216,22 @@ class CvxFEA(CSCStiffnessMatrix):
         return u, lamba
 
 
-class SciPyFEA(CSCStiffnessMatrix):
-    """
-    This parent FEA class can assemble the global stiffness matrix and solve
-    the FE problem with a sparse solver based upon umfpack. This solver is
-    slowen than the CvxFEA solver. It is however more robust. It solves
-    for both the equalibrium and adjoint problem.
-
-    Atributes
-    --------
-    verbose : bool
-        False if the FEA should not print updates.
-
-    Methods
-    -------
-    displace(load, x, penal, length)
-        FE solver based upon a SciPy sparse sysems solver that uses umfpack.
-    gk_freedogs(self, load, x, penal, length)
-        Generates the global stiffness matrix with deleted fixed degrees of
-        freedom. Function inherented from parent.
-    """
-    def __init__(self, verbose=False):
-        super().__init__(verbose)
-
-    # finite element computation for displacement
-    def displace(self, load, x, penal, length):
-        """
-        FE solver based upon the sparse SciPy solver that uses umfpack.
-
-        Parameters
-        -------
-        load : object, child of the Loads class
-            The loadcase(s) considerd for this optimisation problem.
-        x : 2-D array size(nely, nelx)
-            Current density distribution.
-        penal : float
-            Material model penalisation (SIMP).
-        length : int
-            Length of the current crack conciderd.
-
-        Returns
-        -------
-        u : 1-D column array shape(max(edof), 1)
-            The displacement vector.
-        lamba : 1-D column array shape(max(edof), 1)
-            Adjoint equation solution.
-        """
-        freedofs = np.array(load.freedofs(length))
-        nely, nelx = x.shape
-
-        f = load.force(length)
-        l = load.kiloc()
-
-        f_free = np.hstack((f[freedofs], l[freedofs]))
-        k_free = self.gk_freedofs(load, x, penal, length)
-
-        # solving the system f = Ku with scipy
-        num_dof = load.num_dofs
-        u = np.zeros((num_dof, 1))
-        lamba = np.zeros((num_dof, 1))
-
-        res = spsolve(k_free, f_free)
-        u[freedofs] = res[:, 0].reshape(len(freedofs), 1)
-        lamba[freedofs] = res[:, 1].reshape(len(freedofs), 1)
-
-        return u, lamba
-
-
-class CGFEA(CSCStiffnessMatrix):
+class CGFEA(FESolver):
     """
     This parent FEA class can assemble the global stiffness matrix and solve
     the FE problem with a sparse solver based upon a preconditioned conjugate
     gradient solver. The preconditioning is based upon the inverse of the
     diagonal of the stiffness matrix.
 
-    Atributes
-    --------
+    Recomendations
+
+    - Make the tolerance change over the iterations, low accuracy is
+      required for first itteration, more accuracy for the later ones.
+    - Add more advanced preconditioner.
+    - Add gpu accerelation.
+
+    Attributes
+    ----------
     verbose : bool
         False if the FEA should not print updates.
     ufree_old : dict
@@ -270,21 +240,6 @@ class CGFEA(CSCStiffnessMatrix):
     lambafree_old : array len(freedofs)
         Ajoint equation result of previos iteration for every crack length,
         the keys are the related cracklengths.
-
-    Methods
-    -------
-    displace(load, x, penal, length)
-        FE solver based upon a SciPy sparse sysems solver that uses umfpack.
-    gk_freedogs(self, load, x, penal, length)
-        Generates the global stiffness matrix with deleted fixed degrees of
-        freedom. Function inherented from parent.
-
-    Recomendations
-    --------------
-    - Make the tolerance change over the iterations, low accuracy is
-      required for first itteration, more accuracy for the later ones.
-    - Add more advanced preconditioner.
-    - Add gpu accerelation.
     """
     def __init__(self, verbose=False):
         super().__init__(verbose)
@@ -301,7 +256,7 @@ class CGFEA(CSCStiffnessMatrix):
         tolerance is hardcoded as 1e-3.
 
         Parameters
-        -------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considerd for this optimisation problem.
         x : 2-D array size(nely, nelx)

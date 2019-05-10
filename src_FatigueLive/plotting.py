@@ -26,11 +26,11 @@ class Plot(object):
         The loadcase(s) considerd for this optimisation problem.
     directory : str
         Relative directory that the results should be saved in.
-    title : str
+    title : str, optional
         Title of the plot, optionaly.
 
-    Atributes
-    --------
+    Attributes
+    ----------
     nelx : int
         Number of elements in x direction.
     nely : int
@@ -43,22 +43,6 @@ class Plot(object):
         This list contains all density distributions that need to be plotted.
     directory : str
         Location where the results need to be saved.
-
-    Methods
-    -------
-    add(x, animate)
-        Adding a plot of the density distribution to the figure.
-    find(dof)
-        Function to find x and y location of node for any dof.
-    boundary()
-        Plotting the boundary conditions.
-    loading()
-        Plotting the forces acting on the problem.
-    save(filename, fps)
-        Saving an plot in svg or mp4 format.
-    show()
-        Displaying the generated figure.
-    saveXYZ(x, x_size, thickness)
     """
     def __init__(self, load, directory, title=None):
         # create diretory if required
@@ -158,7 +142,7 @@ class Plot(object):
         Plotting the boundary conditions.
 
         Parameters
-        --------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considerd for this optimisation problem.
         """
@@ -179,7 +163,7 @@ class Plot(object):
         Plotting the loading conditions.
 
         Parameters
-        --------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considerd for this optimisation problem.
         """
@@ -205,7 +189,7 @@ class Plot(object):
         function itself.
 
         Parameters
-        ---------
+        ----------
         filename : str
             Name of the file, excluding the file exstension.
         fps : int

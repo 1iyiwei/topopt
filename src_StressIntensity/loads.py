@@ -408,7 +408,7 @@ class EdgeCrack(Load):
     This child class of Load class represents the symetric top half of an edge
     crack. The crack is positioned to the bottom left and propegates towards
     the right. Special elements are placed around the crack tip. The plate is
-    subjected to a distributed tensile load (σ=1) on the top.
+    subjected to a distributed tensile load (:math:`\\sigma=1`) on the top.
 
     For a perfectly flat plate analytical expressions for K_I are known. [2]_
 
@@ -422,7 +422,6 @@ class EdgeCrack(Load):
           K^{\\text{Real}} = K^{\\text{FEA}}(\\sigma=1) \\sigma^{\\text{Real}} \\sqrt{\\frac{a^{\\text{Real}}}{2a^{\\text{FEA}}}}
 
        where :math:`a^{\\text{FEA}}` is the cracklength in number of elements.
-
 
     Parameters
     ----------
@@ -684,8 +683,7 @@ class CompactTension(Load):
     tip. The plate is subjected to upwards load of one. The design follows the
     ASTM standard. [4]_
 
-    For a perfectly flat plate analytical expressions for K_I do exist. [4]_
-    [5]_
+    For a perfectly flat plate analytical expressions for K_I do exist. [5]_
 
     The stress intensity factors calculated can be be interperted in two ways:
     1. Without schaling. This means that all elements have a size of 2 length units.

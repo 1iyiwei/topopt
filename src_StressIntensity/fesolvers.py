@@ -42,20 +42,20 @@ class FESolver(object):
         False if the FEA should not print updates
 
     Attributes
-    --------
+    ----------
     verbose : bool
         False if the FEA should not print updates.
     """
     def __init__(self, verbose=False):
         self.verbose = verbose
 
-    # finite element computation for displacement
+    # finite element computation for displacement adjoint
     def displace(self, load, x, ke, kmin, penal):
         """
         FE solver based upon the sparse SciPy solver that uses umfpack.
 
         Parameters
-        -------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considerd for this optimisation problem.
         x : 2-D array size(nely, nelx)
@@ -169,7 +169,7 @@ class CvxFEA(FESolver):
         equalibrium and adjoint problems. [1]_
 
         Parameters
-        -------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considerd for this optimisation problem.
         x : 2-D array size(nely, nelx)
@@ -189,7 +189,7 @@ class CvxFEA(FESolver):
             Adjoint equation solution.
 
         References
-        ---------
+        ----------
         .. [1] Y. Chen, T. A. Davis, W. W. Hager, S. Rajamanickam, "Algorithm
             887: CHOLMOD, Supernodal Sparse Cholesky Factorization and
             Update/Downdate", ACM Transactions on Mathematical Software, 35(3),
