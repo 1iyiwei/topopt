@@ -1,4 +1,4 @@
-Local Maximum Compliance
+Maximum Local Compliance
 ========================
 
 This loal compliance maximization designs structures with the maximum displacement in one node.

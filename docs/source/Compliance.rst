@@ -7,7 +7,7 @@ Maximizing the output displacement of one, or more, nodes for a given load case 
 These geometries will behave like a normal mechanism but without any hinges, the displacement and force are transfered by (elastic) deformations only.
 Avoiding hinges can be required for various reasons, think of manufacturing constraints or reliability issues.
 Compliant mechanisms are used in various occasions from MEMS actuators to space structures.
-For more information check this `youtube video <https://youtu.be/97t7Xj_iBv0>`_
+For more information check this `youtube video <https://youtu.be/97t7Xj_iBv0>`_.
 
 .. contents::
    :local:
@@ -121,7 +121,7 @@ when :math:`\boldsymbol{\lambda}` satisfies the adjoint equation it becomes:
 .. math::
 
    \frac{\partial u_{\text{out}}}{\partial X_e} = & - \boldsymbol{\lambda}^T \frac{\partial\boldsymbol{K}}{\partial X_e}\boldsymbol{u} \\
-   & \text{when} \hspace{0.5cm} \boldsymbol{f}^T - \boldsymbol{\lambda}^T\boldsymbol{K} = 0
+   & \text{when} \hspace{0.5cm} \boldsymbol{l}^T - \boldsymbol{\lambda}^T\boldsymbol{K} = 0
 
 Satisfying this adjoint equation is simple, just solve :math:`\boldsymbol{K\lambda} = \boldsymbol{l}`.
 The derivative of the stiffness matrix to the density of an element can be derived leading to the final expression of the gradient:
