@@ -2,7 +2,6 @@ Global Compliance Minimization
 ==============================
 
 The total compliance minimization does design structures with maximum stiffness as is discussed at :ref:`Global Compliance Minimization Explanation`.
-It exists of five module.
 An example as how to use the optimization is shown in an example optimization example.py_
 
 .. contents::

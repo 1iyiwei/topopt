@@ -1,7 +1,9 @@
-Maximum Compliance Actuators
-============================
+Local Maximum Compliance
+========================
 
-Intro
+This loal compliance maximization designs structures with the maximum displacement in one node.
+This can be used to design MEMS actuators as is discussed at :ref:`Local Compliance Maximization Explanation`.
+An example as how to use the optimization is shown in an example optimization example.py_
 
 .. contents::
    :local:

@@ -1,7 +1,10 @@
 Fatigue Crack Growth Life Maximization
 ======================================
 
-Intro
+This fatigue crack growth life maximization designs a structure such that the most cycles are required for the crack to grow
+from :math:`a_0` (strating crack length) to :math:`a_{\text{end}}` (final crack length). The theory behind the algorithm is explained in at :ref:`Fatigue Life Explanation`
+The crack path must be kown before running the optimization algorithms
+
 
 .. contents::
    :local:

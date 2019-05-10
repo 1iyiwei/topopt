@@ -1,7 +1,9 @@
 Stress Intensity Factor Minimization
 ====================================
 
-Intro
+In this stress intensity factor minimization a structure with crack is optimized to have minimal crack growth rate.
+Thow this works is discussed in :ref:`Stress Intensity Explanation`
+An example as how to use the optimization is shown in an example optimization example.py_
 
 .. contents::
    :local:
