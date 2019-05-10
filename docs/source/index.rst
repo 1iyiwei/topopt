@@ -17,6 +17,7 @@ Introduction
    About
    TopOpt
    Objectives
+   Code
    License_Link
 
 .. raw:: latex
@@ -24,10 +25,9 @@ Introduction
    \chapter{Introduction and Examples}
 
 .. toctree::
-   :caption: Introduction and Examples
+   :caption: Theory and Examples
    :maxdepth: 2
 
-   Code
    Stiffness
    Compliance
    Stress_Intensity

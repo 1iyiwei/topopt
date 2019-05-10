@@ -114,6 +114,8 @@ Here :math:`E_{\min}` is a small artificial stiffness used to avoid elements wit
 
 When :math:`p > 1` the intermediate density values are less effective as there stiffness is low in comparison to the volume occupied. When :math:`p` is sufficiently large, generally :math:`p\geq3`, the design converges to a solution that is close to a discrete (0-1) design.
 
+.. _Sensitivity_and_MMA:
+
 Sensitivity analysis and MMA
 -----------------------------
 The main focus on developing a robust and stable algorithm is the update scheme.
