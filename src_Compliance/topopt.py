@@ -39,7 +39,7 @@ class Topopt(object):
         The loadcase(s) considerd for this optimisation problem.
     fesolver : object, child of the CSCStiffnessMatrix class
         The finite element solver.
-    verbose : bool
+    verbose : bool, optional
         Printing itteration results.
     itr : int
         Number of iterations performed
@@ -214,7 +214,7 @@ class Topopt(object):
         This funcion calculates compliance and compliance density derivative.
 
         Parameters
-        -------
+        ----------
         x : 2-D array size(nely, nelx)
             Possibly filterd density distribution.
         u : 1-D array len(max(edof)+1)
@@ -263,7 +263,7 @@ class Topopt(object):
             The filter type that is selected, either 'sensitivity' or 'density'.
 
         Returns
-        ------
+        -------
         xf : 2-D array size(nely, nelx)
             Filterd density distribution.
         """
@@ -308,7 +308,7 @@ class Topopt(object):
             The filter type that is selected, either 'sensitivity' or 'density'.
 
         Returns
-        ------
+        -------
         dcf : 2-D array size(nely, nelx)
             Filterd sensitivity distribution.
         """
@@ -337,7 +337,7 @@ class Topopt(object):
 
     # MMA problem linearisation
     def mma(self, m, n, itr, xval, xmin, xmax, xold1, xold2, f0val, df0dx, fval, dfdx, low, upp, a0, a, c, d):
-        '''
+        """
         This function mmasub performs one MMA-iteration, aimed at solving the
         nonlinear programming problem:
 
@@ -348,7 +348,6 @@ class Topopt(object):
             & & x_{\\min} \\geq x_j \geq x_{\\max} & j \in \{1,2,\dots,n \} \\\\
             & & y_i \leq 0 & i \in \{1,2,\dots,m \} \\\\
             & & z \\geq 0
-        
 
         Parameters
         ----------
@@ -413,7 +412,7 @@ class Topopt(object):
         Department of Mathematics KTH, SE-10044 Stockholm, Sweden.
 
         Translated to python 3 by A.J.J. Lagerweij TU Delft June 2018
-        '''
+        """
 
         epsimin = np.sqrt(m + n)*10**(-9)
         raa0 = 0.00001
@@ -488,8 +487,8 @@ class Topopt(object):
         return xmma, low, upp
 
     def solvemma(self, m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d):
-        '''
-        This function solves the MMA subproblem with a primal-dual Newton method
+        """
+        This function solves the MMA subproblem with a primal-dual Newton method.
 
         .. math::
 
@@ -503,7 +502,7 @@ class Topopt(object):
         x : 1-D array len(n)
             Column vector with the optimal values of the variables x_j in the
             current MMA subproblem.
-        '''
+        """
         epsi = 1
         een = np.ones((n))
         eem = np.ones((m))

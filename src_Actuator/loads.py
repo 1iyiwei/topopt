@@ -31,10 +31,10 @@ class Load(object):
         Artifical Youngs modulus of the material to ensure a stable FEA.
         It is used in the SIMP based material model.
     poisson : float
-        Poisson ration of the material.    
+        Poisson ration of the material.
 
-    Atributes
-    -------
+    Attributes
+    ----------
     nelx : int
         Number of elements in x direction.
     nely : int
@@ -51,35 +51,6 @@ class Load(object):
     ext_stiff : float
         Extra stiffness to be added to global stiffness matrix. Due to
         interactions with meganisms outside design domain.
-
-    Methods
-    ------
-    node(elx, ely)
-        Returns the topleft node number of the element.
-    nodes(elx, ely)
-        Returns all nodes of the element.
-    edof()
-        Generats an array with the possitions af all degrees of freedom that
-        belong to all elements.
-    edof()
-        Generats an array with the possitions af all degrees of freedom that
-        belong to all elements.
-    lk(E, nu)
-        Calculates the element stiffness matrix.
-    force()
-        Returns an 2-D column array, the force vector of the loading condition.
-    displaceloc()
-        Returns a 2-D column array, a vector, l, locating the objective node,
-        such that u·l = u_oute
-    alldofs()
-        Returns a list with all degrees of freedom.
-    fixdofs()
-        Returns a list with indices that are fixed by the boundary conditions.
-    freedofs()
-        Returns a list of arr indices that are not fixede
-    passive()
-        Retuns three lists containing the location and magnitude of fixed
-        density valuese
     """
     def __init__(self, nelx, nely, young, Emin, poisson, ext_stiff):
         self.nelx = nelx
@@ -144,8 +115,8 @@ class Load(object):
         Generates an array with the position of the nodes of each element in
         the global stiffness matrix.
 
-        Results
-        ------
+        Returns
+        -------
         edof : 2-D array size(nelx*nely, 8)
             The list with all elements and their degree of freedom numbers.
         x_list : 1-D array len(nelx*nely*8*8)
@@ -263,7 +234,7 @@ class Load(object):
 
 
         Returns
-        ------
+        -------
         elx : 1-D list
             X coordinates of all passive elements, empty for the parrent class.
         ely : 1-D list
@@ -284,8 +255,6 @@ class Inverter(Load):
     the bottom left corner which causes a negative displacement at the bottom
     right corner.
 
-    Methods
-    --------
     No methods are added compared to the parrent class. Only the force,
     displaceloc and fixdof equations are changed to contain the propper
     values for the boundary conditions and optimisation objective.
@@ -299,7 +268,7 @@ class Inverter(Load):
         left corner node.
         
         Returns
-        ------
+        -------
         f : 1-D column array length covering all degrees of freedom
             Value of 1 at the index related to the bottom left node.
         """

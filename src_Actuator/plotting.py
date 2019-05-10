@@ -18,15 +18,13 @@ class Plot(object):
 
     Parameters
     ----------
-    Parameters
-    ----------
     load : object, child of the Loads class
         The loadcase(s) considerd for this optimisation problem.
     title : str
         Title of the plot if required.
 
-    Atributes
-    --------
+    Attributes
+    ----------
     nelx : int
         Number of elements in x direction.
     nely : int
@@ -37,19 +35,6 @@ class Plot(object):
         The axis system that belongs to fig.
     images : 1-D list with imshow objects
         This list contains all density distributions that need to be plotted.
-
-    Methods
-    -------
-    add(x, animate)
-        Adding a plot of the density distribution to the figure.
-    boundary()
-        Plotting the boundary conditions.
-    loading()
-        Plotting the forces acting on the problem.
-    save(filename, fps)
-        Saving an plot in svg or mp4 format.
-    show()
-        Displaying the generated figure.
     """
     def __init__(self, load, title=None):
         # turning off the interactive plotting of matplotlib.pyplot
@@ -76,13 +61,13 @@ class Plot(object):
         ----------
         x : 2-D array size(nely, nelx)
             The density distribution.
-        animated : bool
+        animated : bool, optional
             An animated figure is genereted when history = True.
         """
         if animated is False:
             self.images = []
         x = x.astype(np.float32)
-        plt_im = plt.imshow(1-x, vmin=0, vmax=1, cmap=plt.cm.gray, animated=animated)
+        plt_im = plt.imshow(x, vmin=0, vmax=1, cmap=plt.cm.gray_r, animated=animated)
         self.images.append([plt_im])
 
 
@@ -91,7 +76,7 @@ class Plot(object):
         Plotting the boundary conditions.
 
         Parameters
-        --------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considerd for this optimisation problem.
         """
@@ -120,7 +105,7 @@ class Plot(object):
         Plotting the loading conditions.
 
         Parameters
-        --------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considerd for this optimisation problem.
         """
@@ -156,16 +141,16 @@ class Plot(object):
         function itself.
 
         Parameters
-        ---------
+        ----------
         filename : str
             Name of the file, excluding the file exstension.
-        fps : int
+        fps : int, optional
             Amount of frames per second if the plots are animations.
         """
         if len(self.images) == 1:
             self.fig.savefig(filename+'.svg')
         else:
-            writer = anim.FFMpegWriter(fps=30, extra_args=['-c:v', 'h264_nvenc'])
+            writer = anim.FFMpegWriter(fps=30, extra_args=['-c:v', 'h264'])
             animation = anim.ArtistAnimation(self.fig, self.images, interval=1, blit=True, repeat=False)
             animation.save(filename+'.mp4', writer=writer)
 

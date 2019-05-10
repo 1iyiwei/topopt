@@ -32,9 +32,9 @@ class DensityConstraint(object):
         Maximum volume that can be filled with material.
     volume_derivative : 2D array size(1, nelx*nely)
         Sensityvity of the density constraint to the density in each element.
-    density_min : float (optional)
+    density_min : float, optional
         Minumum density, set at 0.0 if not specified.
-    density_max : float (optional)
+    density_max : float, optional
         Maximum density, set at 0.0 if not specified.
 
     Attributes
@@ -105,10 +105,10 @@ class DensityConstraint(object):
         """
         Calculates the current magnitude of the volume constraint funcion:
 
-	.. math::
+        .. math::
 
-	    V_{\\text{constraint}} = \\frac{\\sum v_e X_e}{ V_{\\max}}-1
-        
+            V_{\\text{constraint}} = \\frac{\\sum v_e X_e}{ V_{\\max}}-1
+
         Parameters
         ----------
         x : 2D array size(nely, nelx)
@@ -121,4 +121,3 @@ class DensityConstraint(object):
         """
         cur_vol = np.sum(x)/(self.nelx*self.nely*self.volume_frac) - 1
         return cur_vol
-

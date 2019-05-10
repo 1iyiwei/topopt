@@ -62,7 +62,7 @@ class Plot(object):
         ----------
         x : 2-D array size(nely, nelx)
             The density distribution.
-        animated : bool
+        animated : bool, optional
             An animated figure is genereted when history = True.
         """
         if animated is False:

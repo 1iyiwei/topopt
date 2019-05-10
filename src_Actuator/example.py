@@ -22,20 +22,20 @@ if __name__ == "__main__":
     young = 1
     Emin = 1e-9
     poisson = 0.3
-    ext_stiff = 0.01
+    ext_stiff = 0.005
 
     # constraints
     volfrac = 0.3
     move = 0.5
 
     # mesh dimensions
-    nelx = 80*2
-    nely = 40*2
+    nelx = 80
+    nely = 40
 
     # optimizer parameters
     penal = 3.0
     rmin = 1.5
-    filt = 'sensitivity'
+    filt = 'density'
     loopy = 100  # math.inf
     delta = 0.005
 

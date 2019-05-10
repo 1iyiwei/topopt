@@ -124,10 +124,17 @@ class FESolver(object):
 
         return k
 
+
 class CvxFEA(FESolver):
     """
     This parent FEA class is used to assemble the global stiffness matrix while
-    this class solves the FE problem with a Supernodal Sparse Cholesky Factorization.
+    this class solves the FE problem with a Supernodal Sparse Cholesky
+    Factorization.
+
+    Attributes
+    --------
+    verbose : bool
+        False if the FEA should not print updates.
     """
     def __init__(self, verbose=False):
         super().__init__(verbose)
@@ -136,12 +143,7 @@ class CvxFEA(FESolver):
     def displace(self, load, x, ke, kmin, penal):
         """
         FE solver based upon a Supernodal Sparse Cholesky Factorization. It
-        requires the instalation of the cvx module.
-
-        See: Y. Chen, T. A. Davis, W. W. Hager, S. Rajamanickam, "Algorithm
-        887: CHOLMOD, Supernodal Sparse Cholesky Factorization and
-        Update/Downdate", ACM Transactions on Mathematical Software, 35(3),
-        22:1-22:14, 2008.
+        requires the instalation of the cvx module. [1]_
 
         Parameters
         ----------
@@ -160,6 +162,13 @@ class CvxFEA(FESolver):
         -------
         u : 1-D array len(max(edof))
             Displacement of all degrees of freedom
+
+        References
+        ---------
+        .. [1] Y. Chen, T. A. Davis, W. W. Hager, S. Rajamanickam, "Algorithm
+            887: CHOLMOD, Supernodal Sparse Cholesky Factorization and
+            Update/Downdate", ACM Transactions on Mathematical Software, 35(3),
+            22:1-22:14, 2008.
         """
         freedofs = np.array(load.freedofs())
         nely, nelx = x.shape
@@ -185,6 +194,13 @@ class CGFEA(FESolver):
     class solves the FE problem with a sparse solver based upon a
     preconditioned conjugate gradient solver. The preconditioning is based
     upon the inverse of the diagonal of the stiffness matrix.
+
+    Attributes
+    ----------
+    verbose : bool
+        False if the FEA should not print updates.
+    ufree_old : array len(freedofs)
+        Displacement field of previous CG iteration
     """
     def __init__(self, verbose=False):
         super().__init__(verbose)

@@ -1,3 +1,5 @@
+.. _`Global Compliance Minimization Explanation`:
+
 Global Compliance Minimization
 ==============================
 
