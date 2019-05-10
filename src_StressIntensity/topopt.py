@@ -28,15 +28,15 @@ class Topopt(object):
         The loadcase(s) considerd for this optimisation problem.
     fesolver : object, child of the CSCStiffnessMatrix class
         The finite element solver.
-    verbose : bool
+    verbose : bool, optional
         Printing itteration results.
-    x0_loc : str
+    x0_loc : str, optional
         Set initial design with numpy '.npy' file location.
-    history : boolean
+    history : boolean, optional
         Saving a history array or not.
 
-    Atributes
-    -------
+    Attributes
+    ----------
     constraint : object of DensityConstraint class
         The constraints for this optimization problem.
     load : object, child of the Loads class
@@ -169,7 +169,7 @@ class Topopt(object):
         - and finaly updates density distribution (design).
 
         Parameters
-        -------
+        ----------
         penal : float
             Material model penalisation (SIMP).
         rmin : float
@@ -293,7 +293,7 @@ class Topopt(object):
             The filter type that is selected, either 'sensitivity' or 'density'.
 
         Returns
-        ------
+        -------
         xf : 2-D array size(nely, nelx)
             Filterd density distribution.
         """
@@ -339,7 +339,7 @@ class Topopt(object):
             The filter type that is selected, either 'sensitivity' or 'density'.
 
         Returns
-        ------
+        -------
         dkif : 2-D array size(nely, nelx)
             Filterd sensitivity distribution.
         """
@@ -367,18 +367,20 @@ class Topopt(object):
 
     # MMA problem linearisation
     def mma(self, m, n, itr, xval, xmin, xmax, xold1, xold2, f0val, df0dx, fval, dfdx, low, upp, a0, a, c, d):
-        '''
+        """
         This function mmasub performs one MMA-iteration, aimed at solving the
         nonlinear programming problem:
 
-        Minimize  f_0(x) + a_0*z + sum( c_i*y_i + 0.5*d_i*(y_i)^2 )
-            subject to  f_i(x) - a_i*z - y_i <= 0,  i = 1,...,m
+        .. math::
 
-                    xmin_j <= x_j <= xmax_j,        j = 1,...,n
+            \\min & f_0(x) & +  a_0z + \\sum_{i=1}^m \\left(c_iy_i + \\frac{1}{2}d_iy_i^2\\right) \\\\
+            &\\text{s.t. }& f_i(x) - a_iz - y_i \\leq 0  \hspace{1cm} & i \in \{1,2,\dots,m \} \\\\
+            & & x_{\\min} \\geq x_j \geq x_{\\max} & j \in \{1,2,\dots,n \} \\\\
+            & & y_i \leq 0 & i \in \{1,2,\dots,m \} \\\\
+            & & z \\geq 0
 
-                    z >= 0,   y_i >= 0,             i = 1,...,m
         Parameters
-        _______
+        ----------
         m : int
             The number of general constraints.
         n : int
@@ -422,7 +424,7 @@ class Topopt(object):
             Vector with the constants d_i in the terms 0.5*d_i*(y_i)^2.
 
         Returns
-        ------
+        -------
         xmma : 1-D array len(n)
             Column vector with the optimal values of the variables x_j in the
             current MMA subproblem.
@@ -440,7 +442,7 @@ class Topopt(object):
         Department of Mathematics KTH, SE-10044 Stockholm, Sweden.
 
         Translated to python 3 by A.J.J. Lagerweij TU Delft June 2018
-        '''
+        """
 
         epsimin = np.sqrt(m + n)*10**(-9)
         raa0 = 0.00001
@@ -515,16 +517,22 @@ class Topopt(object):
         return xmma, low, upp
 
     def solvemma(self, m, n, epsimin, low, upp, alfa, beta, p0, q0, P, Q, a0, a, b, c, d):
-        '''
-        This function solves the MMA subproblem with a primal-dual Newton
-        method:
+        """
+        This function solves the MMA subproblem with a primal-dual Newton method.
 
-        minimize   SUM[ p0j/(uppj-xj) + q0j/(xj-lowj) ] + a0*z + SUM[ ci*yi +
-        0.5*di*(yi)^2 ],
+        .. math::
 
-        subject to SUM[ pij/(uppj-xj) + qij/(xj-lowj) ] - ai*z - yi <= bi,
-        alfaj <=  xj <=  betaj,  yi >= 0,  z >= 0.
-        '''
+            \\min &\\sum_{j-1}^n& \\left( \\frac{p_{0j}^{(k)}}{U_j^{(k)} - x_j} + \\frac{q_{0j}^{(k)}}{x_j - L_j^{(k)}} \\right) +  a_0z + \\sum_{i=1}^m \\left(c_iy_i + \\frac{1}{2}d_iy_i^2\\right) \\\\
+            &\\text{s.t. }& \\sum_{j-1}^n \\left(\\frac{p_{ij}^{(k)}}{U_j^{(k)} - x_j} + \\frac{q_{ij}^{(k)}}{x_j - L_j^{(k)}} \\right) - a_iz - y_i \\leq b_i \\\\
+            & & \\alpha_j \\geq x_j \geq \\beta_j\\\\
+            & & z \\geq 0
+        
+        Returns
+        -------
+        x : 1-D array len(n)
+            Column vector with the optimal values of the variables x_j in the
+            current MMA subproblem.
+        """
         epsi = 1
         een = np.ones((n))
         eem = np.ones((m))
@@ -704,3 +712,4 @@ class Topopt(object):
                 print('      epsi = ', epsi)
             epsi = 0.1*epsi
         return x
+

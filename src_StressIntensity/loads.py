@@ -42,8 +42,8 @@ class Load(object):
         List of lists with for every cracklength the x end y element locations
         that need to be enriched.
 
-    Atributes
-    -------
+    Attributes
+    ----------
     nelx : int
         Number of elements in x direction.
     nely : int
@@ -74,36 +74,6 @@ class Load(object):
     ext_stiff : float
         Extra stiffness to be added to global stiffness matrix. Due to
         interactions with meganisms outside design domain.
-
-    Methods
-    ------
-    node(elx, ely)
-        Returns the topleft node number of the element.
-    nodes(elx, ely)
-        Returns all nodes of the element.
-    edof(hoe)
-        Generats an array with the possitions af all degrees of freedom that
-        belong to all elements.
-    import_stiffness(elementtype, E, nu)
-        Imports and reads stiffness matrices from .csv file
-    reset_Kij()
-        Bug fix that removes Kij as a global variable.
-    lk(load, E, nu)
-        Generates a list with all element stiffness matrices.
-    force()
-        Returns an 2-D column array, the force vector of the loading condition.
-    kiloc()
-        Returns a 2-D column array, a vector, l, locating the stress intensity
-        node, such that u·l = KI
-    alldofs()
-        Returns a list with all degrees of freedom.
-    fixdofs()
-        Returns a list with indices that are fixed by the boundary conditions.
-    freedofs()
-        Returns a list of arr indices that are not fixede
-    passive()
-        Retuns three lists containing the location and magnitude of fixed
-        density valuese
     """
     def __init__(self, nelx, nely, young, Emin, poisson, ext_stiff, hoe):
         self.nelx = nelx
@@ -174,8 +144,8 @@ class Load(object):
         the global stiffness matrix. This takes the Higher Order Elements in
         account.
 
-        Results
-        ------
+        Returns
+        -------
         edof : 2-D list size(nelx*nely, # degrees of freedom per element)
             The list with all elements and their degree of freedom numbers.
         x_list : 1-D array
@@ -419,7 +389,7 @@ class Load(object):
         density values
 
         Returns
-        ------
+        -------
         elx : 1-D list
             X coordinates of all passive elements, empty for the parrent class.
         ely : 1-D list
@@ -440,17 +410,22 @@ class EdgeCrack(Load):
     the right. Special elements are placed around the crack tip. The plate is
     subjected to a distributed tensile load (σ=1) on the top.
 
-    For a perfectly flat plate analytical expressions for K_I are known. [1]_
+    For a perfectly flat plate analytical expressions for K_I are known. [2]_
 
     The stress intensity factors calculated can be be interperted in two ways:
 
     1. Without schaling. This means that all elements have a size of 2 length units.
-    2. With schaling, comparison to reality should be based upon. ::
+    2. With schaling, comparison to reality should be based upon.
 
-        Kreal = sigma_real * sqrt(real_crack_length) * Ksim/sqrt(2*crack_length)
+       .. math::
+
+          K^{\\text{Real}} = K^{\\text{FEA}}(\\sigma=1) \\sigma^{\\text{Real}} \\sqrt{\\frac{a^{\\text{Real}}}{2a^{\\text{FEA}}}}
+
+       where :math:`a^{\\text{FEA}}` is the cracklength in number of elements.
+
 
     Parameters
-    ---------
+    ----------
     nelx : int
         Number of elements in x direction.
     nely : int
@@ -468,26 +443,16 @@ class EdgeCrack(Load):
         Extra stiffness to be added to global stiffness matrix. Due to
         interactions with meganisms outside design domain.
 
-    Atributes
-    ---------
-    Two attributes are added with respect to the parrent class.
-
+    Attributes
+    ----------
     crack_length : int
         Is the amount of elements that the crack is long.
-    hoe : list len(2)
-        List containing the x end y element locations that need to be enriched.
     hoe_type : list len(2)
         List containing element type for each enriched element.
 
-    Methods
-    -------
-    No methods are added compared to the parrent class. Only the force and
-    fixdof are changed to contain the propper values for the boundary
-    conditions.
-
     References
     ----------
-    .. [1] Tada, H., Paris, P., & Irwin, G. (2000). "Part II 2.10-2.12 The
+    .. [2] Tada, H., Paris, P., & Irwin, G. (2000). "Part II 2.10-2.12 The
         Single Edge Notch Test Specimen", The stress analysis of cracks
         handbook (3rd ed.). New York: ASME Press, pp:52-54.
     """
@@ -523,7 +488,7 @@ class EdgeCrack(Load):
         space (due to symetry) and x-translations at the top (due to the clamps)
 
         Returns
-        ------
+        -------
         fix : 1-D list
             List with all the numbers of fixed degrees of freedom.
         """
@@ -552,7 +517,7 @@ class EdgeCrack(Load):
         density of one.
 
         Returns
-        ------
+        -------
         elx : 1-D list
             X coordinates of all passive elements, empty for the parrent class.
         ely : 1-D list
@@ -581,14 +546,19 @@ class DoubleEdgeCrack(Load):
     propegatestowards the right. Special elements are placed around the crack
     tip. The plate is subjected to a distributed tensile load (σ=1) on the top.
 
-    For a perfectly flat plate analytical expressions for K_I are known. [1]_
+    For a perfectly flat plate analytical expressions for K_I are known. [3]_
 
     The stress intensity factors calculated can be be interperted in two ways:
 
     1. Without schaling. This means that all elements have a size of 2 length units.
-    2. With schaling, comparison to reality should be based upon. ::
+    2. With schaling, comparison to reality should be based upon.
 
-        Kreal = sigma_real * sqrt(real_crack_length) * Ksim/sqrt(2*crack_length)
+       .. math::
+
+           K^{\\text{Real}} = K^{\\text{FEA}}(\\sigma=1) \\sigma^{\\text{Real}} \\sqrt{\\frac{a^{\\text{Real}}}{2a^{\\text{FEA}}}}
+
+       where :math:`a^{\\text{FEA}}` is the cracklength in number of elements.
+
 
     Parameters
     ---------
@@ -605,31 +575,19 @@ class DoubleEdgeCrack(Load):
         Extra stiffness to be added to global stiffness matrix. Due to
         interactions with meganisms outside design domain.
 
-    Atributes
-    ---------
-    Two attributes are added and one was changed with respect to the parrent
-    class.
-
+    Attributes
+    ----------
     nely : int
         Number of y elements, this is now a function of nelx.
     crack_length : int
         Is the amount of elements that the crack is long, this is a function of
         nelx.
-    hoe : list len(2)
-        List containing the x end y element locations that need to be enriched.
     hoe_type : list len(2)
         List containging the type of enriched element.
 
-    Methods
-    -------
-    No methods are added compared to the parrent class. Only the force,
-    fixdof and passive equations are changed to contain the
-    propper values for the boundary conditions and
-    passive elements.
-
     References
     ----------
-    .. [1] Tada, H., Paris, P., & Irwin, G. (2000). "Part II 2.6-2.9a The
+    .. [3] Tada, H., Paris, P., & Irwin, G. (2000). "Part II 2.6-2.9a The
         Double Edge Notch Test Specimen", The stress analysis of cracks handbook
         (3rd ed.). New York: ASME Press, pp:46-51.
     """
@@ -696,7 +654,7 @@ class DoubleEdgeCrack(Load):
         density of one.
 
         Returns
-        ------
+        -------
         elx : 1-D list
             X coordinates of all passive elements, empty for the parrent class.
         ely : 1-D list
@@ -724,13 +682,20 @@ class CompactTension(Load):
     compact tension specimen. The crack is positioned to the bottom left and
     propegatestowards the right. Special elements are placed around the crack
     tip. The plate is subjected to upwards load of one. The design follows the
-    ASTM standard. [1]_
+    ASTM standard. [4]_
 
-    For a perfectly flat plate analytical expressions for K_I do exist. [1]_
-    [2]_
+    For a perfectly flat plate analytical expressions for K_I do exist. [4]_
+    [5]_
 
-    The stress intensity factors calculated is for the case where the element
-    size is the real dimensions times two and a load of 1.
+    The stress intensity factors calculated can be be interperted in two ways:
+    1. Without schaling. This means that all elements have a size of 2 length units.
+    2. With schaling, comparison to reality should be based upon.
+
+       .. math::
+
+          K^{\\text{Real}} = K^{\\text{FEA}}(F=1) F^{\\text{Real}} \\sqrt{\\frac{2W^{\\text{FEA}}}{W^{\\text{Real}}}}
+
+       where :math:`W^{\\text{FEA}}` is the width in number of elements.
 
     Parameters
     ---------
@@ -751,11 +716,8 @@ class CompactTension(Load):
     pas_loc : string
         Location/Name of the .npy file that contains passive background.
 
-    Atributes
-    ---------
-    Two attributes are added and one was changed with respect to the parrent
-    class.
-
+    Attributes
+    ----------
     nely : int
         Number of y elements, this is now a function of nelx.
     crack_length : int
@@ -765,17 +727,11 @@ class CompactTension(Load):
     hoe_type : list len(2)
         List containging the type of enriched element.
 
-    Methods
-    -------
-    No methods are added compared to the parrent class. Only the force and
-    fixdof are changed to contain the propper values for the boundary
-    conditions.
-
     References
     ----------
-    .. [1] ASTM Standard E647-15e1, “Standard Test Method for Measurement of
+    .. [4] ASTM Standard E647-15e1, “Standard Test Method for Measurement of
         Fatigue Crack Growth Rates,” ASTM Book of Standards, vol. 0.30.1, 2015.
-    .. [2] Tada, H., Paris, P., & Irwin, G. (2000). "Part II 2.19-2.21 The
+    .. [5] Tada, H., Paris, P., & Irwin, G. (2000). "Part II 2.19-2.21 The
         Compact Tension Test Specimen", The stress analysis of cracks handbook
         (3rd ed.). New York: ASME Press, pp:61-63.
     """
@@ -795,6 +751,7 @@ class CompactTension(Load):
         and at 0.195 * nely from the top.
 
         Returns
+        -------
         f : 1-D column array length covering all degrees of freedom
             Force vector
         """

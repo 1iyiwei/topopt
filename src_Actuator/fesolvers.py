@@ -225,7 +225,7 @@ class CGFEA(FESolver):
     diagonal of the stiffness matrix.
 
     Recomendations
-    
+
     - Make the tolerance change over the iterations, low accuracy is
       required for first itteration, more accuracy for the later ones.
     - Add more advanced preconditioner.
