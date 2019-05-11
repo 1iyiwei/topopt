@@ -74,7 +74,7 @@ As minimizing the work, due to the traction forces for a given load, minimizes t
     \min_{\Omega^m} \;\;& l(\boldsymbol{u}) \\
     &\begin{array}{llll}
     \text{s.t. :} & a(\boldsymbol{u},\hat{\boldsymbol{u}}) = l(\hat{\boldsymbol{u}}) \\
-    & \int_{\Omega} X(\boldsymbol{x}) \text{d}\Omega \; = \; \text{ Vol}(\Omega^m) \; \leq \; V
+    & \displaystyle\int_{\Omega} X(\boldsymbol{x}) \text{d}\Omega \; = \; \text{ Vol}(\Omega^m) \; \leq \; V
     \end{array}
 
 
