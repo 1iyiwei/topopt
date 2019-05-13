@@ -215,7 +215,7 @@ To reduce computational costs these enriched elements are only used at the crack
 It uses the hanging node method to connect the elements as can be seen in :numref:`Meshing_SIF`.
 
 .. figure:: nstatic/Meshing.svg
-   :width: 80%
+   :width: 60%
    :align: center
    :name: Meshing_SIF
 
@@ -287,13 +287,13 @@ The flowchart of the local compliance algorithm can be found in :numref:`Flowcha
    :align: center
    :name: Flowchart_SIF
 
-   Flowchart for maximum local compliance maximization [7]_.
+   Flowchart for fatigue crack growth rate minimization [7]_.
 
 In the initialization phase the problem is set up.
 It defines the design domain, the loading conditions, the initial design and generates the finite element mesh that will be used in the optimization phase.
 
 The optimization phase is the iterative method that solves the topology problem.
-It will analyze the current design with a FEA. After which it will calculate the sensitivity of the global compliance to the density of each element, this is the local gradient of which the calculation is discussed in :ref:`Sensitivity_and_MMA`.
+It will analyze the current design with a FEA. After which it will calculate the sensitivity of the stress intensity factor to the density of each element, this is the local gradient of which the calculation is discussed in :ref:`Sensitivity_and_MMA`.
 The Method of Moving Asymptotes (MMA), developed by K. Svanberg [9]_, is used to formulate a simplified convex approximation of the problem which is optimized to formulate the updated design.
 These steps are performed in a loop until the design is converged, i.e. when the change in design between two iterations becomes negligible.
 
