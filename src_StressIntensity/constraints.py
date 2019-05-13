@@ -21,11 +21,9 @@ class DensityConstraint(object):
     The class itself is not changed by the itterations.
 
     Parameters
-    ---------
-    nelx : int
-        Number of elements in x direction.
-    nely : int
-        Number of elements in y direction.
+    ----------
+    load : object, child of the Loads class
+        The loadcase(s) considerd for this optimisation problem
     move : float
         Maximum change in density of an element over 1 itteration.
     volume_frac : float
@@ -54,12 +52,12 @@ class DensityConstraint(object):
     density_max : float, optional
         Maximum density, set at 0.0 if not specified.
     """
-    def __init__(self, nelx, nely, move, volume_frac, density_min=0.0, density_max=1.0):
-        self.nelx = nelx
-        self.nely = nely
+    def __init__(self, load, move, volume_frac, density_min=0.0, density_max=1.0):
+        self.nelx = load.nelx
+        self.nely = load.nely
         self.move = move
         self.volume_frac = volume_frac
-        self.volume_derivative = 1/(nelx*nely*volume_frac)*np.ones((1, nely*nelx))
+        self.volume_derivative = 1/(self.nelx*self.nely*volume_frac)*np.ones((1, self.nely*self.nelx))
         self.density_min = density_min
         self.density_max = density_max
 

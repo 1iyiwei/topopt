@@ -80,7 +80,7 @@ class Plot(object):
         if animated is False:
             self.images = []
         x = x.astype(np.float32)
-        plt_im = plt.imshow(x, vmin=0, vmax=1, cmap=plt.cm.gray_r, animated=animated)
+        plt_im = plt.imshow(x, cmap=plt.cm.gray_r, vmin=0, vmax=2, animated=animated)
         self.images.append([plt_im])
 
     def find(self, dof):

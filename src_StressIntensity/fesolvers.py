@@ -78,17 +78,19 @@ class FESolver(object):
         nely, nelx = x.shape
 
         f = load.force()
-        l = load.displaceloc()
+        l = load.kiloc()
 
         f_free = np.hstack((f[freedofs], l[freedofs]))
         k_free = self.gk_freedofs(load, x, ke, kmin, penal)
 
         # solving the system f = Ku with scipy
-        u = np.zeros((load.dim*(nely+1)*(nelx+1), 1))
-        lamba = np.zeros((load.dim*(nely+1)*(nelx+1), 1))
+        num_dof = load.num_dofs
+        u = np.zeros((num_dof, 1))
+        lamba = np.zeros((num_dof, 1))
+
         res = spsolve(k_free, f_free)
-        u[freedofs] = res[:, 0].reshape((len(freedofs), 1))
-        lamba[freedofs] = res[:, 1].reshape((len(freedofs), 1))
+        u[freedofs] = res[:, 0].reshape(len(freedofs), 1)
+        lamba[freedofs] = res[:, 1].reshape(len(freedofs), 1)
 
         return u, lamba
 
@@ -104,15 +106,15 @@ class FESolver(object):
         output an external stiffness is added due to stability reasons.
 
         Parameters
-        --------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considerd for this optimisation problem.
         x : 2-D array size(nely, nelx)
             Current density distribution.
-        ke : 2-D array size(8, 8)
-            Local fully dense stiffnes matrix.
-        kmin : 2-D array size(8, 8)
-            Local stiffness matrix for an empty element.
+        ke : list len(nelx*nely)
+            List with all element stiffness matrixes for full dense material.
+        kmin : list len(nelx*nely)
+            List with all element stiffness matrixes for empty material.
         penal : float
             Material model penalisation (SIMP).
 
@@ -125,19 +127,19 @@ class FESolver(object):
         nelx = load.nelx
         nely = load.nely
 
-        edof, x_list, y_list = load.edof()
-
         #  SIMP - Ee(xe) = Emin + x^p (E-Emin)
-        kd = x.T.reshape(nelx*nely, 1, 1) ** penal  # knockdown factor
-        value_list = ((np.tile(kmin, (nelx*nely, 1, 1)) + np.tile(ke-kmin, (nelx*nely, 1, 1))*kd)).flatten()
+        kd = x.T.reshape(nelx*nely) ** penal  # knockdown factor
+        value_list = [kmini + kdi*(kei - kmini) for kei, kmini, kdi in zip(ke, kmin, kd)]
+        value_list = [item for sublist in value_list for subsublist in sublist for item in subsublist]
+        value_list = np.array(value_list)
 
         # coo_matrix sums duplicated entries and sipmlyies slicing
-        dof = load.dim*(nelx+1)*(nely+1)
-        k = coo_matrix((value_list, (y_list, x_list)), shape=(dof, dof)).tocsc()
+        dof = load.num_dofs
+        k = coo_matrix((value_list, (load.y_list, load.x_list)), shape=(dof, dof)).tocsc()
 
         # adding external spring stiffness to load and actuator locations
         loc_force = np.where(load.force() != 0)[0]
-        loc_actuator = np.where(load.displaceloc() != 0)[0]
+        loc_actuator = np.where(load.kiloc() != 0)[0]
         loc = np.hstack((loc_force, loc_actuator))
         k[loc, loc] += load.ext_stiff*np.ones(len(loc))
 
@@ -199,14 +201,15 @@ class CvxFEA(FESolver):
         nely, nelx = x.shape
 
         f = load.force()
-        l = load.displaceloc()
+        l = load.kiloc()
         B_free = cvxopt.matrix(np.hstack((f[freedofs], l[freedofs])))
 
         k_free = self.gk_freedofs(load, x, ke, kmin, penal).tocoo()
         k_free = cvxopt.spmatrix(k_free.data, k_free.row, k_free.col)
 
-        u = np.zeros((load.dim*(nely+1)*(nelx+1), 1))
-        lamba = np.zeros((load.dim*(nely+1)*(nelx+1), 1))
+        num_dof = load.num_dofs
+        u = np.zeros((num_dof, 1))
+        lamba = np.zeros((num_dof, 1))
 
         # setting up a fast cholesky decompositon solver
         cvxopt.cholmod.linsolve(k_free, B_free)
@@ -275,20 +278,21 @@ class CGFEA(FESolver):
         """
         freedofs = np.array(load.freedofs())
         nely, nelx = x.shape
+        num_dof = load.num_dofs
 
         f_free = load.force()[freedofs]
-        l_free = load.displaceloc()[freedofs]
+        l_free = load.kiloc()[freedofs]
         k_free = self.gk_freedofs(load, x, ke, kmin, penal)
 
         # Preconditioning
         L = diags(1/k_free.diagonal())
 
         # solving the system f = Ku with a cg implementation
-        u = np.zeros((load.dim*(nely+1)*(nelx+1), 1))
+        u = np.zeros((num_dof, 1))
         u[freedofs, 0], info1 = cg(k_free, f_free, x0=self.ufree_old, tol=1e-5, M=L)
 
         # solving adjoint problem l = Klamba with cg
-        lamba = np.zeros((load.dim*(nely+1)*(nelx+1), 1))
+        lamba = np.zeros((num_dof, 1))
         lamba[freedofs, 0], info2 = cg(k_free, l_free, x0=self.lambafree_old, tol=1e-5, M=L)
 
         # update uold
