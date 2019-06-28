@@ -89,7 +89,7 @@ html_theme = 'default'
 html_static_path = ['nstatic/']
 
 def setup(app):
-   app.add_css_file("nstatic/stylesheet.css")
+   app.add_css_file("stylesheet.css")
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
