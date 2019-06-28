@@ -353,7 +353,7 @@ class Canti(Load):
         """
         f = super().force()
         n1, n2, n3, n4 = self.nodes(self.nelx-1, int(self.nely/2))
-        f[self.dim*n2+1] = -1
+        f[self.dim*n2] = -1
         return f
 
     def fixdofs(self):

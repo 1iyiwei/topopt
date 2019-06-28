@@ -37,12 +37,12 @@ if __name__ == "__main__":
     penal = 3.0
     rmin = 3
     filt = 'sensitivity'
-    loopy = 1000  # math.inf
+    loopy = 1  # math.inf
     delta = 0.005
 
     # plotting and printing options
     verbose = True
-    plotting = True
+    plotting = False
     save_plot = False
     history = False
 
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     print('Elapsed time is: ', time.time() - t, 'seconds.')
 
     # plotting
-    pl = Plot(load, title='Cantilever beam example 1600x300 elementen')
+    pl = Plot(load, title='Cantilever beam example 200x50 elementen')
     pl.boundary(load)
     pl.loading(load)
 

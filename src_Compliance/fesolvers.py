@@ -22,6 +22,8 @@ from scipy.sparse.linalg import spsolve
 from scipy.sparse.linalg import cg
 from scipy.sparse import diags
 
+import matplotlib.pyplot as plt
+
 
 class FESolver(object):
     """
@@ -185,6 +187,14 @@ class CvxFEA(FESolver):
         cvxopt.cholmod.linsolve(k_free, B_free)
         u[freedofs] = np.array(B_free)[:, 0]
 
+        ux = u[0::2].reshape((201, 51)).T
+        uy = u[1::2].reshape((201, 51)).T
+
+        plt.imshow(ux)
+        plt.title('x displacement')
+        plt.colorbar()
+        plt.show()
+        
         return u
 
 
