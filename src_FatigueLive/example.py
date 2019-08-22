@@ -12,9 +12,9 @@ import time
 import math
 import numpy as np
 
-from loads import EdgeCrack, DoubleEdgeCrack, CompactTension
+from loads import EdgeCrack, CompactTension
 from constraints import DensityConstraint
-from fesolvers import CvxFEA, SciPyFEA, CGFEA
+from fesolvers import FESolver, CvxFEA, CGFEA
 from topopt import Topopt
 from plotting import Plot
 
@@ -33,16 +33,16 @@ if __name__ == "__main__":
     move = 0.25
 
     # mesh dimensions
-    nelx = 500
+    nelx = 100
 #    nely = 100
-    crack_length = np.arange(220, 261, 2)
+    crack_length = np.arange(50, 53, 2)
     weights = np.ones(np.shape(crack_length[:-1]))
 
     # optimization parameters
     penal = 1.0
     rmin = 0.9
     filt = 'density'
-    loopy = 5000  # math.inf
+    loopy = 2  # math.inf
     delta = 0.001
 
     # plotting and printing options
@@ -58,14 +58,14 @@ if __name__ == "__main__":
     load = CompactTension(nelx, crack_length, young, Emin, poisson, ext_stiff)
 
     # constraints object created
-    den_con = DensityConstraint(load, move, volume_frac=volfrac, density_min=1, density_max=2)
+    den_con = DensityConstraint(load.nelx, load.nely, move, volume_frac=volfrac, density_min=1, density_max=2)
 
     # FEA object is generated, other solvers can be selected and created
     fesolver = CvxFEA(verbose=verbose)
 
     # create optimizer object and initialise the problem
-    optimizer = Topopt(den_con, load, fesolver, weights, C, m, verbose=verbose, x0_loc='x.npy')
-    print('start')
+    optimizer = Topopt(den_con, load, fesolver, weights, C, m, verbose=verbose)
+
     # compute
     t = time.time()
     x, x_history, ki = optimizer.layout(penal, rmin, delta, loopy, filt, history)
