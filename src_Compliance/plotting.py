@@ -150,7 +150,7 @@ class Plot(object):
         if len(self.images) == 1:
             self.fig.savefig(filename+'.svg')
         else:
-            writer = anim.FFMpegWriter(fps=30, extra_args=['-c:v', 'h264_nvenc'])
+            writer = anim.FFMpegWriter(fps=30, codec='h264')
             animation = anim.ArtistAnimation(self.fig, self.images, interval=1, blit=True, repeat=False)
             animation.save(filename+'.mp4', writer=writer)
 
@@ -184,9 +184,9 @@ class FasterFFMpegWriter(anim.FFMpegWriter):
             self.fig.set_dpi(self.dpi)
             # Draw and save the frame as an argb string to the pipe sink
             self.fig.canvas.draw()
-            self._frame_sink().write(self.fig.canvas.tostring_argb()) 
+            self._frame_sink().write(self.fig.canvas.tostring_argb())
         except (RuntimeError, IOError) as e:
             out, err = self._proc.communicate()
             raise IOError('Error saving animation to file (cause: {0}) '
                       'Stdout: {1} StdError: {2}. It may help to re-run '
-                      'with --verbose-debug.'.format(e, out, err)) 
+                      'with --verbose-debug.'.format(e, out, err))
