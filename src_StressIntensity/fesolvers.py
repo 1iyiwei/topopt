@@ -139,9 +139,9 @@ class FESolver(object):
 
         # adding external spring stiffness to load and actuator locations
         loc_force = np.where(load.force() != 0)[0]
-        loc_actuator = np.where(load.kiloc() != 0)[0]
-        loc = np.hstack((loc_force, loc_actuator))
-        k[loc, loc] += load.ext_stiff*np.ones(len(loc))
+        loc_ki = np.where(load.kiloc() != 0)[0]
+        k[loc_force, loc_force] = load.ext_stiff + np.float64(k[loc_force, loc_force])
+        k[loc_ki, loc_ki] = load.ext_stiff + np.float64(k[loc_ki, loc_ki])
 
         # selecting only the free directions of the siffness matirx
         k = k[freedofs, :][:, freedofs]
