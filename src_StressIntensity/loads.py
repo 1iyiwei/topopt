@@ -79,7 +79,7 @@ class Load(object):
         self.nelx = nelx
         self.nely = nely
         self.dim = 2
-        self.edof, self.x_list, self.y_list, self.num_dofs = self.edof(hoe)
+        self.edof, self.x_list, self.y_list, self.num_dofs = self.edofcalc(hoe)
         self.young = young
         self.Emin = Emin
         self.poisson = poisson
@@ -138,7 +138,7 @@ class Load(object):
         return n0, n1, n2, n3
 
     # edof that returns an array
-    def edof(self, hoe):
+    def edofcalc(self, hoe):
         """
         Generates an array with the position of the nodes of each element in
         the global stiffness matrix. This takes the Higher Order Elements in
