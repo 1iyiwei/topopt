@@ -5,6 +5,10 @@ Documentation for TopOpt in Python
 Introduction
 ============
 
+.. raw:: latex
+
+   \chapter{About}
+
 .. toctree::
    :caption: About
    :maxdepth: 2
@@ -15,6 +19,10 @@ Introduction
    Code
    License_Link
 
+.. raw:: latex
+
+   \chapter{Theory and Examples}
+
 .. toctree::
    :caption: Theory and Examples
    :maxdepth: 2
@@ -24,6 +32,11 @@ Introduction
    Stress_Intensity
    Fatigue_Life
 
+.. raw:: latex
+
+   \chapter{Docstrings}
+
+
 .. toctree::
    :caption: Docstrings
    :maxdepth: 2
@@ -32,7 +45,7 @@ Introduction
    Compliance_Docs
    Stress_Intensity_Docs
    Fatigue_Life_Docs
-   
+
 
 Indices and Tables
 ==================
