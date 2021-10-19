@@ -43,7 +43,7 @@ class FESolver(object):
         False if the FEA should not print updates
 
     Attributes
-    --------
+    ----------
     verbose : bool
         False if the FEA should not print updates.
     """
@@ -56,7 +56,7 @@ class FESolver(object):
         FE solver based upon the sparse SciPy solver that uses umfpack.
 
         Parameters
-        -------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considered for this optimisation problem.
         x : 2-D array size(nely, nelx)
@@ -105,7 +105,7 @@ class FESolver(object):
         output an external stiffness is added due to stability reasons.
 
         Parameters
-        --------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considered for this optimisation problem.
         x : 2-D array size(nely, nelx)
@@ -170,7 +170,7 @@ class CvxFEA(FESolver):
         equilibrium and adjoint problems. [1]_
 
         Parameters
-        -------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considerd for this optimisation problem.
         x : 2-D array size(nely, nelx)
@@ -225,7 +225,7 @@ class CGFEA(FESolver):
     diagonal of the stiffness matrix.
 
     Recommendations
-    ---------------
+
     - Make the tolerance change over the iterations, low accuracy is
       required for first iteration, more accuracy for the later ones.
     - Add more advanced preconditioned.
@@ -255,7 +255,7 @@ class CGFEA(FESolver):
         adjoint problems.
 
         Parameters
-        -------
+        ----------
         load : object, child of the Loads class
             The loadcase(s) considered for this optimisation problem.
         x : 2-D array size(nely, nelx)
