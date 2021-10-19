@@ -323,13 +323,16 @@ html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(
     border-color: var(--admonition-note-title-background-color);
 }
 
+html.writer-html4 .rst-content dl:not(.docutils) .descclassname,
+html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.simple) .descclassname {
+    color: var(--highlight-type2-color)
+}
+
 /* Give colors to the class, function, method and attribute names */
 html.writer-html4 .rst-content dl:not(.docutils) dl:not(.field-list) > dt,
 html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.simple) dl:not(.field-list) > dt,
-html.writer-html4 .rst-content dl:not(.docutils) .descclassname,
 html.writer-html4 .rst-content dl:not(.docutils) .descname,
 html.writer-html4 .rst-content dl:not(.docutils) .sig-name,
-html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.simple) .descclassname,
 html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.simple) .descname,
 html.writer-html5 .rst-content dl[class]:not(.option-list):not(.field-list):not(.footnote):not(.glossary):not(.simple) .sig-name {
     color: var(--highlight-function-color);
