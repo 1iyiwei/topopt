@@ -1,5 +1,5 @@
 """
-This file containts the Load class that allows the generation of an object that
+This file contains the Load class that allows the generation of an object that
 contains geometric, mesh, loads and boundary conditions that belong to the
 load case. This version of the code is meant for the fatigue live maximization.
 
@@ -15,8 +15,8 @@ import csv
 class Load(object):
     """
     Load parent class that contains the basic functions used in all load cases.
-    This class and its children do cantain information about the load case
-    conciderd in the optimisation. The load case consists of the mesh, the
+    This class and its children do contain information about the load case
+    considered in the optimisation. The load case consists of the mesh, the
     loads, and the boundaries conditions. The class is constructed such that
     new load cases can be generated simply by adding a child and changing the
     function related to the geometry, loads and boundaries.
@@ -28,15 +28,15 @@ class Load(object):
     nely : int
         Number of elements in y direction.
     young : float
-        Youngs modulus of the materias.
+        Young's modulus of the materials.
     Emin : float
-        Artifical Youngs modulus of the material to ensure a stable FEA.
+        Artificial Young's modulus of the material to ensure a stable FEA.
         It is used in the SIMP based material model.
     poisson : float
         Poisson ration of the material.    
     ext_stiff : float
         Extra stiffness to be added to global stiffness matrix. Due to
-        interactions with meganisms outside design domain.
+        interactions with mechanisms outside design domain.
     hoe : dict
         Dictionary with for every cracklength the x end y element locations
         that need to be enriched.
@@ -48,22 +48,22 @@ class Load(object):
     nely : int
         Number of elements in y direction.
     dim : int
-        Amount of dimensions conciderd in the problem, set at 2.
+        Amount of dimensions considered in the problem, set at 2.
     edof : dict
         Dictionary containing list with all elements and their degree of
-        freedom numbers for all crack_lengtgs, str(length) is the key.
+        freedom numbers for all crack_lengths, str(length) is the key.
     x_list : dict
         Dictionary with a 1D list that contains the x indices of all degrees of
-        freedom for all cracklengths, str(length) is the key.
+        freedom for all crack lengths, str(length) is the key.
     y_list : dict
         Dictionary with a 1D list that contains the y indices of all degrees of
-        freedom for all cracklengths, str(length) is the key.
+        freedom for all crack lengths, str(length) is the key.
     num_dofs : int
         Amount of degrees of freedom.
     young : float
-        Youngs modulus of the materias.
+        Young's modulus of the materials.
     Emin : float
-        Artifical Youngs modulus of the material to ensure a stable FEA.
+        Artificial Young's modulus of the material to ensure a stable FEA.
         It is used in the SIMP based material model.
     poisson : float
         Poisson ration of the material.
@@ -73,11 +73,11 @@ class Load(object):
         elements, str(length) is the key.
     kmin_list : list len(nelx*nely)
         Dictionary containing a list for every crack length, these lists
-        contain the epmy element stiffness matrices for all elements,
+        contain the empty element stiffness matrices for all elements,
         str(length) is the key.
     ext_stiff : float
         Extra stiffness to be added to global stiffness matrix. Due to
-        interactions with meganisms outside design domain.
+        interactions with mechanisms outside design domain.
     """
     def __init__(self, nelx, nely, young, Emin, poisson, ext_stiff, hoe):
         self.nelx = nelx
@@ -112,9 +112,9 @@ class Load(object):
         Parameters
         ---------
         elx : int
-            X position of the conciderd element.
+            X position of the considered element.
         ely : int
-            Y position of the conciderd element.
+            Y position of the considered element.
 
         Returns
         -------
@@ -132,9 +132,9 @@ class Load(object):
         Parameters
         ---------
         elx : int
-            X position of the conciderd element.
+            X position of the considered element.
         ely : int
-            Y position of the conciderd element.
+            Y position of the considered element.
 
         Returns
         -------
@@ -171,11 +171,11 @@ class Load(object):
         edof : 2-D list size(nelx*nely, # degrees of freedom per element)
             The list with all elements and their degree of freedom numbers.
         x_list : 1-D array
-            The list with the x indices of all ellements to be inserted into
-            the global stiffniss matrix.
+            The list with the x indices of all elements to be inserted into
+            the global stiffness matrix.
         y_list : 1-D array
-            The list with the y indices of all ellements to be inserted into
-            the global stiffniss matrix.
+            The list with the y indices of all elements to be inserted into
+            the global stiffness matrix.
         num_dofs : int
             The amount of degrees of freedom.
         """
@@ -244,7 +244,7 @@ class Load(object):
 
         return edof, np.array(x_list), np.array(y_list), num_dofs
 
-    # Importing the stiffness matrixes
+    # Importing the stiffness matrices
     def import_stiffness(self, elementtype, E, nu):
         """
         This function imports a matrix from a csv file that has variables to
@@ -255,9 +255,9 @@ class Load(object):
         elementtype : str
             Describes what .csv file should be used for the import.
         E : float
-            Youngs modulus of the material.
+            Young's modulus of the material.
         nu : float
-            Poissons ratio of the material.
+            Poisson's ratio of the material.
 
         Returns
         -------
@@ -286,24 +286,24 @@ class Load(object):
     # reset global Kij, fixes bug with exec??
     def reset_Kij(self):
         """
-        Resets the global variable Kij. This is neccesary as function
+        Resets the global variable Kij. This is necessary as function
         import_stiffness will not clean up its local variables itself.
         """
         global Kij
         del Kij
 
-    # list with all local stiffeness matrix of every element
+    # list with all local stiffness matrix of every element
     def lk(self, E, nu, hoe):
         """
-        Generates a list with all element stiffness matrices. It differenciates
+        Generates a list with all element stiffness matrices. It differentiates
         between the element types used.
 
         Parameters
         ----------
         E : float
-            Youngs modulus of the material.
+            Young's modulus of the material.
         nu : float
-            Poissons ratio of the material.
+            Poisson's ratio of the material.
 
         Returns
         -------
@@ -347,7 +347,7 @@ class Load(object):
         Returns
         -------
         f : 1-D column array length covering all degrees of freedom
-            Empy force vector.
+            Empty force vector.
         """
         return np.zeros((self.num_dofs, 1))
 
@@ -391,7 +391,7 @@ class Load(object):
         -------
         fix : 1-D list
             List with all the numbers of fixed degrees of freedom. This list is
-            empty in this parrent class.
+            empty in this parent class.
         """
         return []
 
@@ -407,25 +407,25 @@ class Load(object):
         Returns
         -------
         free : 1-D list
-            List containing all elemens of alldogs except those that appear in
-            the freedofs list.
+            List containing all elements of all dofs except those that appear in
+            the freedos list.
         """
         return list(set(self.alldofs()) - set(self.fixdofs(length_i)))
 
     def passive(self):
         """
-        Retuns three lists containing the location and magnitude of fixed
+        Returns three lists containing the location and magnitude of fixed
         density values
 
 
         Returns
         -------
         elx : 1-D list
-            X coordinates of all passive elements, empty for the parrent class.
+            X coordinates of all passive elements, empty for the parent class.
         ely : 1-D list
-            Y ccordinates of all passive elements, empty for the parrent class.
+            Y coordinates of all passive elements, empty for the parent class.
         values : 1-D list
-            Density values of all passive elements, empty for the parrent class.
+            Density values of all passive elements, empty for the parent class.
         fix_ele : 1-D list
             List with all element numbers that are allowed to change.
         """
@@ -435,8 +435,8 @@ class Load(object):
 # example loading scenario, inverter with horizontal mirror axis
 class EdgeCrack(Load):
     """
-    This child class of Load class represents the symetric top half of an edge
-    crack. The crack is positioned to the bottom left and propegates towards
+    This child class of Load class represents the symmetric top half of an edge
+    crack. The crack is positioned to the bottom left and propagates towards
     the right. Special elements are placed around the crack tip. The plate is
     subjected to a distributed tensile load (:math:`\\sigma=1`) on the top.
 
@@ -444,8 +444,8 @@ class EdgeCrack(Load):
 
     The stress intensity factors calculated can be be interperted in two ways:
 
-    1. Without schaling. This means that all elements have a size of 2 length units.
-    2. With schaling, comparison to reality should be based upon.
+    1. Without scaling. This means that all elements have a size of 2 length units.
+    2. With scaling, comparison to reality should be based upon.
 
        .. math::
 
@@ -458,17 +458,17 @@ class EdgeCrack(Load):
     nelx : int
         Number of elements in x direction.
     crack_length : array
-        An array containing all crack lengths conciderd.
+        An array containing all crack lengths considered.
     young : float
-        Youngs modulus of the materias.
+        Young's modulus of the materials.
     Emin : float
-        Artifical Youngs modulus of the material to ensure a stable FEA.
+        Artificial Young's modulus of the material to ensure a stable FEA.
         It is used in the SIMP based material model.
     poisson : float
         Poisson ration of the material.
     ext_stiff : float
         Extra stiffness to be added to global stiffness matrix. Due to
-        interactions with meganisms outside design domain.
+        interactions with mechanisms outside design domain.
 
     Attributes
     ----------
@@ -522,7 +522,7 @@ class EdgeCrack(Load):
 
     def fixdofs(self, length_i):
         """
-        The boundary conditions limmit y-translation at the bottom of the design
+        The boundary conditions limit y-translation at the bottom of the design
         space (due to symetry) and x-translations at the top (due to the clamps)
 
         Parameters
@@ -558,18 +558,18 @@ class EdgeCrack(Load):
 
     def passive(self):
         """
-        Retuns three lists containing the location and magnitude of fixed
+        Returns three lists containing the location and magnitude of fixed
         density values. The elements around the crack tip are fixed at a
         density of one.
 
         Returns
         -------
         elx : 1-D list
-            X coordinates of all passive elements, empty for the parrent class.
+            X coordinates of all passive elements, empty for the parent class.
         ely : 1-D list
-            Y ccordinates of all passive elements, empty for the parrent class.
+            Y coordinates of all passive elements, empty for the parent class.
         values : 1-D list
-            Density values of all passive elements, empty for the parrent class.
+            Density values of all passive elements, empty for the parent class.
         fix_ele : 1-D list
             List with all element numbers that are allowed to change.
         """
@@ -587,17 +587,17 @@ class EdgeCrack(Load):
 
 class CompactTension(Load):
     """
-    This child class of Load class represents the symetric top half of an
+    This child class of Load class represents the symmetric top half of an
     compact tension specimen. The crack is positioned to the bottom left and
-    propegatestowards the right. Special elements are placed around the crack
+    propagates towards the right. Special elements are placed around the crack
     tip. The plate is subjected to upwards load of one. The design follows the
     ASTM standard. [3]_
 
     For a perfectly flat plate analytical expressions for K_I do exist. [4]_
 
-    The stress intensity factors calculated can be be interperted in two ways:
-    1. Without schaling. This means that all elements have a size of 2 length units.
-    2. With schaling, comparison to reality should be based upon.
+    The stress intensity factors calculated can be be interpreted in two ways:
+    1. Without scaling. This means that all elements have a size of 2 length units.
+    2. With scaling, comparison to reality should be based upon.
 
        .. math::
 
@@ -606,28 +606,28 @@ class CompactTension(Load):
        where :math:`W^{\\text{FEA}}` is the width in number of elements.
 
     Parameters
-    ---------
+    ----------
     nelx : int
         Number of elements in x direction.
     crack_length : array
-        An array containing all crack lengths conciderd.
+        An array containing all crack lengths considered.
     young : float
-        Youngs modulus of the materias.
+        Young's modulus of the materials.
     Emin : float
-        Artifical Youngs modulus of the material to ensure a stable FEA.
+        Artificial Young's modulus of the material to ensure a stable FEA.
         It is used in the SIMP based material model.
     poisson : float
         Poisson ration of the material.
     ext_stiff : float
         Extra stiffness to be added to global stiffness matrix. Due to
-        interactions with meganisms outside design domain.
+        interactions with mechanisms outside design domain.
 
-    Atributes
-    ---------
+    Attributes
+    ----------
     nely : int
         Number of y elements, this is now a function of nelx.
     crack_length : array
-        Is for all cracks conciderd the crack_length.
+        Is for all cracks considered the crack_length.
 
     References
     ----------
@@ -675,7 +675,7 @@ class CompactTension(Load):
 
     def fixdofs(self, length_i):
         """
-        The bottom of the design space is fixed in y direction (due to symetry
+        The bottom of the design space is fixed in y direction (due to symmetry
         around the x axis). While at the location that the load is introduced
         x translations are constraint.
 
@@ -711,18 +711,18 @@ class CompactTension(Load):
 
     def passive(self):
         """
-        Retuns three lists containing the location and magnitude of fixed
+        Returns three lists containing the location and magnitude of fixed
         density values. The elements around the crack tip are fixed at a
         density of one.
 
         Returns
         -------
         elx : 1-D list
-            X coordinates of all passive elements, empty for the parrent class.
+            X coordinates of all passive elements, empty for the parent class.
         ely : 1-D list
-            Y ccordinates of all passive elements, empty for the parrent class.
+            Y coordinates of all passive elements, empty for the parent class.
         values : 1-D list
-            Density values of all passive elements, empty for the parrent class.
+            Density values of all passive elements, empty for the parent class.
         fix_ele : 1-D list
             List with all element numbers that are allowed to change.
         """
