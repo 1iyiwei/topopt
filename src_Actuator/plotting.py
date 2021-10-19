@@ -1,5 +1,5 @@
 """
-Plotting the simulated TopOpt geometry with boundery conditions and loads.
+Plotting the simulated TopOpt geometry with boundary conditions and loads.
 
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft
@@ -13,13 +13,13 @@ import numpy as np
 class Plot(object):
     """
     This class contains functions that allows the visualisation of the TopOpt
-    algorithem. It can print the density distribution, the boundary conditions
+    algorithm. It can print the density distribution, the boundary conditions
     and the forces.
 
     Parameters
     ----------
     load : object, child of the Loads class
-        The loadcase(s) considerd for this optimisation problem.
+        The loadcase(s) considered for this optimisation problem.
     title : str
         Title of the plot if required.
 
@@ -62,7 +62,7 @@ class Plot(object):
         x : 2-D array size(nely, nelx)
             The density distribution.
         animated : bool, optional
-            An animated figure is genereted when history = True.
+            An animated figure is generated when history = True.
         """
         if animated is False:
             self.images = []
@@ -78,7 +78,7 @@ class Plot(object):
         Parameters
         ----------
         load : object, child of the Loads class
-            The loadcase(s) considerd for this optimisation problem.
+            The loadcase(s) considered for this optimisation problem.
         """
         wedgepropsH = dict(arrowstyle="wedge, tail_width=1.", color='g')
         wedgepropsV = dict(arrowstyle="wedge, tail_width=1.", color='b')
@@ -107,7 +107,7 @@ class Plot(object):
         Parameters
         ----------
         load : object, child of the Loads class
-            The loadcase(s) considerd for this optimisation problem.
+            The loadcase(s) considered for this optimisation problem.
         """
         arrowprops = dict(arrowstyle="simple",fc="r", ec="r", mutation_scale=20)
 
@@ -143,7 +143,7 @@ class Plot(object):
         Parameters
         ----------
         filename : str
-            Name of the file, excluding the file exstension.
+            Name of the file, excluding the file extension.
         fps : int, optional
             Amount of frames per second if the plots are animations.
         """

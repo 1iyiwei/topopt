@@ -1,5 +1,5 @@
 """
-This file containts the Load class that allows the generation of an object that
+This file contains the Load class that allows the generation of an object that
 contains geometric, mesh, loads and boundary conditions that belong to the
 load case. This version of the code is meant for local compliant maximization.
 

@@ -1,5 +1,5 @@
 """
-Topology Optimization class that handles the itterations, objective functions,
+Topology Optimization class that handles the iterations, objective functions,
 filters and update scheme. It requires to call upon a constraint, load case and
 FE solver classes. This version of the code is meant for local compliant
 maximization (Actuator design).
@@ -25,7 +25,7 @@ class Topopt(object):
     constraint : object of DensityConstraint class
         The constraints for this optimization problem.
     load : object, child of the Loads class
-        The loadcase(s) considerd for this optimisation problem.
+        The loadcase(s) considered for this optimisation problem.
     fesolver : object, child of the CSCStiffnessMatrix class
         The finite element solver.
     verbose : bool, optional
@@ -36,25 +36,25 @@ class Topopt(object):
     constraint : object of DensityConstraint class
         The constraints for this optimization problem.
     load : object, child of the Loads class
-        The loadcase(s) considerd for this optimisation problem.
+        The loadcase(s) considered for this optimisation problem.
     fesolver : object, child of the CSCStiffnessMatrix class
         The finite element solver.
     verbose : bool
-        Printing itteration results.
+        Printing iteration results.
     itr : int
         Number of iterations performed
     x : 2-D array size(nely, nelx)
         Array containing the current densities of every element.
     xold1 : 1D array len(nelx*nely)
-        Flattend density distribution one iteration ago.
+        Flattened density distribution one iteration ago.
     xold2 : 1D array len(nelx*nely)
-        Flattend density distribution two iteration ago.
+        Flattened density distribution two iteration ago.
     low : 1D array len(nelx*nely)
         Column vector with the lower asymptotes, calculated and used in the
-        MMA subproblem of the previous itteration.
+        MMA subproblem of the previous iteration.
     upp : 1D array len(nelx*nely)
         Column vector with the lower asymptotes, calculated and used in the
-        MMA subproblem of the previous itteration.
+        MMA subproblem of the previous iteration.
     """
     def __init__(self, constraint, load, fesolver, verbose=False):
         self.constraint = constraint
@@ -98,8 +98,8 @@ class Topopt(object):
         -------
         xf : array size(nely, nelx)
             Density distribution resulting from the optimisation.
-        xf_history : list of arrays len(itterations size(nely, nelx))
-            List with the density distributions of all itterations, None when
+        xf_history : list of arrays len(iterations size(nely, nelx))
+            List with the density distributions of all iterations, None when
             history != True.
         """
         # check if an existing filter was selected
@@ -122,7 +122,7 @@ class Topopt(object):
                 xf = self.densityfilt(rmin, filt)
                 xf_history.append(xf.astype(np.float16))
 
-        # the filtered density is the physical desity
+        # the filtered density is the physical density
         xf = self.densityfilt(rmin, filt)
 
         if history:
@@ -133,17 +133,17 @@ class Topopt(object):
     # iteration
     def iter(self, penal, rmin, filt):
         """
-        This funcion performs one itteration of the topology optimisation
+        This function performs one iteration of the topology optimisation
         problem. It
 
         - loads the constraints,
         - calculates the stiffness matrices,
         - executes the density filter,
         - executes the FEA solver,
-        - calls upon the displacment objective and its sensitivity calculation,
+        - calls upon the displacement objective and its sensitivity calculation,
         - executes the sensitivity filter,
         - executes the MMA update scheme,
-        - and finaly updates density distribution (design).
+        - and finally updates density distribution (design).
 
         Parameters
         ----------
@@ -165,7 +165,7 @@ class Topopt(object):
         constraint = self.constraint
         load = self.load
 
-        # element stiffnes matrices
+        # element stiffness matrices
         ke = load.lk(load.young, load.poisson)
         kmin = load.lk(load.Emin, load.poisson)
 
@@ -178,10 +178,10 @@ class Topopt(object):
         # displacement and its derivative
         uout, duout = self.disp(xf, u, lamba, ke, penal)
 
-        # applying the sensitvity filter if required
+        # applying the sensitivity filter if required
         duoutf = self.sensitivityfilt(xf, rmin, duout, filt)
 
-        # Prepairing MMA update scheme
+        # Preparing MMA update scheme
         m = 1  # amount of constraint functions
         n = len(self.ele_free)  # load.nelx*load.nely  # amount of elements
         x = np.copy(self.x).flatten()[self.ele_free]
@@ -211,13 +211,13 @@ class Topopt(object):
     # updated compliance algorithm
     def disp(self, x, u, lamba, ke, penal):
         """
-        This fuction calculates displacement of the objective node and its
+        This function calculates displacement of the objective node and its
         sensitivity to the densities.
 
         Parameters
         ----------
         x : 2-D array size(nely, nelx)
-            Possibly filterd density distribution.
+            Possibly filtered density distribution.
         u : 1-D array size(max(edof), 1)
             Displacement of all degrees of freedom.
         lamba : 2-D array size(max(edof), 1)
@@ -234,13 +234,13 @@ class Topopt(object):
             Displacement objective sensitivity to density changes.
         """
         nely, nelx = x.shape
-        xe = x.T.flatten()  # flat list wich desities
+        xe = x.T.flatten()  # flat list with densities
 
         edof = self.load.edof()[0]
         ue = u[edof]  # list with the displacements of the nodes of that element
-        lamba = lamba[edof] # list with lamda result for each node of every element
+        lamba = lamba[edof] # list with lambda result for each node of every element
 
-        # calculate displacment at actuator tip
+        # calculate displacement at actuator tip
         l = self.load.displaceloc()
         uout = np.dot(l.T, u)[0, 0]
 

@@ -1,6 +1,6 @@
 """
 Finite element solvers for the displacement from stiffness matrix, force and
-adjoint vector. This version of the code is meant for local compliant
+adjoin vector. This version of the code is meant for local compliant
 maximization.
 
 Bram Lagerweij
@@ -28,13 +28,13 @@ from scipy.sparse import diags
 class FESolver(object):
     """
     This parent FEA class can only assemble the global stiffness matrix and
-    exclude all fixed degrees of freedom from it. This stiffenss csc-sparse
-    stiffness matrix is assebled in the gk_freedof method. This
+    exclude all fixed degrees of freedom from it. This stiffness csc-sparse
+    stiffness matrix is assembled in the gk_freedof method. This
     class solves the FE problem with a sparse LU-solver based upon umfpack.
     This solver is slow and inefficient. It is however more robust.
 
     For this local compliance (actuator) maximization this solver solves two
-    problems, the equalibrum and the adjoint problem which will be
+    problems, the equilibrium and the adjoint problem which will be
     required to compute the gradients.
 
     Parameters
@@ -58,11 +58,11 @@ class FESolver(object):
         Parameters
         -------
         load : object, child of the Loads class
-            The loadcase(s) considerd for this optimisation problem.
+            The loadcase(s) considered for this optimisation problem.
         x : 2-D array size(nely, nelx)
             Current density distribution.
         ke : 2-D array size(8, 8)
-            Local fully dense stiffnes matrix.
+            Local fully dense stiffness matrix.
         kmin : 2-D array size(8, 8)
             Local stiffness matrix for an empty element.
         penal : float
@@ -99,7 +99,7 @@ class FESolver(object):
         Generates the global stiffness matrix with deleted fixed degrees of
         freedom. It generates a list with stiffness values and their x and y
         indices in the global stiffness matrix. Some combination of x and y
-        appear multiple times as the degree of freedom might apear in multiple
+        appear multiple times as the degree of freedom might appear in multiple
         elements of the FEA. The SciPy coo_matrix function adds them up at the
         background. At the location of the force introduction and displacement
         output an external stiffness is added due to stability reasons.
@@ -107,11 +107,11 @@ class FESolver(object):
         Parameters
         --------
         load : object, child of the Loads class
-            The loadcase(s) considerd for this optimisation problem.
+            The loadcase(s) considered for this optimisation problem.
         x : 2-D array size(nely, nelx)
             Current density distribution.
         ke : 2-D array size(8, 8)
-            Local fully dense stiffnes matrix.
+            Local fully dense stiffness matrix.
         kmin : 2-D array size(8, 8)
             Local stiffness matrix for an empty element.
         penal : float
@@ -152,7 +152,7 @@ class CvxFEA(FESolver):
     """
     This parent FEA class can assemble the global stiffness matrix and solve
     the FE problem with a Supernodal Sparse Cholesky Factorization. It solves
-    for both the equalibrium and adjoint problems.
+    for both the equilibrium and adjoin problems.
 
     Attributes
     ----------
@@ -166,8 +166,8 @@ class CvxFEA(FESolver):
     def displace(self, load, x, ke, kmin, penal):
         """
         FE solver based upon a Supernodal Sparse Cholesky Factorization. It
-        requires the instalation of the cvx module. It solves both the FEA
-        equalibrium and adjoint problems. [1]_
+        requires the installation of the cvx module. It solves both the FEA
+        equilibrium and adjoint problems. [1]_
 
         Parameters
         -------
@@ -176,7 +176,7 @@ class CvxFEA(FESolver):
         x : 2-D array size(nely, nelx)
             Current density distribution.
         ke : 2-D array size(8, 8)
-            Local fully dense stiffnes matrix.
+            Local fully dense stiffness matrix.
         kmin : 2-D array size(8, 8)
             Local stiffness matrix for an empty element.
         penal : float
@@ -224,12 +224,12 @@ class CGFEA(FESolver):
     gradient solver. The preconditioning is based upon the inverse of the
     diagonal of the stiffness matrix.
 
-    Recomendations
-
+    Recommendations
+    ---------------
     - Make the tolerance change over the iterations, low accuracy is
-      required for first itteration, more accuracy for the later ones.
-    - Add more advanced preconditioner.
-    - Add gpu accerelation.
+      required for first iteration, more accuracy for the later ones.
+    - Add more advanced preconditioned.
+    - Add gpu acceleration.
 
     Attributes
     ----------
@@ -251,17 +251,17 @@ class CGFEA(FESolver):
         FE solver based upon the sparse SciPy solver that uses a preconditioned
         conjugate gradient solver, preconditioning is based upon the inverse
         of the diagonal of the stiffness matrix. Currently the relative
-        tolerance is hardcoded as 1e-5. It solves both the equalibrium and
+        tolerance is hardcoded as 1e-5. It solves both the equilibrium and
         adjoint problems.
 
         Parameters
         -------
         load : object, child of the Loads class
-            The loadcase(s) considerd for this optimisation problem.
+            The loadcase(s) considered for this optimisation problem.
         x : 2-D array size(nely, nelx)
             Current density distribution.
         ke : 2-D array size(8, 8)
-            Local fully dense stiffnes matrix.
+            Local fully dense stiffness matrix.
         kmin : 2-D array size(8, 8)
             Local stiffness matrix for an empty element.
         penal : float
