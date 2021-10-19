@@ -1,5 +1,5 @@
 """
-This is the main progam code that sets up the topology optimisation problem.
+This is the main program code that sets up the topology optimisation problem.
 This optimisation tries to maximize the fatigue live of a crack and thus
 increase damage tolerance.
 

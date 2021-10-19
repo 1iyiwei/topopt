@@ -1,7 +1,7 @@
 """
-This is the main progam code that sets up the topology optimisation problem.
+This is the main program code that sets up the topology optimisation problem.
 This optimisation tries to minimize the stress intensity factor. Which should
-maximise the fatigue crack propegation life and thus the increase damage
+maximise the fatigue crack propagation life and thus the increase damage
 tolerance.
 
 Bram Lagerweij

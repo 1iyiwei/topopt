@@ -1,7 +1,7 @@
 """
-This is the main progam code that sets up the topology optimisation problem.
+This is the main program code that sets up the topology optimisation problem.
 This optimisation tries to maximize the displacement at a set location. A so-
-called compiant design.
+called compliant design.
 
 Bram Lagerweij
 Aerospace Structures and Materials Department TU Delft

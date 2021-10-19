@@ -1,6 +1,6 @@
 """
-This is the main progam code that sets up the topology optimisation problem.
-This optimisation tries to mimimize the global compliance and thus maximizing
+This is the main program code that sets up the topology optimisation problem.
+This optimisation tries to minimize the global compliance and thus maximizing
 the stiffness.
 
 Bram Lagerweij
