@@ -134,7 +134,7 @@ The iterative implementation of topology optimization as proposed by M. Beckers,
 It exists out of three parts, initialization, optimization and post processing.
 The flowchart for the methods used in this algorithm can be found in :numref:`Flowchart_stiffness`.
 
-.. figure:: nstatic/Flowchart.svg
+.. figure:: _static/Flowchart.svg
    :width: 50%
    :align: center
    :name: Flowchart_stiffness

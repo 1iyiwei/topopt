@@ -16,7 +16,7 @@ The problem formulation, required for optimization problems, should contain the 
 Because the goal is design a geometry with the lowest crack growth rate and the Paris-Erdogan law [1]_ minimizing stress intensity factor :math:`K_I` was chosen as the objective.
 Due to this formulation the design geometry, topology, is the optimization variable.
 
-.. figure:: nstatic/ProblemStatement.svg
+.. figure:: _static/ProblemStatement.svg
    :width: 40%
    :align: center
    :name: Problem_SIF
@@ -83,7 +83,7 @@ Crack tip element
 The method uses special elements around the crack tip of which the stiffness matrix needs to be derived.
 As these enriched elements based upon an addition of the continuous and singularity displacement field these are discussed separately at first.
 
-.. figure:: nstatic/12node.svg
+.. figure:: _static/12node.svg
    :width: 40%
    :align: center
    :name: ElementDef_SIF
@@ -139,7 +139,7 @@ and the crack tip stresses derived with the Westergaard method [6]_,
 
 which are accurate approximations of the stresses close to the crack tip, i.e. :math:`r` is small. :numref:`CrackTip_SIF` shows the axis system definition for the calculation around the crack tip.
 
-.. figure:: nstatic/CrackTip.svg
+.. figure:: _static/CrackTip.svg
    :width: 40%
    :align: center
    :name: CrackTip_SIF
@@ -214,7 +214,7 @@ Meshing strategy
 To reduce computational costs these enriched elements are only used at the crack tip and conventional linear elements are used throughout the rest of the mesh.
 It uses the hanging node method to connect the elements as can be seen in :numref:`Meshing_SIF`.
 
-.. figure:: nstatic/Meshing.svg
+.. figure:: _static/Meshing.svg
    :width: 60%
    :align: center
    :name: Meshing_SIF
@@ -282,7 +282,7 @@ The iterative implementation of topology optimization as proposed by M. Beckers,
 It exists out of three parts, initialization, optimization and post processing.
 The flowchart of the local compliance algorithm can be found in :numref:`Flowchart_SIF`.
 
-.. figure:: nstatic/Flowchart_Actuator.svg
+.. figure:: _static/Flowchart_Actuator.svg
    :width: 50%
    :align: center
    :name: Flowchart_SIF

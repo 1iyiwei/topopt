@@ -14,7 +14,7 @@ Continuum formulation
 ---------------------
 The problem formulation, required for optimization problems, should contain the optimization objective, its link to the design variables and the constraints.
 
-.. figure:: nstatic/ProblemStatement.svg
+.. figure:: _static/ProblemStatement.svg
    :width: 40%
    :align: center
    :name: Problem_FCGL
@@ -100,7 +100,7 @@ Crack tip element
 The method uses special elements around the crack tip of which the stiffness matrix needs to be derived.
 As these enriched elements based upon an addition of the continuous and singularity displacement field these are discussed separately at first.
 
-.. figure:: nstatic/12node.svg
+.. figure:: _static/12node.svg
    :width: 40%
    :align: center
    :name: ElementDef_FCGL
@@ -156,7 +156,7 @@ and the crack tip stresses derived with the Westergaard method [6]_,
 
 which are accurate approximations of the stresses close to the crack tip, i.e. :math:`r` is small. :numref:`CrackTip_FCGL` shows the axis system definition for the calculation around the crack tip.
 
-.. figure:: nstatic/CrackTip.svg
+.. figure:: _static/CrackTip.svg
    :width: 40%
    :align: center
    :name: CrackTip_FCGL
@@ -231,7 +231,7 @@ Meshing strategy
 To reduce computational costs these enriched elements are only used at the crack tip and conventional linear elements are used throughout the rest of the mesh.
 It uses the hanging node method to connect the elements as can be seen in :numref:`Meshing_FCGL`.
 
-.. figure:: nstatic/Meshing.svg
+.. figure:: _static/Meshing.svg
    :width: 60%
    :align: center
    :name: Meshing_FCGL
@@ -322,7 +322,7 @@ The iterative implementation of topology optimization as proposed by M. Beckers,
 It exists out of three parts, initialization, optimization and post processing.
 The flowchart of the local compliance algorithm can be found in :numref:`Flowchart_FL`.
 
-.. figure:: nstatic/FlowchartFL.svg
+.. figure:: _static/FlowchartFL.svg
    :width: 50%
    :align: center
    :name: Flowchart_FL

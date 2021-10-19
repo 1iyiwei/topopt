@@ -1,7 +1,7 @@
 Background in Topology Optimization
 ===================================
 
-.. figure:: nstatic/Canti_1.svg
+.. figure:: _static/Canti_1.svg
    :name: Canti_1
 
    Topology optimization example, a cantilever beam with maximum stiffness.
@@ -224,13 +224,13 @@ All nodes that fall within radius :math:`r_{min}` are contributing but the furth
 There is limited understanding why this filter works, there is no physical or theoretical basis for it. From experience, it was simply observed that it works well.
 
 +--+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
-|a)|.. figure:: nstatic/Canti_3.svg                                                                       |.. figure:: nstatic/Canti_3.svg                                                                       |
+|a)|.. figure:: _static/Canti_3.svg                                                                       |.. figure:: nstatic/Canti_3.svg                                                                       |
 +--+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
-|b)|.. figure:: nstatic/Canti_2.svg                                                                       |.. figure:: nstatic/Canti_5.svg                                                                       |
+|b)|.. figure:: _static/Canti_2.svg                                                                       |.. figure:: nstatic/Canti_5.svg                                                                       |
 +--+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
-|c)|.. figure:: nstatic/Canti_4.svg                                                                       |.. figure:: nstatic/Canti_6.svg                                                                       |
+|c)|.. figure:: _static/Canti_4.svg                                                                       |.. figure:: nstatic/Canti_6.svg                                                                       |
 +--+------------------------------------------------------------------------------------------------------+------------------------------------------------------------------------------------------------------+
-| .. figure:: nstatic/Canti_4.svg                                                                                                                                                                                |
+| .. figure:: _static/Canti_4.svg                                                                                                                                                                                |
 |    :name: Sensitivity_filt                                                                                                                                                                                     |
 |    :width: 1pt                                                                                                                                                                                                 |
 |                                                                                                                                                                                                                |
@@ -269,13 +269,13 @@ The paper clearly shows that better filters exist then those presented in this c
    :width: 100%
 
 +--+----------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------+
-|a)|.. figure:: nstatic/Canti_7.svg                                                                     |.. figure:: nstatic/Canti_7.svg                                                                     |
+|a)|.. figure:: _static/Canti_7.svg                                                                     |.. figure:: nstatic/Canti_7.svg                                                                     |
 +--+----------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------+
-|b)|.. figure:: nstatic/Canti_8.svg                                                                     |.. figure:: nstatic/Canti_10.svg                                                                    |
+|b)|.. figure:: _static/Canti_8.svg                                                                     |.. figure:: nstatic/Canti_10.svg                                                                    |
 +--+----------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------+
-|c)|.. figure:: nstatic/Canti_9.svg                                                                     |.. figure:: nstatic/Canti_11.svg                                                                    |
+|c)|.. figure:: _static/Canti_9.svg                                                                     |.. figure:: nstatic/Canti_11.svg                                                                    |
 +--+----------------------------------------------------------------------------------------------------+----------------------------------------------------------------------------------------------------+
-| .. figure:: nstatic/Canti_4.svg                                                                                                                                                                            |
+| .. figure:: _static/Canti_4.svg                                                                                                                                                                            |
 |    :name: Density_filt                                                                                                                                                                                     |
 |    :width: 1pt                                                                                                                                                                                             |
 |                                                                                                                                                                                                            |
@@ -288,7 +288,7 @@ The iterative implementation of topology optimization as proposed by M. Beckers,
 It exists out of three parts, initialization, optimization and post processing.
 The flowchart for the methods used in this communication can be found in :numref:`Flowchart`.
 
-.. figure:: nstatic/Flowchart.svg
+.. figure:: _static/Flowchart.svg
    :width: 50%
    :align: center
    :name: Flowchart
@@ -316,7 +316,7 @@ When changing the objective and/or problem one should start with a formulation o
 Sometimes optimization objectives are formulated in the form of several sub objectives resulting in multi objective optimization formulations.
 Optimizing for multiple objectives or load cases at once is common. For most structures several considerations, such as costs, weight and strength are taken in account. In addition do most structures experience multiple load-cases during their life. Several TO algorithms have been developed for this purpose. The most basic methods will be discussed here.
 
-.. figure:: nstatic/FlowchartMulti.svg
+.. figure:: _static/FlowchartMulti.svg
    :width: 50%
    :align: center
    :name: Flowchart_Multi

@@ -137,7 +137,7 @@ The iterative implementation of topology optimization as proposed by M. Beckers,
 It exists out of three parts, initialization, optimization and post processing.
 The flowchart of the local compliance algorithm can be found in :numref:`Flowchart_Actuator`.
 
-.. figure:: nstatic/Flowchart_Actuator.svg
+.. figure:: _static/Flowchart_Actuator.svg
    :width: 50%
    :align: center
    :name: Flowchart_Actuator
