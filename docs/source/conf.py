@@ -104,7 +104,6 @@ def setup(app):
 
 # Numbered figures
 numfig = True
-numfig = True
 numfig_secnum_depth = (2)
 
 
