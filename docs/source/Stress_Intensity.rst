@@ -152,11 +152,11 @@ A formulation of the displacement field can be found by integration leading to,
 .. math::
 
    u_x =& K_I f_x(r,\, \theta) + K_{II} g_x(r,\, \theta) \\
-   =& \frac{K_I}{4G}\sqrt{\frac{r}{2\pi}} \left(-1 + \gamma -2\sin^2\frac{\theta}{2}\right)\cos\frac{\theta}{2}\\
-   &+ \frac{K_{II}}{4G}\sqrt{\frac{r}{2\pi}}\left(1 + \gamma + 2\cos^2\frac{\theta}{2}\right)\sin\frac{\theta}{2}\\
+   =& \frac{K_I}{2G}\sqrt{\frac{r}{2\pi}} \left(-1 + \gamma -2\sin^2\frac{\theta}{2}\right)\cos\frac{\theta}{2}\\
+   &+ \frac{K_{II}}{2G}\sqrt{\frac{r}{2\pi}}\left(1 + \gamma + 2\cos^2\frac{\theta}{2}\right)\sin\frac{\theta}{2}\\
    u_y =& K_I f_y(r,\, \theta) + K_{II} g_y(r,\, \theta) \\
-   =& \frac{K_I}{4G}\sqrt{\frac{r}{2\pi}}\left(1 + \gamma +2\cos^2\frac{\theta}{2} \right)\sin\frac{\theta}{2} \\
-   &+ \frac{K_{II}}{4G}\sqrt{\frac{r}{2\pi}}\left(1 - \gamma +2\sin^2\frac{\theta}{2}\right)\cos\frac{\theta}{2}
+   =& \frac{K_I}{2G}\sqrt{\frac{r}{2\pi}}\left(1 + \gamma +2\cos^2\frac{\theta}{2} \right)\sin\frac{\theta}{2} \\
+   &+ \frac{K_{II}}{2G}\sqrt{\frac{r}{2\pi}}\left(1 - \gamma +2\sin^2\frac{\theta}{2}\right)\cos\frac{\theta}{2}
 
 where :math:`\gamma = (3-\nu)/(1+\nu)` for plane stress and :math:`\gamma = 3-4\nu` for plane strain [7]_.
 When assuming linear fracture mechanics one can describe the displacement field of this element as summation of the continuums and the singularity displacement fields resulting in:
